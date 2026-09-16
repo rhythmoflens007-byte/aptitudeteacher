@@ -1,0 +1,510 @@
+<title>Aptitude Teacher Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F3F6F4; --surface:#FFFFFF; --surface-2:#EAEFEC;
+    --ink:#16211D; --ink-soft:#55665F; --line:#D8E2DC;
+    --accent:#1B7A5C; --accent-2:#D97B29; --accent-soft:#E4F2EC;
+    --good:#1B7A5C; --warn:#B5790A; --crit:#B23A3A;
+    --font-display:"Newsreader", Georgia, serif;
+    --font-body:"IBM Plex Sans", system-ui, sans-serif;
+    --font-mono:"IBM Plex Mono", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#101513; --surface:#171E1B; --surface-2:#1E2622;
+      --ink:#EAF1EC; --ink-soft:#9FB0A7; --line:#2A342F;
+      --accent:#3FBF8F; --accent-2:#F0954A; --accent-soft:#16261F;
+      --good:#3FBF8F; --warn:#E0A83E; --crit:#E07272;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#101513; --surface:#171E1B; --surface-2:#1E2622;
+    --ink:#EAF1EC; --ink-soft:#9FB0A7; --line:#2A342F;
+    --accent:#3FBF8F; --accent-2:#F0954A; --accent-soft:#16261F;
+    --good:#3FBF8F; --warn:#E0A83E; --crit:#E07272;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); font-size:15px; line-height:1.6;
+    padding-inline:20px;
+  }
+  h1,h2,h3{font-family:var(--font-display); text-wrap:balance; font-weight:600; color:var(--ink); margin:0 0 .4em}
+  h1{font-size:2.1rem; font-weight:500}
+  h2{font-size:1.5rem}
+  h3{font-size:1.15rem; margin-top:1.4em}
+  p{margin:.6em 0}
+  a{color:var(--accent)}
+  code, .mono{font-family:var(--font-mono); font-size:.86em}
+  .eyebrow{
+    font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.08em;
+    font-size:.72rem; color:var(--accent); font-weight:500;
+  }
+
+  .shell{max-width:1180px; margin:0 auto; padding-block:28px 80px}
+
+  .cover{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:32px clamp(20px,4vw,44px); margin-bottom:28px;
+  }
+  .cover .eyebrow{margin-bottom:10px; display:block}
+  .cover p.lede{font-size:1.05rem; color:var(--ink-soft); max-width:62ch; margin-top:.3em}
+  .stack-strip{
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;
+  }
+  .chip{
+    font-family:var(--font-mono); font-size:.76rem; padding:5px 10px;
+    background:var(--accent-soft); color:var(--accent); border-radius:999px; border:1px solid var(--line);
+  }
+  .chip.cost::before{content:"$0 · "; opacity:.7}
+
+  .layout{display:grid; grid-template-columns:220px 1fr; gap:36px; align-items:start}
+  @media (max-width:900px){ .layout{grid-template-columns:1fr} }
+
+  nav.toc{
+    position:sticky; top:calc(env(safe-area-inset-top,0px) + 16px);
+    display:flex; flex-direction:column; gap:2px;
+    border-right:1px solid var(--line); padding-right:16px;
+  }
+  @media (max-width:900px){ nav.toc{display:none} }
+  nav.toc a{
+    color:var(--ink-soft); text-decoration:none; font-size:.85rem;
+    padding:6px 8px; border-radius:6px; border-left:2px solid transparent;
+  }
+  nav.toc a:hover{background:var(--surface-2); color:var(--ink)}
+  nav.toc a.num{font-family:var(--font-mono); color:var(--accent); margin-right:6px; font-size:.78rem}
+
+  details.mobile-toc{display:none; margin-bottom:20px}
+  @media (max-width:900px){ details.mobile-toc{display:block} }
+  details.mobile-toc summary{
+    cursor:pointer; font-family:var(--font-mono); font-size:.82rem;
+    padding:10px 14px; background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  }
+  details.mobile-toc .toc-list{display:flex; flex-direction:column; gap:2px; padding:10px 4px}
+  details.mobile-toc a{color:var(--ink-soft); font-size:.86rem; padding:6px 8px}
+
+  main{min-width:0}
+  section{
+    padding-block:22px; border-bottom:1px solid var(--line); scroll-margin-top:20px;
+  }
+  section:last-child{border-bottom:none}
+  section > .num-badge{
+    font-family:var(--font-mono); color:var(--accent); font-size:.8rem; display:block; margin-bottom:6px;
+  }
+  section p.dek{color:var(--ink-soft); max-width:68ch}
+
+  table{border-collapse:collapse; width:100%; font-size:.86rem}
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px; margin:14px 0}
+  .table-wrap table{min-width:520px}
+  th, td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  thead th{background:var(--surface-2); font-family:var(--font-mono); font-weight:500; font-size:.74rem; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:var(--surface-2)}
+  td.mono, th.mono{font-family:var(--font-mono)}
+
+  .method{font-family:var(--font-mono); font-size:.72rem; font-weight:600; padding:2px 6px; border-radius:4px}
+  .method.get{background:#DCEBFF; color:#1554A8}
+  .method.post{background:var(--accent-soft); color:var(--accent)}
+  .method.put{background:#FFE9CC; color:#95530A}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .method.get{background:#122A44; color:#7DB4EF}
+    :root:not([data-theme="light"]) .method.put{background:#3A2A12; color:#E6A85C}
+  }
+  :root[data-theme="dark"] .method.get{background:#122A44; color:#7DB4EF}
+  :root[data-theme="dark"] .method.put{background:#3A2A12; color:#E6A85C}
+
+  .phase-list{list-style:none; margin:16px 0; padding:0; display:flex; flex-direction:column; gap:0}
+  .phase{
+    display:grid; grid-template-columns:44px 1fr; gap:14px;
+    padding:14px 0; border-left:2px solid var(--line); padding-left:18px; position:relative;
+  }
+  .phase::before{
+    content:""; position:absolute; left:-6px; top:20px; width:10px; height:10px;
+    border-radius:50%; background:var(--accent);
+  }
+  .phase .pn{font-family:var(--font-mono); color:var(--accent); font-size:.95rem; font-weight:600}
+  .phase h4{margin:0 0 4px; font-family:var(--font-body); font-weight:600; font-size:.98rem}
+  .phase p{margin:0; color:var(--ink-soft); font-size:.88rem}
+  .phase .unlocks{font-family:var(--font-mono); font-size:.72rem; color:var(--accent-2); margin-top:4px; display:inline-block}
+
+  .card-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin:14px 0}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px}
+  .card h4{margin:0 0 6px; font-size:.95rem; font-family:var(--font-body); font-weight:600}
+  .card p{margin:0; font-size:.85rem; color:var(--ink-soft)}
+  .card .tag{font-family:var(--font-mono); font-size:.68rem; color:var(--accent); text-transform:uppercase; letter-spacing:.05em}
+
+  .callout{
+    background:var(--accent-soft); border:1px solid var(--line); border-left:3px solid var(--accent);
+    border-radius:8px; padding:12px 16px; margin:14px 0; font-size:.88rem;
+  }
+  .callout.warn{border-left-color:var(--warn); background:transparent; background-image:none}
+  .callout .lbl{font-family:var(--font-mono); font-size:.72rem; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:4px}
+
+  pre.mermaid{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; overflow-x:auto}
+
+  .badge-list{display:flex; flex-wrap:wrap; gap:6px; margin:10px 0}
+  .badge{font-family:var(--font-mono); font-size:.72rem; padding:3px 8px; border-radius:5px; background:var(--surface-2); color:var(--ink-soft)}
+  .badge.in{background:var(--accent-soft); color:var(--accent)}
+  .badge.out{color:var(--ink-soft); text-decoration:line-through; opacity:.7}
+
+  footer{margin-top:30px; padding-top:16px; border-top:1px solid var(--line); font-size:.8rem; color:var(--ink-soft)}
+</style>
+
+<div class="shell">
+
+  <div class="cover">
+    <span class="eyebrow">Build blueprint · v1 spec</span>
+    <h1>AI Aptitude Teacher</h1>
+    <p class="lede">A complete, dependency-ordered plan for building the app end-to-end on a $0 infrastructure budget: what to build, in what order, on which free services, with the schema and API surface fixed up front so there's no re-planning mid-build.</p>
+    <div class="stack-strip">
+      <span class="chip cost">Next.js + FastAPI</span>
+      <span class="chip cost">Supabase (DB · Auth · Storage)</span>
+      <span class="chip cost">Upstash Redis</span>
+      <span class="chip cost">Gemini API (free tier)</span>
+      <span class="chip cost">Web Speech API</span>
+      <span class="chip cost">Vercel + Render</span>
+    </div>
+  </div>
+
+  <details class="mobile-toc">
+    <summary>Contents</summary>
+    <div class="toc-list">
+      <a href="#scope">01 Scope — what "v1" actually includes</a>
+      <a href="#stack">02 Stack &amp; free AI picks</a>
+      <a href="#architecture">03 Architecture</a>
+      <a href="#engine">04 The adaptive engine</a>
+      <a href="#database">05 Database schema</a>
+      <a href="#api">06 API surface</a>
+      <a href="#workflow">07 Build workflow</a>
+      <a href="#structure">08 Repo structure</a>
+      <a href="#env">09 Environment &amp; quotas</a>
+      <a href="#deploy">10 Deployment</a>
+      <a href="#risks">11 Risks to watch</a>
+    </div>
+  </details>
+
+  <div class="layout">
+    <nav class="toc">
+      <a href="#scope"><span class="num">01</span>Scope</a>
+      <a href="#stack"><span class="num">02</span>Stack &amp; AI picks</a>
+      <a href="#architecture"><span class="num">03</span>Architecture</a>
+      <a href="#engine"><span class="num">04</span>Adaptive engine</a>
+      <a href="#database"><span class="num">05</span>Database</a>
+      <a href="#api"><span class="num">06</span>API surface</a>
+      <a href="#workflow"><span class="num">07</span>Build workflow</a>
+      <a href="#structure"><span class="num">08</span>Repo structure</a>
+      <a href="#env"><span class="num">09</span>Env &amp; quotas</a>
+      <a href="#deploy"><span class="num">10</span>Deployment</a>
+      <a href="#risks"><span class="num">11</span>Risks</a>
+    </nav>
+
+    <main>
+
+      <section id="scope">
+        <span class="num-badge">01</span>
+        <h2>Scope — what "v1" actually includes</h2>
+        <p class="dek">"Build it in one go" means: no mid-build re-planning, not "every feature launches simultaneously." The list below is what ships in the single v1 build, in the order Section 07 lays out. One item is deliberately deferred, with a free substitute standing in for it.</p>
+
+        <div class="badge-list">
+          <span class="badge in">Auth + profile</span>
+          <span class="badge in">Question bank (3 sections, 5 difficulty levels)</span>
+          <span class="badge in">Practice / Quiz / Mock test modes</span>
+          <span class="badge in">Instant answers + step-by-step explanations</span>
+          <span class="badge in">AI doubt-solving chat (text)</span>
+          <span class="badge in">Voice in/out (browser-native)</span>
+          <span class="badge in">OCR from photographed questions</span>
+          <span class="badge in">AI-generated practice questions</span>
+          <span class="badge in">Adaptive difficulty + misconception detection</span>
+          <span class="badge in">Personalized daily path</span>
+          <span class="badge in">Mastery dashboard, streaks, XP, badges</span>
+          <span class="badge in">Multilingual UI + tutor responses</span>
+          <span class="badge in">2D animated avatar (illustrated, viseme-synced)</span>
+          <span class="badge out">Photoreal video avatar (HeyGen/Tavus)</span>
+        </div>
+
+        <div class="callout warn">
+          <span class="lbl">Why the avatar is swapped, not cut</span>
+          Every vendor that does photorealistic lip-synced video (HeyGen, Tavus, D-ID, Soul Machines) bills per minute — none has a free tier that survives real usage. Section 02 substitutes a self-built 2D illustrated tutor whose mouth shape follows live audio amplitude. It delivers the "face that talks back" requirement at $0. Swap in a vendor later once there's revenue to fund it — nothing else in the build depends on which one you use.
+        </div>
+      </section>
+
+      <section id="stack">
+        <span class="num-badge">02</span>
+        <h2>Stack &amp; free AI picks</h2>
+        <p class="dek">One choice per layer, picked for being genuinely free at prototype-to-small-cohort scale, not just "has a free trial."</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Layer</th><th>Pick</th><th>Free ceiling</th><th>Why this one</th></tr></thead>
+            <tbody>
+              <tr><td>Frontend</td><td class="mono">Next.js 14 + TypeScript, installed as a PWA</td><td>Unlimited (self-hosted code)</td><td>One codebase serves web + installable "app" icon on phones — skips a separate React Native build.</td></tr>
+              <tr><td>Backend</td><td class="mono">FastAPI (Python)</td><td>Unlimited</td><td>All the AI glue (LLM calls, OCR routing, mastery math) is Python-native; FastAPI keeps it typed and fast to wire up.</td></tr>
+              <tr><td>Database + Auth + File storage</td><td class="mono">Supabase (Postgres)</td><td>500 MB DB, 1 GB storage, 50k monthly active users on the free project tier</td><td>Bundles Postgres, row-level auth, and image storage under one free project — three services collapse into one.</td></tr>
+              <tr><td>Cache / session state</td><td class="mono">Upstash Redis</td><td>~10k commands/day</td><td>Serverless Redis billed per request, not per hour running — a free project never idles up a bill.</td></tr>
+              <tr><td>Tutoring + reasoning LLM</td><td class="mono">Google Gemini API (Flash-tier model)</td><td>Free daily request quota via Google AI Studio, resets every 24h</td><td>Best free-tier reasoning-per-dollar available; multimodal, so it also does OCR and multilingual generation — one API key covers three requirements.</td></tr>
+              <tr><td>OCR (photographed questions)</td><td class="mono">Gemini vision (same API)</td><td>Shares the LLM quota above</td><td>No separate OCR vendor needed — send the photo straight to Gemini with a "transcribe this question" prompt.</td></tr>
+              <tr><td>Speech-to-text</td><td class="mono">Web Speech API (<code>SpeechRecognition</code>)</td><td>Unlimited, runs in the browser</td><td>Zero server cost, zero API key. Best support in Chrome/Edge; Safari/Firefox support is partial — flag this to users on unsupported browsers rather than silently failing.</td></tr>
+              <tr><td>Text-to-speech</td><td class="mono">Web Speech API (<code>SpeechSynthesis</code>)</td><td>Unlimited, runs in the browser</td><td>Same zero-cost logic. Voice quality is more robotic than ElevenLabs — acceptable for v1; Piper (self-hosted, free) is the upgrade path if it feels too flat.</td></tr>
+              <tr><td>Avatar</td><td class="mono">Self-built 2D illustrated character (Rive or Lottie), mouth shape driven by TTS audio amplitude</td><td>Free — it's an asset + a few lines of JS</td><td>Gets a face and lip movement without a per-minute vendor bill. See callout in Section 01.</td></tr>
+              <tr><td>Frontend hosting</td><td class="mono">Vercel (Hobby tier)</td><td>100 GB bandwidth/month</td><td>Zero-config Next.js deploys, generous enough for an early cohort.</td></tr>
+              <tr><td>Backend hosting</td><td class="mono">Render or Fly.io (free web service)</td><td>750 instance-hours/month</td><td>Free tier sleeps on idle, which is fine pre-launch; upgrade to a paid dyno once there's traffic worth keeping warm.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <span class="lbl">Fallback if Gemini's free quota gets tight</span>
+          Self-host an open model (Llama 3 or Qwen2.5 via Ollama) on your own machine or a free-tier cloud GPU. Software cost stays $0; you're only trading API quota for your own compute. Don't build this fallback up front — wire it in only if you actually hit the ceiling.
+        </div>
+      </section>
+
+      <section id="architecture">
+        <span class="num-badge">03</span>
+        <h2>Architecture</h2>
+        <p class="dek">Client talks to one backend; the backend fans out to the free services above. Nothing talks to the LLM except the backend, so API keys never touch the browser.</p>
+        <pre class="mermaid">
+flowchart TD
+    subgraph Client["Client — Next.js PWA"]
+        UI[Practice / Quiz / Mock UI]
+        Chat[Tutor chat + voice UI]
+        Avatar[2D avatar renderer]
+        Speech["Web Speech API (STT/TTS) — runs in-browser"]
+    end
+
+    subgraph Server["Backend — FastAPI"]
+        API[REST API]
+        Engine[Adaptive + misconception engine]
+        Router[LLM prompt router]
+    end
+
+    subgraph Data["Free-tier data layer"]
+        DB[(Postgres — Supabase)]
+        Cache[(Redis — Upstash)]
+        Files[(File storage — Supabase)]
+    end
+
+    subgraph External["External AI"]
+        Gemini["Gemini API — text, OCR vision, multilingual"]
+    end
+
+    UI --> API
+    Chat --> API
+    Chat <--> Speech
+    Avatar <-- audio amplitude --> Speech
+    API --> Engine
+    Engine --> DB
+    API --> Cache
+    API --> Files
+    API --> Router
+    Router --> Gemini
+    Gemini --> Router
+    Router --> API
+        </pre>
+      </section>
+
+      <section id="engine">
+        <span class="num-badge">04</span>
+        <h2>The adaptive engine — the actual differentiator</h2>
+        <p class="dek">Everything above is standard ed-tech plumbing. This is the loop that makes it more than a quiz app: diagnose the gap, teach to it, retest it, move on only when it's closed.</p>
+
+        <h3>1 · Tag everything at the skill level, not just the topic level</h3>
+        <p>Every question maps to one <code>topic</code> (Quant / Logical / Verbal) → <code>subtopic</code> (e.g. "Time &amp; Work") → one or more fine-grained <code>skills</code> (e.g. "converting rate-to-time", "combined-work LCM shortcut"). Mastery is tracked per skill, not per subtopic — a student can be strong at the formula and weak at the LCM shortcut inside the same subtopic.</p>
+
+        <h3>2 · Classify every wrong answer by <em>why</em> it's wrong</h3>
+        <p>On an incorrect attempt, send the question, the correct method, and the student's working (typed or transcribed) to Gemini with a fixed classification prompt. It returns one of:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Misconception type</th><th>Signal</th><th>Mastery penalty</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">careless_slip</td><td>Correct method, arithmetic error</td><td>Small</td></tr>
+              <tr><td class="mono">conceptual_gap</td><td>Wrong method entirely</td><td>Large</td></tr>
+              <tr><td class="mono">partial_method</td><td>Right approach, stopped short / misapplied a step</td><td>Medium</td></tr>
+              <tr><td class="mono">no_attempt</td><td>Skipped or guessed</td><td>Medium, flagged for a worked example first</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>3 · Update mastery, weighted by that classification</h3>
+        <p>Each skill carries a 0–100 <code>mastery_score</code>. A correct answer raises it by an amount scaled to question difficulty (harder-than-current-level correct answers move it more). A wrong answer lowers it by an amount scaled to the misconception type above — a <code>conceptual_gap</code> drops mastery hard and re-queues the skill sooner than a <code>careless_slip</code> does.</p>
+
+        <h3>4 · Teach before retesting</h3>
+        <p>When <code>conceptual_gap</code> or <code>partial_method</code> is detected, the tutor doesn't just show the correct answer — it generates a short targeted micro-lesson for that specific skill, then queues a <em>fresh, AI-generated</em> question on the same skill (never the same question) for later in the same session.</p>
+
+        <h3>5 · Pick the next question by weakest-skill-due</h3>
+        <p>The practice feed always pulls from: skills with the lowest mastery among those "due" (attempted recently enough to still be top-of-mind, spaced-repetition style), at a difficulty band matched to current mastery — never max difficulty on a skill still near zero.</p>
+
+        <h3>6 · Daily goal = personalized, not generic</h3>
+        <p>Each day's goal auto-composes from: a fixed number of questions on the 2–3 lowest-mastery skills, plus one reinforcement question on a skill mastered in the last 3 days (to prevent regression). This is the "personalized learning path" requirement — it's this rule, not a separate feature.</p>
+      </section>
+
+      <section id="database">
+        <span class="num-badge">05</span>
+        <h2>Database schema</h2>
+        <p class="dek">Postgres, via Supabase. Field types written as they'd appear in a migration.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Table</th><th>Key columns</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">users</td><td class="mono">id uuid pk, email text, display_name text, locale text, created_at timestamptz</td><td>Row created by Supabase Auth on sign-up.</td></tr>
+              <tr><td class="mono">topics</td><td class="mono">id uuid pk, name text, slug text</td><td>Seed with exactly 3 rows: Quantitative, Logical Reasoning, Verbal.</td></tr>
+              <tr><td class="mono">subtopics</td><td class="mono">id uuid pk, topic_id fk, name text</td><td>e.g. "Time &amp; Work", "Syllogisms", "Reading Comprehension".</td></tr>
+              <tr><td class="mono">skills</td><td class="mono">id uuid pk, subtopic_id fk, name text</td><td>The unit mastery is actually tracked against — see Section 04.</td></tr>
+              <tr><td class="mono">questions</td><td class="mono">id uuid pk, subtopic_id fk, difficulty smallint (1–5), body text, options jsonb, correct_option text, explanation text, source text ('seed' | 'ai_generated'), created_at timestamptz</td><td><code>options</code>/<code>correct_option</code> null for free-response questions.</td></tr>
+              <tr><td class="mono">question_skills</td><td class="mono">question_id fk, skill_id fk</td><td>Many-to-many — one question can exercise 1–3 skills.</td></tr>
+              <tr><td class="mono">attempts</td><td class="mono">id uuid pk, user_id fk, question_id fk, chosen_answer text, is_correct bool, time_taken_ms int, misconception_type text, hint_used bool, created_at timestamptz</td><td>One row per submitted answer — the raw signal everything else derives from.</td></tr>
+              <tr><td class="mono">skill_mastery</td><td class="mono">user_id fk, skill_id fk, mastery_score numeric(5,2), last_attempt_at timestamptz, streak_correct int</td><td>Composite pk (user_id, skill_id). Updated after every attempt per Section 04.</td></tr>
+              <tr><td class="mono">tutor_sessions</td><td class="mono">id uuid pk, user_id fk, question_id fk nullable, started_at, ended_at</td><td>Groups a chat/voice thread; nullable question_id covers open-ended doubts.</td></tr>
+              <tr><td class="mono">tutor_messages</td><td class="mono">id uuid pk, session_id fk, role text ('student'|'tutor'), content text, audio_url text nullable, created_at timestamptz</td><td><code>audio_url</code> only populated if you later add recorded voice playback.</td></tr>
+              <tr><td class="mono">daily_goals</td><td class="mono">user_id fk, date date, target_questions int, completed_questions int, skill_ids uuid[]</td><td>Composite pk (user_id, date). Generated per Section 04 rule 6.</td></tr>
+              <tr><td class="mono">gamification</td><td class="mono">user_id pk fk, xp int, level int, current_streak_days int, longest_streak_days int, last_active_date date</td><td>One row per user.</td></tr>
+              <tr><td class="mono">badges</td><td class="mono">id uuid pk, code text, name text, description text</td><td>Static reference table, seeded once.</td></tr>
+              <tr><td class="mono">user_badges</td><td class="mono">user_id fk, badge_id fk, earned_at timestamptz</td><td>Composite pk (user_id, badge_id).</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="api">
+        <span class="num-badge">06</span>
+        <h2>API surface</h2>
+        <p class="dek">Grouped by module, in the order they get built (Section 07). Auth routes are handled by Supabase directly from the client and aren't listed.</p>
+
+        <h3>Questions &amp; practice</h3>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td><span class="method get">GET</span></td><td class="mono">/questions/next</td><td>Returns the next question per the adaptive rule (Section 04.5). Query: <code>topic_id</code> optional.</td></tr>
+              <tr><td><span class="method post">POST</span></td><td class="mono">/attempts</td><td>Submit an answer. Triggers misconception classification + mastery update.</td></tr>
+              <tr><td><span class="method get">GET</span></td><td class="mono">/questions/{id}/explanation</td><td>Step-by-step explanation, generated on first request and cached.</td></tr>
+              <tr><td><span class="method post">POST</span></td><td class="mono">/questions/generate</td><td>AI-generates a fresh question for a given skill + difficulty (used by the "teach then retest" flow).</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Quiz &amp; mock test</h3>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td><span class="method post">POST</span></td><td class="mono">/quizzes</td><td>Start a timed quiz: body specifies topic mix + question count.</td></tr>
+              <tr><td><span class="method post">POST</span></td><td class="mono">/quizzes/{id}/submit</td><td>Submit all answers at once; returns score + per-question breakdown.</td></tr>
+              <tr><td><span class="method get">GET</span></td><td class="mono">/mocks/{id}/report</td><td>Full mock-test report: section-wise score, time spent, weak skills surfaced.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>AI tutor (text + voice + OCR)</h3>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td><span class="method post">POST</span></td><td class="mono">/tutor/sessions</td><td>Open a tutor session, optionally linked to a question_id.</td></tr>
+              <tr><td><span class="method post">POST</span></td><td class="mono">/tutor/sessions/{id}/messages</td><td>Send a message (text or transcribed voice); returns the tutor's reply.</td></tr>
+              <tr><td><span class="method post">POST</span></td><td class="mono">/tutor/ocr</td><td>Upload a photographed question; returns the transcribed question text + auto-opens a tutor session on it.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Progress &amp; gamification</h3>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td><span class="method get">GET</span></td><td class="mono">/progress/mastery</td><td>Per-skill mastery scores for the dashboard.</td></tr>
+              <tr><td><span class="method get">GET</span></td><td class="mono">/progress/daily-goal</td><td>Today's generated goal + completion state.</td></tr>
+              <tr><td><span class="method get">GET</span></td><td class="mono">/gamification/summary</td><td>XP, level, streak, earned badges.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="workflow">
+        <span class="num-badge">07</span>
+        <h2>Build workflow</h2>
+        <p class="dek">Strict dependency order — each phase needs the state or plumbing the previous one created. This is the order to actually write code in, whether that's one continuous session or spread across days.</p>
+
+        <ol class="phase-list">
+          <li class="phase"><span class="pn">00</span><div><h4>Infra bootstrap</h4><p>Create the Supabase project, Upstash Redis instance, Gemini API key, and repo (frontend + backend as a monorepo, see Section 08). Wire environment variables end to end before writing any feature code.</p></div></li>
+          <li class="phase"><span class="pn">01</span><div><h4>Auth + profile</h4><p>Supabase Auth (email/password + Google), a <code>users</code> row on sign-up, and a bare profile page.</p><span class="unlocks">unlocks → everything else, since every table hangs off user_id</span></div></li>
+          <li class="phase"><span class="pn">02</span><div><h4>Question bank + seed content</h4><p>Build the <code>topics/subtopics/skills/questions</code> tables and an admin seed script. Seed ~150–200 real questions across all three sections before moving on — the practice engine has nothing to serve without this.</p></div></li>
+          <li class="phase"><span class="pn">03</span><div><h4>Practice engine</h4><p><code>GET /questions/next</code> (unweighted/random for now), <code>POST /attempts</code>, instant correct/incorrect + static explanation display.</p><span class="unlocks">unlocks → quiz mode, mastery engine</span></div></li>
+          <li class="phase"><span class="pn">04</span><div><h4>Quiz &amp; mock test modes</h4><p>Timed sessions, scoring, section-wise mock report.</p></div></li>
+          <li class="phase"><span class="pn">05</span><div><h4>Adaptive + misconception engine</h4><p>Wire the Gemini classification call into <code>POST /attempts</code>, add <code>skill_mastery</code> updates, switch <code>/questions/next</code> from random to weakest-skill-due (Section 04).</p><span class="unlocks">unlocks → the actual differentiator</span></div></li>
+          <li class="phase"><span class="pn">06</span><div><h4>AI doubt-solving tutor (text)</h4><p>Chat UI + <code>/tutor/sessions</code> + <code>/tutor/messages</code>, backed by Gemini with the question's context injected into the prompt.</p></div></li>
+          <li class="phase"><span class="pn">07</span><div><h4>OCR</h4><p>Image upload to Supabase Storage → Gemini vision transcription → auto-opens a tutor session on the parsed question.</p></div></li>
+          <li class="phase"><span class="pn">08</span><div><h4>Voice</h4><p>Web Speech API wired into the tutor chat: mic button → <code>SpeechRecognition</code> → text message; tutor reply → <code>SpeechSynthesis</code>.</p></div></li>
+          <li class="phase"><span class="pn">09</span><div><h4>Avatar</h4><p>2D illustrated character with 4–6 mouth-shape frames swapped based on live TTS audio amplitude. Purely cosmetic layer on top of Phase 08 — no new data flows.</p></div></li>
+          <li class="phase"><span class="pn">10</span><div><h4>Gamification</h4><p><code>gamification</code> + <code>daily_goals</code> tables, XP/streak/badge logic, dashboard UI.</p></div></li>
+          <li class="phase"><span class="pn">11</span><div><h4>Multilingual</h4><p>Locale field on <code>users</code>, prompt templates parameterized by language, <code>SpeechSynthesis</code> voice selection by locale.</p></div></li>
+          <li class="phase"><span class="pn">12</span><div><h4>Polish + PWA + deploy</h4><p>Installable manifest/icons, empty/loading/error states, deploy per Section 10.</p></div></li>
+        </ol>
+      </section>
+
+      <section id="structure">
+        <span class="num-badge">08</span>
+        <h2>Repo structure</h2>
+        <div class="table-wrap">
+          <table>
+            <tbody>
+              <tr><td class="mono">/apps/web</td><td>Next.js PWA — practice UI, tutor chat, dashboard, avatar renderer.</td></tr>
+              <tr><td class="mono">/apps/api</td><td>FastAPI backend — routes, adaptive engine, Gemini prompt templates.</td></tr>
+              <tr><td class="mono">/apps/api/engine</td><td>Mastery scoring + misconception classification logic (Section 04), isolated from route handlers so it's independently testable.</td></tr>
+              <tr><td class="mono">/packages/shared-types</td><td>TypeScript/Pydantic types shared between web and api (question, attempt, mastery shapes) so the two never drift.</td></tr>
+              <tr><td class="mono">/db/migrations</td><td>SQL migrations for the schema in Section 05, applied via Supabase CLI.</td></tr>
+              <tr><td class="mono">/db/seed</td><td>Seed script for topics/subtopics/skills + the initial ~150–200 questions.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="env">
+        <span class="num-badge">09</span>
+        <h2>Environment variables &amp; quotas to watch</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Variable</th><th>Source</th><th>Watch for</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">GEMINI_API_KEY</td><td>Google AI Studio</td><td>Daily request cap resets every 24h — cache explanations (Section 06) so repeat views don't re-spend quota.</td></tr>
+              <tr><td class="mono">SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY</td><td>Supabase project settings</td><td>500 MB DB ceiling — question text is cheap, but don't store generated audio in Postgres; use Storage instead.</td></tr>
+              <tr><td class="mono">UPSTASH_REDIS_URL / UPSTASH_REDIS_TOKEN</td><td>Upstash console</td><td>Billed per command — use it for session/rate-limit state, not as a general cache for everything.</td></tr>
+              <tr><td class="mono">NEXT_PUBLIC_SUPABASE_URL / ANON_KEY</td><td>Same Supabase project, public-safe keys</td><td>Never expose the service-role key or Gemini key to the client — all AI calls route through the FastAPI backend.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="deploy">
+        <span class="num-badge">10</span>
+        <h2>Deployment</h2>
+        <div class="card-grid">
+          <div class="card"><span class="tag">Frontend</span><h4>Vercel</h4><p>Connect the repo, deploy <code>/apps/web</code>. Free Hobby tier — 100 GB bandwidth/month.</p></div>
+          <div class="card"><span class="tag">Backend</span><h4>Render / Fly.io</h4><p>Deploy <code>/apps/api</code> as a free web service. Free tier sleeps after inactivity — acceptable pre-launch, upgrade once there's steady traffic.</p></div>
+          <div class="card"><span class="tag">Database</span><h4>Supabase</h4><p>Same project used in development — just point production env vars at it, or spin up a second free project for prod isolation.</p></div>
+          <div class="card"><span class="tag">Cache</span><h4>Upstash</h4><p>Serverless — no separate deploy step, just a production token.</p></div>
+        </div>
+      </section>
+
+      <section id="risks">
+        <span class="num-badge">11</span>
+        <h2>Risks to watch</h2>
+        <div class="callout warn">
+          <span class="lbl">Latency stacking in the voice loop</span>
+          STT → Gemini round-trip → TTS → avatar can feel sluggish if each step is naive. Stream the Gemini response and start TTS on the first sentence rather than waiting for the full reply.
+        </div>
+        <div class="callout warn">
+          <span class="lbl">Free-tier backend cold starts</span>
+          Render/Fly's free tier sleeping mid-demo reads as "broken app" to a first-time user. Add a lightweight keep-alive ping if you're demoing live, or accept the ~10–30s wake delay pre-launch.
+        </div>
+        <div class="callout warn">
+          <span class="lbl">Gemini free-quota ceiling</span>
+          Fine for a prototype and a small cohort; a real user base will hit the daily cap. The Ollama fallback in Section 02 is the release valve — don't build it until quota pressure is real.
+        </div>
+      </section>
+
+      <footer>Aptitude Teacher Blueprint — spec for a single, dependency-ordered build. Revisit Section 07 as the checklist while executing.</footer>
+
+    </main>
+  </div>
+</div>
