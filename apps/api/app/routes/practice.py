@@ -100,7 +100,7 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     micro_lesson = None
     retest_id = None
     if misconception in mastery.NEEDS_RETEST and question.skills:
-        micro_lesson = ai.micro_lesson(question, question.skills[0].name, misconception, user.locale)
+        micro_lesson = ai.micro_lesson(question, question.skills[0].name, misconception, user)
         retest_id = mastery.question_for_skill(db, user.id, question.skills[0], exclude_id=question.id).id
 
     badges = gamification.check_badges(db, user.id, goal_just_completed)
@@ -109,7 +109,7 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     return AttemptOut(
         is_correct=is_correct,
         correct_option=question.correct_option,
-        explanation=ai.explain(question, user.locale),
+        explanation=ai.explain(question, user),
         misconception_type=misconception,
         micro_lesson=micro_lesson,
         retest_question_id=retest_id,

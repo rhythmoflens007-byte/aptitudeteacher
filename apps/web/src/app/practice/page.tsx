@@ -1,25 +1,27 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
-import Avatar, { Mood } from "@/components/Avatar";
-import { Button, Card, DIFFICULTY, ErrorNote, Label, MISCONCEPTION_LABEL, Pill, ProgressBar, Spinner } from "@/components/ui";
+import type { Mood } from "@/components/Avatar";
+import TutorAvatar from "@/components/TutorAvatar";
+import { Button, Card, Confetti, DIFFICULTY, ErrorNote, Icon, Label, MISCONCEPTION_LABEL, Pill, ProgressBar, Skeleton } from "@/components/ui";
 import { api, AttemptResult, Question, Topic, TutorSession } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { speak, stopSpeaking, Viseme, visemeFor } from "@/lib/speech";
+import { useTutor } from "@/lib/tutor";
 
 type Reason = "retest" | "weakest_skill" | "new_skill";
 
-const REASON_TEXT: Record<Reason, string> = {
-  retest: "Re-test: checking that idea again",
-  weakest_skill: "Focus: one of your weakest skills",
-  new_skill: "New skill to explore",
+const REASON: Record<Reason, { text: string; icon: string; tone: "marker" | "accent" | "violet" }> = {
+  retest: { text: "Re-test: checking that idea again", icon: "refresh", tone: "marker" },
+  weakest_skill: { text: "Focus: one of your weakest skills", icon: "target", tone: "accent" },
+  new_skill: { text: "New skill to explore", icon: "sparkles", tone: "violet" },
 };
 
 export default function PracticePage() {
   return (
-    <AppShell>
+    <AppShell wide>
       <Practice />
     </AppShell>
   );
@@ -27,6 +29,7 @@ export default function PracticePage() {
 
 function Practice() {
   const { t, speechLang } = useT();
+  const tutor = useTutor();
   const router = useRouter();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [topicId, setTopicId] = useState<string | null>(null);
@@ -37,6 +40,8 @@ function Practice() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
   const [elapsed, setElapsed] = useState(0);
+  const [confetti, setConfetti] = useState(0);
+  const [qKey, setQKey] = useState(0);
   const startedAt = useRef(0);
 
   const [speaking, setSpeaking] = useState(false);
@@ -45,11 +50,13 @@ function Practice() {
 
   const show = useCallback((q: Question, r: Reason) => {
     stopSpeaking();
+    setSpeaking(false);
     setQuestion(q);
     setReason(r);
     setSelected(null);
     setResult(null);
     setError(null);
+    setQKey((k) => k + 1);
     startedAt.current = Date.now();
     setElapsed(0);
   }, []);
@@ -88,6 +95,25 @@ function Practice() {
     return () => clearInterval(id);
   }, [question, result]);
 
+  const talk = useCallback(
+    (text: string) => {
+      speak(
+        text,
+        speechLang,
+        {
+          onStart: () => setSpeaking(true),
+          onEnd: () => setSpeaking(false),
+          onWord: (w) => {
+            setViseme(visemeFor(w));
+            setWordTick((n) => n + 1);
+          },
+        },
+        tutor.gender,
+      );
+    },
+    [speechLang, tutor.gender],
+  );
+
   const submit = useCallback(
     async (answer: string | null) => {
       if (!question || result || busy) return;
@@ -100,6 +126,7 @@ function Practice() {
         });
         setSelected(answer);
         setResult(res);
+        if (res.is_correct || res.new_badges.length) setConfetti((n) => n + 1);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Couldn't submit your answer.");
       } finally {
@@ -142,29 +169,21 @@ function Practice() {
     }
   }
 
-  function listen(text: string) {
-    if (speaking) {
-      stopSpeaking();
-      setSpeaking(false);
-      return;
-    }
-    speak(text, speechLang, {
-      onStart: () => setSpeaking(true),
-      onEnd: () => setSpeaking(false),
-      onWord: (w) => {
-        setViseme(visemeFor(w));
-        setWordTick((n) => n + 1);
-      },
-    });
-  }
-
-  const mood: Mood = !result ? "neutral" : result.is_correct ? "happy" : result.micro_lesson ? "concerned" : "neutral";
+  const mood: Mood = busy && !result ? "thinking" : !result ? (selected ? "listening" : "neutral") : result.is_correct ? "happy" : "concerned";
+  const reasonInfo = REASON[reason];
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = String(elapsed % 60).padStart(2, "0");
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl font-semibold">{t("practice.title")}</h1>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by topic">
+      <Confetti burst={confetti} />
+
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <Label>{tutor.name} picks each question for you</Label>
+          <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("practice.title")}</h1>
+        </div>
+        <div className="no-scrollbar -mx-4 flex max-w-[calc(100%+2rem)] gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0" role="group" aria-label="Filter by topic">
           {[{ id: null, name: t("practice.all") }, ...topics].map((tp) => (
             <button
               key={tp.id ?? "all"}
@@ -173,8 +192,8 @@ function Practice() {
                 loadNext(tp.id);
               }}
               aria-pressed={topicId === tp.id}
-              className={`rounded-full border px-3 py-1 text-sm transition ${
-                topicId === tp.id ? "border-accent bg-accent-soft text-accent" : "border-line bg-surface text-ink-soft hover:text-ink"
+              className={`press shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${
+                topicId === tp.id ? "border-transparent bg-brand text-accent-ink shadow-[var(--shadow-glow)]" : "border-line bg-surface text-ink-soft hover:border-accent/50 hover:text-ink"
               }`}
             >
               {tp.name}
@@ -184,140 +203,224 @@ function Practice() {
       </div>
 
       <ErrorNote message={error} />
-      {!question ? (
-        <Spinner label="Picking your next question" />
-      ) : (
-        <Card className="p-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <Pill tone={reason === "retest" ? "marker" : "accent"}>{REASON_TEXT[reason]}</Pill>
-            <Pill>{question.topic}</Pill>
-            <Pill>{question.subtopic}</Pill>
-            <Pill>{DIFFICULTY[question.difficulty]}</Pill>
-            {question.source === "ai_generated" && <Pill tone="marker">AI-generated</Pill>}
-            <span className="ml-auto text-sm text-ink-soft tabular" aria-label="Time on this question">
-              ⏱ {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
-            </span>
-          </div>
-          <p className="mt-5 whitespace-pre-line text-lg leading-relaxed">{question.body}</p>
 
-          <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
-            {question.options.map((option, i) => {
-              const isCorrect = result && option === result.correct_option;
-              const isWrongPick = result && option === selected && !result.is_correct;
-              const picked = !result && option === selected;
-              return (
-                <li key={option}>
-                  <button
-                    disabled={!!result || busy}
-                    onClick={() => setSelected(option)}
-                    className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition ${
-                      isCorrect
-                        ? "border-good bg-good-soft"
-                        : isWrongPick
-                          ? "border-bad bg-bad-soft"
-                          : picked
-                            ? "border-accent bg-accent-soft"
-                            : "border-line bg-surface hover:border-accent/60"
-                    } disabled:cursor-default`}
-                  >
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-line bg-paper text-xs font-medium tabular">
-                      {i + 1}
-                    </span>
-                    <span>{option}</span>
-                    {isCorrect && <span className="ml-auto text-good">✓</span>}
-                    {isWrongPick && <span className="ml-auto text-bad">✗</span>}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-
-          {!result && (
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button onClick={() => submit(selected)} disabled={!selected || busy}>
-                {busy ? "Checking…" : t("practice.submit")}
-              </Button>
-              <Button variant="ghost" onClick={() => submit(null)} disabled={busy}>
-                {t("practice.skip")}
-              </Button>
-              <span className="ml-auto self-center text-xs text-ink-soft">Keys 1–4 to choose, Enter to check</span>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {result && question && (
-        <div className="grid gap-4 md:grid-cols-[1fr_260px]">
-          <div className="flex flex-col gap-4">
-            <Card>
-              <div className="flex flex-wrap items-center gap-3">
-                <p className={`font-display text-2xl font-semibold ${result.is_correct ? "text-good" : "text-bad"}`}>
-                  {result.is_correct ? t("practice.correct") : t("practice.incorrect")}
-                </p>
-                <Pill tone="marker">+{result.xp_gained} XP</Pill>
-                {result.misconception_type && <Pill tone="bad">{MISCONCEPTION_LABEL[result.misconception_type].title}</Pill>}
-              </div>
-              {result.misconception_type && (
-                <p className="mt-2 text-sm text-ink-soft">{MISCONCEPTION_LABEL[result.misconception_type].hint}</p>
-              )}
-              <div className="mt-4">
-                <Label>{t("practice.explanation")}</Label>
-                <p className="mt-2 whitespace-pre-line leading-relaxed">{result.explanation}</p>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex min-w-0 flex-col gap-5">
+          {!question ? (
+            <Card className="flex flex-col gap-4 p-6">
+              <Skeleton className="h-6 w-2/3" />
+              <Skeleton className="h-16" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-14" />
+                ))}
               </div>
             </Card>
+          ) : (
+            <Card key={qKey} className="rise p-5 sm:p-7">
+              <div className="flex flex-wrap items-center gap-2">
+                <Pill tone={reasonInfo.tone}>
+                  <Icon name={reasonInfo.icon} className="h-3.5 w-3.5" />
+                  {reasonInfo.text}
+                </Pill>
+                <Pill>{question.subtopic}</Pill>
+                <Pill>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <span key={i} className={`h-1.5 w-1.5 rounded-full ${i < question.difficulty ? "bg-marker" : "bg-line"}`} />
+                  ))}
+                  <span className="ml-1">{DIFFICULTY[question.difficulty]}</span>
+                </Pill>
+                {question.source === "ai_generated" && <Pill tone="violet">AI-generated</Pill>}
+                <span
+                  className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm tabular ${result ? "text-ink-soft" : elapsed > 90 ? "bg-marker-soft text-marker" : "bg-surface-2 text-ink-soft"}`}
+                  aria-label="Time on this question"
+                >
+                  <Icon name="clock" className="h-4 w-4" /> {minutes}:{seconds}
+                </span>
+              </div>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ink-soft">{question.topic}</p>
+              <p className="mt-3 whitespace-pre-line text-lg leading-relaxed sm:text-xl">{question.body}</p>
 
-            {result.micro_lesson && (
-              <Card className="border-marker/40 bg-marker-soft">
-                <div className="flex items-center justify-between gap-2">
-                  <Label>{t("practice.lesson")}</Label>
-                  <Button variant="secondary" className="px-3 py-1.5" onClick={() => listen(result.micro_lesson!)}>
-                    {speaking ? "■ Stop" : "▶ Listen"}
+              <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                {question.options.map((option, i) => {
+                  const isCorrect = result && option === result.correct_option;
+                  const isWrongPick = result && option === selected && !result.is_correct;
+                  const picked = !result && option === selected;
+                  const dim = result && !isCorrect && !isWrongPick;
+                  return (
+                    <li key={option} className="rise" style={{ "--i": i + 1 } as CSSProperties}>
+                      <button
+                        disabled={!!result || busy}
+                        onClick={() => setSelected(option)}
+                        aria-pressed={picked}
+                        className={`press group flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition disabled:cursor-default ${
+                          isCorrect
+                            ? "pulse-good border-good bg-good-soft"
+                            : isWrongPick
+                              ? "shake border-bad bg-bad-soft"
+                              : picked
+                                ? "-translate-y-0.5 border-accent bg-accent-soft shadow-[var(--shadow-glow)]"
+                                : "border-line bg-surface hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-[var(--shadow-md)]"
+                        } ${dim ? "opacity-55" : ""}`}
+                      >
+                        <span
+                          className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl text-sm font-semibold tabular transition ${
+                            isCorrect ? "bg-good text-white" : isWrongPick ? "bg-bad text-white" : picked ? "bg-brand text-accent-ink" : "bg-surface-2 text-ink-soft group-hover:text-ink"
+                          }`}
+                        >
+                          {isCorrect ? <Icon name="check" className="pop h-4 w-4" /> : isWrongPick ? <Icon name="x" className="pop h-4 w-4" /> : i + 1}
+                        </span>
+                        <span className="text-base">{option}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {!result && (
+                <div className="mt-6 flex flex-wrap items-center gap-2">
+                  <Button onClick={() => submit(selected)} disabled={!selected || busy} className="px-6 py-3">
+                    {busy ? "Checking…" : t("practice.submit")}
+                    {!busy && <Icon name="arrow" className="h-4 w-4" />}
                   </Button>
+                  <Button variant="ghost" onClick={() => submit(null)} disabled={busy}>
+                    {t("practice.skip")}
+                  </Button>
+                  <span className="ml-auto hidden text-xs text-ink-soft sm:inline">
+                    <kbd className="rounded border border-line bg-surface-2 px-1.5">1</kbd>–<kbd className="rounded border border-line bg-surface-2 px-1.5">4</kbd> choose ·{" "}
+                    <kbd className="rounded border border-line bg-surface-2 px-1.5">Enter</kbd> check
+                  </span>
                 </div>
-                <p className="mt-2 whitespace-pre-line leading-relaxed">{result.micro_lesson}</p>
-              </Card>
-            )}
-
-            <div className="flex flex-wrap gap-2">
-              {result.retest_question_id ? (
-                <Button variant="marker" onClick={retest} disabled={busy}>
-                  {t("practice.retest")} →
-                </Button>
-              ) : (
-                <Button onClick={() => loadNext(topicId)} disabled={busy}>
-                  {t("practice.next")} →
-                </Button>
               )}
-              {result.retest_question_id && (
-                <Button variant="secondary" onClick={() => loadNext(topicId)} disabled={busy}>
-                  Skip to next
-                </Button>
-              )}
-              <Button variant="secondary" onClick={askTutor}>
-                💬 {t("practice.askTutor")}
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <Card className="flex flex-col items-center">
-              <Avatar speaking={speaking} viseme={viseme} wordTick={wordTick} mood={mood} size={170} />
             </Card>
-            <Card>
+          )}
+
+          {result && question && (
+            <>
+              <Card className={`rise relative overflow-hidden border-2 ${result.is_correct ? "border-good/40" : "border-bad/30"}`}>
+                <span aria-hidden className={`absolute -right-12 -top-12 h-40 w-40 rounded-full ${result.is_correct ? "bg-good/10" : "bg-bad/10"}`} />
+                <div className="relative flex flex-wrap items-center gap-3">
+                  <span className={`pop grid h-12 w-12 place-items-center rounded-2xl text-white ${result.is_correct ? "bg-brand" : "bg-[linear-gradient(135deg,var(--bad),#e46a6a)]"}`}>
+                    <Icon name={result.is_correct ? "check" : "x"} className="h-6 w-6" />
+                  </span>
+                  <p className={`font-display text-3xl font-semibold ${result.is_correct ? "text-good" : "text-bad"}`}>
+                    {result.is_correct ? t("practice.correct") : t("practice.incorrect")}
+                  </p>
+                  <span className="relative">
+                    <Pill tone="marker">
+                      <Icon name="bolt" className="h-3.5 w-3.5" />+{result.xp_gained} XP
+                    </Pill>
+                    <span aria-hidden className="xp-float absolute -top-6 left-2 font-display text-lg font-semibold text-marker">
+                      +{result.xp_gained}
+                    </span>
+                  </span>
+                  {result.misconception_type && <Pill tone="bad">{MISCONCEPTION_LABEL[result.misconception_type].title}</Pill>}
+                </div>
+                {result.misconception_type && <p className="relative mt-2 text-sm text-ink-soft">{MISCONCEPTION_LABEL[result.misconception_type].hint}</p>}
+                <div className="relative mt-5 rounded-2xl bg-surface-2/60 p-4">
+                  <Label>{t("practice.explanation")}</Label>
+                  <p className="mt-2 whitespace-pre-line leading-relaxed">{result.explanation}</p>
+                </div>
+              </Card>
+
+              {result.micro_lesson && (
+                <Card className="rise border-marker/40 bg-marker-soft/70" style={{ "--i": 1 } as CSSProperties}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="grid h-8 w-8 place-items-center rounded-xl bg-sunrise text-white">
+                        <Icon name="book" className="h-4 w-4" />
+                      </span>
+                      <Label>
+                        {t("practice.lesson")} · {tutor.name}
+                      </Label>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      className="px-3 py-1.5"
+                      onClick={() => {
+                        if (speaking) {
+                          stopSpeaking();
+                          setSpeaking(false);
+                        } else talk(result.micro_lesson!);
+                      }}
+                    >
+                      <Icon name={speaking ? "stop" : "speaker"} className="h-4 w-4" />
+                      {speaking ? "Stop" : "Listen"}
+                    </Button>
+                  </div>
+                  <p className="mt-3 whitespace-pre-line leading-relaxed">{result.micro_lesson}</p>
+                </Card>
+              )}
+
+              <div className="rise flex flex-wrap gap-2" style={{ "--i": 2 } as CSSProperties}>
+                {result.retest_question_id ? (
+                  <>
+                    <Button variant="marker" onClick={retest} disabled={busy} className="px-5 py-3">
+                      <Icon name="refresh" className="h-4 w-4" />
+                      {t("practice.retest")}
+                    </Button>
+                    <Button variant="secondary" onClick={() => loadNext(topicId)} disabled={busy}>
+                      Skip to next
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => loadNext(topicId)} disabled={busy} className="px-5 py-3">
+                    {t("practice.next")} <Icon name="arrow" className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button variant="secondary" onClick={askTutor}>
+                  <Icon name="chat" className="h-4 w-4" />
+                  {t("practice.askTutor")}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">
+          <Card className="flex items-center gap-4 p-4 lg:flex-col lg:p-5">
+            <TutorAvatar
+              gender={tutor.gender}
+              speaking={speaking}
+              viseme={viseme}
+              wordTick={wordTick}
+              mood={mood}
+              className="aspect-square w-28 shrink-0 sm:w-36 lg:w-full"
+            />
+            <div className="min-w-0 lg:text-center">
+              <p className="font-display text-xl font-semibold">{tutor.name}</p>
+              <p className="text-sm text-ink-soft" aria-live="polite">
+                {!result
+                  ? busy
+                    ? "Choosing your next question…"
+                    : selected
+                      ? "Happy with that? Check your answer."
+                      : "Take your time and set the problem up first."
+                  : result.is_correct
+                    ? "Nicely done! That skill just got stronger."
+                    : result.micro_lesson
+                      ? "Let's fix this idea together. Read the quick lesson."
+                      : "Close one. Re-check the calculation next time."}
+              </p>
+            </div>
+          </Card>
+
+          {result && (
+            <Card className="rise">
               <Label>Mastery</Label>
-              <ul className="mt-2 flex flex-col gap-3">
+              <ul className="mt-3 flex flex-col gap-3">
                 {result.mastery.map((m) => (
                   <li key={m.skill}>
-                    <div className="flex justify-between text-sm">
-                      <span>{m.skill}</span>
-                      <span className="font-medium tabular">{Math.round(m.score)}%</span>
+                    <div className="mb-1 flex justify-between text-sm">
+                      <span className="truncate">{m.skill}</span>
+                      <span className="font-semibold tabular">{Math.round(m.score)}%</span>
                     </div>
                     <ProgressBar value={m.score} />
                   </li>
                 ))}
               </ul>
-              <div className="mt-4">
-                <div className="flex justify-between text-sm">
+              <div className="mt-5">
+                <div className="mb-1 flex justify-between text-sm">
                   <span>Daily goal</span>
                   <span className="tabular">
                     {Math.min(result.daily_goal_completed, result.daily_goal_target)} / {result.daily_goal_target}
@@ -326,19 +429,26 @@ function Practice() {
                 <ProgressBar value={(100 * result.daily_goal_completed) / result.daily_goal_target} tone="marker" />
               </div>
             </Card>
-            {result.new_badges.length > 0 && (
-              <Card className="border-marker/40 bg-marker-soft">
-                <Label>New badge</Label>
-                {result.new_badges.map((b) => (
-                  <p key={b.code} className="mt-1 text-sm">
-                    🏅 <strong>{b.name}</strong> — {b.description}
-                  </p>
-                ))}
-              </Card>
-            )}
-          </div>
-        </div>
-      )}
+          )}
+
+          {result && result.new_badges.length > 0 && (
+            <Card className="pop shine border-marker/40 bg-marker-soft">
+              <Label>New badge unlocked</Label>
+              {result.new_badges.map((b) => (
+                <div key={b.code} className="mt-3 flex items-center gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-2xl bg-sunrise text-white shadow-[var(--shadow-md)]">
+                    <Icon name="trophy" />
+                  </span>
+                  <div>
+                    <p className="font-semibold">{b.name}</p>
+                    <p className="text-xs text-ink-soft">{b.description}</p>
+                  </div>
+                </div>
+              ))}
+            </Card>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

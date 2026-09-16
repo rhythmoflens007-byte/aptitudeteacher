@@ -32,6 +32,8 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     display_name: Mapped[str] = mapped_column(String(100))
     locale: Mapped[str] = mapped_column(String(10), default="en")
+    tutor_name: Mapped[str] = mapped_column(String(30), default="Asha", server_default="Asha")
+    tutor_gender: Mapped[str] = mapped_column(String(10), default="female", server_default="female")
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 

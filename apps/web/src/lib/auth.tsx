@@ -9,7 +9,7 @@ type AuthState = {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string, locale: Locale) => Promise<void>;
   logout: () => void;
-  updateProfile: (changes: Partial<Pick<User, "display_name" | "locale">>) => Promise<void>;
+  updateProfile: (changes: Partial<Pick<User, "display_name" | "locale" | "tutor_name" | "tutor_gender">>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | null>(null);

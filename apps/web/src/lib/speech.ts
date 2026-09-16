@@ -91,10 +91,29 @@ export function cleanForSpeech(text: string) {
     .replace(/₹/g, " rupees ");
 }
 
+// Browsers don't expose a voice's gender, so infer it from well-known system voice names.
+const FEMALE_VOICE = /female|woman|heera|kalpana|swara|neerja|pallavi|zira|aria|jenny|samantha|veena|lekha|sonia|libby|natasha|salli|joanna|kajal|aditi|raveena|shruti|sapna|ananya|karen|moira|tessa|fiona|victoria/i;
+const MALE_VOICE = /(?<!fe)male|\bman\b|ravi|hemant|madhur|prabhat|valluvar|mark|david|guy|ryan|daniel|rishi|george|james|fred|alex|tom|aaron|arthur|thomas|kumar|mohan/i;
+
+export function pickVoice(lang: string, gender: "female" | "male") {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return { voice: null, pitch: 1 };
+  const prefix = lang.split("-")[0];
+  const voices = window.speechSynthesis.getVoices();
+  const inLanguage = [...voices.filter((v) => v.lang === lang), ...voices.filter((v) => v.lang !== lang && v.lang.startsWith(prefix))];
+  const wanted = gender === "female" ? FEMALE_VOICE : MALE_VOICE;
+  const unwanted = gender === "female" ? MALE_VOICE : FEMALE_VOICE;
+  const match = inLanguage.find((v) => wanted.test(v.name) && !(gender === "male" && FEMALE_VOICE.test(v.name)));
+  if (match) return { voice: match, pitch: 1 };
+  // No matching voice installed: shift the pitch of whatever voice is available instead.
+  const neutral = inLanguage.find((v) => !unwanted.test(v.name)) ?? inLanguage[0] ?? null;
+  return { voice: neutral, pitch: gender === "female" ? 1.15 : 0.8 };
+}
+
 export function speak(
   text: string,
   lang: string,
   handlers: { onStart?: () => void; onEnd?: () => void; onWord?: (word: string) => void },
+  gender: "female" | "male" = "female",
 ) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
   const synth = window.speechSynthesis;
@@ -102,10 +121,9 @@ export function speak(
   const spoken = cleanForSpeech(text);
   const utterance = new SpeechSynthesisUtterance(spoken);
   utterance.lang = lang;
-  const prefix = lang.split("-")[0];
-  const voices = synth.getVoices();
-  utterance.voice =
-    voices.find((v) => v.lang === lang) ?? voices.find((v) => v.lang.startsWith(prefix)) ?? null;
+  const { voice, pitch } = pickVoice(lang, gender);
+  utterance.voice = voice;
+  utterance.pitch = pitch;
   utterance.rate = 1;
   utterance.onstart = () => handlers.onStart?.();
   utterance.onend = () => handlers.onEnd?.();

@@ -1,12 +1,16 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { CSSProperties, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
-import Avatar, { Mood } from "@/components/Avatar";
-import { Button, Card, ErrorNote, Label } from "@/components/ui";
+import type { Mood } from "@/components/Avatar";
+import Modal from "@/components/Modal";
+import TutorAvatar from "@/components/TutorAvatar";
+import TutorCustomizer from "@/components/TutorCustomizer";
+import { Button, Card, ErrorNote, Icon, Label } from "@/components/ui";
 import { api, TutorMessage, TutorSession } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { speak, stopSpeaking, useSpeechRecognition, Viseme, visemeFor } from "@/lib/speech";
+import { useTutor } from "@/lib/tutor";
 
 const SPEAK_PREF = "aptitude.tutor.speak";
 
@@ -22,12 +26,15 @@ export default function TutorPage() {
 
 function Tutor() {
   const { t, speechLang } = useT();
+  const tutor = useTutor();
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [session, setSession] = useState<TutorSession | null>(null);
   const [draft, setDraft] = useState("");
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState(true);
+  const [customising, setCustomising] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   // Tutor only renders client-side (AppShell waits for auth), so reading storage here is safe.
   const [speakReplies, setSpeakReplies] = useState(() => {
     try {
@@ -43,7 +50,7 @@ function Tutor() {
 
   const voice = useSpeechRecognition(speechLang);
   const fileInput = useRef<HTMLInputElement>(null);
-  const bottom = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
 
   const refreshSessions = useCallback(() => {
     api<SessionSummary[]>("/tutor/sessions").then(setSessions).catch(() => {});
@@ -54,6 +61,7 @@ function Tutor() {
     try {
       setSession(await api<TutorSession>(`/tutor/sessions/${id}`));
       setError(null);
+      setHistoryOpen(false);
       window.history.replaceState(null, "", `/tutor?session=${id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't open that conversation.");
@@ -72,13 +80,17 @@ function Tutor() {
   }, [refreshSessions]);
 
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const el = scroller.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [session?.messages.length, waiting]);
 
   function toggleSpeak() {
     const next = !speakReplies;
     setSpeakReplies(next);
-    if (!next) stopSpeaking();
+    if (!next) {
+      stopSpeaking();
+      setSpeaking(false);
+    }
     try {
       localStorage.setItem(SPEAK_PREF, next ? "on" : "off");
     } catch {}
@@ -86,16 +98,21 @@ function Tutor() {
 
   const say = useCallback(
     (text: string) => {
-      speak(text, speechLang, {
-        onStart: () => setSpeaking(true),
-        onEnd: () => setSpeaking(false),
-        onWord: (w) => {
-          setViseme(visemeFor(w));
-          setWordTick((n) => n + 1);
+      speak(
+        text,
+        speechLang,
+        {
+          onStart: () => setSpeaking(true),
+          onEnd: () => setSpeaking(false),
+          onWord: (w) => {
+            setViseme(visemeFor(w));
+            setWordTick((n) => n + 1);
+          },
         },
-      });
+        tutor.gender,
+      );
     },
-    [speechLang],
+    [speechLang, tutor.gender],
   );
 
   const send = useCallback(
@@ -163,174 +180,266 @@ function Tutor() {
     }
   }
 
+  function newChat() {
+    stopSpeaking();
+    setSpeaking(false);
+    setSession(null);
+    setHistoryOpen(false);
+    window.history.replaceState(null, "", "/tutor");
+  }
+
   const mood: Mood = voice.listening ? "listening" : waiting ? "thinking" : speaking ? "neutral" : "happy";
   const context = session?.question_text ?? (session?.question_id ? session.title : null);
+  const listeningText = tutor.gender === "female" ? t("tutor.listeningFemale") : t("tutor.listening");
+  const status = voice.listening
+    ? voice.interim || listeningText
+    : waiting
+      ? "Thinking…"
+      : speaking
+        ? "Speaking · tap the mic to interrupt"
+        : "Ask by typing, speaking, or sending a photo";
+
+  const sessionList = (
+    <ul className="flex flex-col gap-1">
+      {sessions.map((s, i) => (
+        <li key={s.id} className="rise" style={{ "--i": Math.min(i, 8) } as CSSProperties}>
+          <button
+            onClick={() => openSession(s.id)}
+            className={`press w-full rounded-xl px-3 py-2.5 text-left text-sm transition ${
+              session?.id === s.id ? "bg-accent-soft text-accent" : "text-ink-soft hover:bg-surface-2 hover:text-ink"
+            }`}
+          >
+            <span className="line-clamp-2">{s.title}</span>
+            <span className="text-[11px] opacity-70">{new Date(s.started_at).toLocaleDateString()}</span>
+          </button>
+        </li>
+      ))}
+      {sessions.length === 0 && <li className="px-3 py-2 text-sm text-ink-soft">No conversations yet.</li>}
+    </ul>
+  );
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
-      <aside className="order-2 lg:order-1">
-        <Card className="p-3">
-          <Button
-            variant="secondary"
-            className="w-full"
-            onClick={() => {
-              stopSpeaking();
-              setSession(null);
-              window.history.replaceState(null, "", "/tutor");
-            }}
-          >
-            + {t("tutor.newChat")}
-          </Button>
-          <ul className="mt-3 flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
-            {sessions.map((s) => (
-              <li key={s.id}>
-                <button
-                  onClick={() => openSession(s.id)}
-                  className={`w-full rounded-lg px-2.5 py-2 text-left text-sm ${
-                    session?.id === s.id ? "bg-accent-soft text-accent" : "text-ink-soft hover:bg-surface-2 hover:text-ink"
-                  }`}
-                >
-                  <span className="line-clamp-2">{s.title}</span>
-                  <span className="text-[11px] opacity-70">{new Date(s.started_at).toLocaleDateString()}</span>
-                </button>
-              </li>
-            ))}
-            {sessions.length === 0 && <li className="px-2 py-2 text-xs text-ink-soft">No conversations yet.</li>}
-          </ul>
+    <div className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
+      <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">
+        <Card className="relative overflow-hidden p-4 lg:p-5">
+          <span aria-hidden className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-accent-soft/80 to-transparent" />
+          <div className="relative flex items-center gap-4 lg:flex-col lg:gap-2">
+            <TutorAvatar
+              gender={tutor.gender}
+              speaking={speaking}
+              viseme={viseme}
+              wordTick={wordTick}
+              mood={mood}
+              className="aspect-square w-28 shrink-0 sm:w-36 lg:w-full"
+            />
+            <div className="min-w-0 flex-1 lg:w-full lg:text-center">
+              <div className="flex items-center gap-2 lg:justify-center">
+                <h1 className="truncate font-display text-2xl font-semibold">{tutor.name}</h1>
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${aiEnabled ? "bg-good" : "bg-marker"} ${speaking || waiting ? "animate-pulse" : ""}`} title={aiEnabled ? "AI online" : "Offline mode"} />
+              </div>
+              <p className="min-h-10 text-sm text-ink-soft lg:min-h-0" aria-live="polite">
+                {status}
+              </p>
+            </div>
+          </div>
+          <div className="relative mt-3 flex flex-wrap items-center gap-2 lg:justify-center">
+            <button
+              onClick={toggleSpeak}
+              role="switch"
+              aria-checked={speakReplies}
+              className="press flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-sm"
+            >
+              <span className={`relative h-5 w-9 rounded-full transition ${speakReplies ? "bg-brand" : "bg-line"}`}>
+                <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${speakReplies ? "left-4.5" : "left-0.5"}`} />
+              </span>
+              {t("tutor.speak")}
+            </button>
+            {speaking && (
+              <Button variant="ghost" className="px-3 py-1.5" onClick={() => (stopSpeaking(), setSpeaking(false))}>
+                <Icon name="stop" className="h-4 w-4" /> Stop
+              </Button>
+            )}
+            <Button variant="secondary" className="px-3 py-1.5" onClick={() => setCustomising(true)}>
+              <Icon name="settings" className="h-4 w-4" /> {t("tutor.customise")}
+            </Button>
+            <Button variant="secondary" className="px-3 py-1.5 lg:hidden" onClick={() => setHistoryOpen(true)}>
+              <Icon name="history" className="h-4 w-4" /> {t("tutor.history")}
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="hidden p-3 lg:block">
+          <div className="mb-2 flex items-center justify-between px-2">
+            <Label>{t("tutor.history")}</Label>
+            <button onClick={newChat} className="press flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-accent hover:bg-accent-soft">
+              <Icon name="plus" className="h-4 w-4" /> New
+            </button>
+          </div>
+          <div className="no-scrollbar max-h-[34vh] overflow-y-auto">{sessionList}</div>
         </Card>
       </aside>
 
-      <section className="order-1 flex min-w-0 flex-col gap-4 lg:order-2">
+      <section className="flex min-w-0 flex-col gap-3">
         {!aiEnabled && (
-          <p className="rounded-lg border border-marker/40 bg-marker-soft px-4 py-3 text-sm">
-            <strong>Offline mode.</strong> Asha can show worked solutions but can&apos;t hold a conversation or read photos until a free
-            Gemini key is added to <code>apps/api/.env</code>.
+          <p className="fade flex items-start gap-3 rounded-2xl border border-marker/40 bg-marker-soft px-4 py-3 text-sm">
+            <Icon name="alert" className="mt-0.5 h-4 w-4 shrink-0 text-marker" />
+            <span>
+              <strong>Offline mode.</strong> {tutor.name} can show worked solutions but can&apos;t hold a conversation or read photos until a free Gemini key is
+              added to <code className="rounded bg-surface/70 px-1">apps/api/.env</code>.
+            </span>
           </p>
         )}
 
-        <Card className="flex flex-col items-center gap-4 sm:flex-row sm:items-center">
-          <Avatar speaking={speaking} viseme={viseme} wordTick={wordTick} mood={mood} size={150} />
-          <div className="flex flex-1 flex-col gap-2">
-            <h1 className="font-display text-2xl font-semibold">{t("tutor.title")} · Asha</h1>
-            <p className="text-sm text-ink-soft" aria-live="polite">
-              {voice.listening
-                ? voice.interim || t("tutor.listening")
-                : waiting
-                  ? "Thinking…"
-                  : speaking
-                    ? "Speaking. Tap the mic to interrupt."
-                    : "Ask by typing, speaking, or sending a photo of a question."}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm">
-                <input id="speak-replies" type="checkbox" checked={speakReplies} onChange={toggleSpeak} className="accent-[var(--accent)]" />
-                {t("tutor.speak")}
-              </label>
-              {speaking && (
-                <Button variant="ghost" className="px-3 py-1.5" onClick={() => { stopSpeaking(); setSpeaking(false); }}>
-                  ■ Stop
-                </Button>
-              )}
-            </div>
+        <Card className="flex flex-col overflow-hidden p-0 lg:h-[calc(100dvh-7.5rem)]">
+          <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+            <p className="truncate text-sm font-medium">{session ? session.title : t("tutor.newChat")}</p>
+            {session && (
+              <button onClick={newChat} className="press flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-sm text-accent hover:bg-accent-soft">
+                <Icon name="plus" className="h-4 w-4" /> New
+              </button>
+            )}
           </div>
-        </Card>
 
-        {context && (
-          <div className="rounded-xl border border-line bg-surface-2 px-4 py-3 text-sm">
-            <Label>Question we&apos;re discussing</Label>
-            <p className="mt-1 whitespace-pre-line">{context}</p>
-          </div>
-        )}
-
-        <Card className="flex min-h-[320px] flex-col gap-3 p-4">
-          {(!session || session.messages.length === 0) && !waiting && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center text-sm text-ink-soft">
-              <p>Try asking:</p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {[
-                  "What's the shortcut for combined work problems?",
-                  "How do I solve syllogisms with 'some'?",
-                  "Why is average speed not (x + y) / 2?",
-                ].map((s) => (
-                  <button key={s} onClick={() => send(s)} className="rounded-full border border-line bg-surface px-3 py-1.5 text-ink hover:border-accent">
-                    {s}
-                  </button>
-                ))}
-              </div>
+          {context && (
+            <div className="border-b border-line bg-surface-2/50 px-4 py-3 text-sm">
+              <Label>Question we&apos;re discussing</Label>
+              <p className="mt-1 line-clamp-4 whitespace-pre-line">{context}</p>
             </div>
           )}
-          {session?.messages.map((m) => (
-            <div key={m.id} className={`flex ${m.role === "student" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-2.5 leading-relaxed ${
-                  m.role === "student" ? "rounded-br-sm bg-accent text-accent-ink" : "rounded-bl-sm bg-surface-2"
-                }`}
-              >
-                {m.content}
+
+          <div ref={scroller} className="flex min-h-[320px] flex-1 flex-col gap-3 overflow-y-auto px-4 py-5">
+            {(!session || session.messages.length === 0) && !waiting && (
+              <div className="fade m-auto flex flex-col items-center gap-4 py-6 text-center">
+                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand text-accent-ink shadow-[var(--shadow-glow)]">
+                  <Icon name="sparkles" className="h-7 w-7" />
+                </span>
+                <div>
+                  <p className="font-display text-xl font-semibold">What shall we work on?</p>
+                  <p className="text-sm text-ink-soft">Try one of these, or ask your own doubt.</p>
+                </div>
+                <div className="flex max-w-xl flex-wrap justify-center gap-2">
+                  {[
+                    "What's the shortcut for combined work problems?",
+                    "How do I solve syllogisms with 'some'?",
+                    "Why is average speed not (x + y) / 2?",
+                  ].map((s, i) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      style={{ "--i": i } as CSSProperties}
+                      className="pop press rounded-full border border-line bg-surface px-3.5 py-2 text-sm shadow-[var(--shadow-sm)] hover:border-accent hover:text-accent"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {session?.messages.map((m) => (
+              <div key={m.id} className={`rise flex items-end gap-2 ${m.role === "student" ? "justify-end" : "justify-start"}`}>
                 {m.role === "tutor" && (
-                  <button onClick={() => say(m.content)} className="mt-1 block text-xs text-ink-soft hover:text-accent" aria-label="Read this reply aloud">
-                    🔊 Listen
-                  </button>
+                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-white ${tutor.gender === "female" ? "bg-brand" : "bg-sunrise"}`}>
+                    {tutor.name.charAt(0).toUpperCase()}
+                  </span>
                 )}
+                <div
+                  className={`max-w-[85%] whitespace-pre-line rounded-3xl px-4 py-3 leading-relaxed shadow-[var(--shadow-sm)] ${
+                    m.role === "student" ? "rounded-br-md bg-brand text-accent-ink" : "rounded-bl-md border border-line bg-surface"
+                  }`}
+                >
+                  {m.content}
+                  {m.role === "tutor" && (
+                    <button onClick={() => say(m.content)} className="mt-2 flex items-center gap-1 text-xs font-medium text-ink-soft hover:text-accent" aria-label="Read this reply aloud">
+                      <Icon name="speaker" className="h-3.5 w-3.5" /> Listen
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-          {waiting && (
-            <div className="flex justify-start">
-              <div className="rounded-2xl rounded-bl-sm bg-surface-2 px-4 py-3 text-ink-soft">
-                <span className="animate-pulse">Asha is thinking…</span>
+            ))}
+            {waiting && (
+              <div className="fade flex items-end gap-2">
+                <span className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold text-white ${tutor.gender === "female" ? "bg-brand" : "bg-sunrise"}`}>
+                  {tutor.name.charAt(0).toUpperCase()}
+                </span>
+                <div className="flex items-center gap-1 rounded-3xl rounded-bl-md border border-line bg-surface px-4 py-4" aria-label={`${tutor.name} is typing`}>
+                  {[0, 1, 2].map((i) => (
+                    <span key={i} className="typing-dot h-2 w-2 rounded-full bg-accent" style={{ "--i": i } as CSSProperties} />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          <div ref={bottom} />
+            )}
+          </div>
+
+          <div className="border-t border-line bg-surface/80 p-3">
+            <ErrorNote message={error ?? voice.error} />
+            <form onSubmit={onSubmit} className={`flex items-end gap-2 ${error || voice.error ? "mt-3" : ""}`}>
+              <input
+                ref={fileInput}
+                id="photo-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/heic"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && onPhoto(e.target.files[0])}
+              />
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                disabled={waiting}
+                aria-label={t("tutor.photo")}
+                title={t("tutor.photo")}
+                className="press grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-line text-ink-soft transition hover:border-accent/50 hover:text-accent disabled:opacity-50"
+              >
+                <Icon name="camera" />
+              </button>
+              <textarea
+                id="tutor-draft"
+                value={voice.listening ? voice.interim : draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send(draft);
+                  }
+                }}
+                rows={1}
+                placeholder={voice.listening ? listeningText : t("tutor.placeholder")}
+                className="max-h-32 min-h-11 flex-1 resize-none rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base outline-none transition focus:border-accent focus:shadow-[0_0_0_4px_var(--accent-soft)]"
+              />
+              {voice.supported && (
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  aria-label={voice.listening ? "Stop listening" : "Speak your question"}
+                  title={voice.listening ? "Stop listening" : "Speak your question"}
+                  className={`press relative grid h-11 w-11 shrink-0 place-items-center rounded-xl transition ${
+                    voice.listening ? "bg-sunrise text-white" : "border border-line text-ink-soft hover:border-accent/50 hover:text-accent"
+                  }`}
+                >
+                  {voice.listening && <span className="absolute inset-0 animate-ping rounded-xl bg-marker/40" />}
+                  <Icon name={voice.listening ? "stop" : "mic"} className="relative h-5 w-5" />
+                </button>
+              )}
+              <Button type="submit" disabled={waiting || !draft.trim()} className="h-11 w-11 shrink-0 p-0 sm:w-auto sm:px-4" aria-label={t("tutor.send")}>
+                <Icon name="send" className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("tutor.send")}</span>
+              </Button>
+            </form>
+            {!voice.supported && <p className="mt-2 text-xs text-ink-soft">Voice input works in Chrome and Edge.</p>}
+          </div>
         </Card>
-
-        <ErrorNote message={error ?? voice.error} />
-
-        <form onSubmit={onSubmit} className="flex items-end gap-2">
-          <input
-            ref={fileInput}
-            id="photo-input"
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/heic"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => e.target.files?.[0] && onPhoto(e.target.files[0])}
-          />
-          <Button type="button" variant="secondary" onClick={() => fileInput.current?.click()} disabled={waiting} aria-label={t("tutor.photo")} title={t("tutor.photo")}>
-            📷
-          </Button>
-          <textarea
-            id="tutor-draft"
-            value={voice.listening ? voice.interim : draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send(draft);
-              }
-            }}
-            rows={1}
-            placeholder={t("tutor.placeholder")}
-            className="min-h-[44px] flex-1 resize-none rounded-lg border border-line bg-surface px-3 py-2.5 text-sm outline-none focus:border-accent"
-          />
-          {voice.supported && (
-            <Button
-              type="button"
-              variant={voice.listening ? "marker" : "secondary"}
-              onClick={toggleMic}
-              aria-label={voice.listening ? "Stop listening" : "Speak your question"}
-              title={voice.listening ? "Stop listening" : "Speak your question"}
-            >
-              {voice.listening ? "■" : "🎤"}
-            </Button>
-          )}
-          <Button type="submit" disabled={waiting || !draft.trim()}>
-            {t("tutor.send")}
-          </Button>
-        </form>
-        {!voice.supported && <p className="text-xs text-ink-soft">Voice input works in Chrome and Edge.</p>}
       </section>
+
+      <Modal open={customising} title={t("tutor.customise")} onClose={() => setCustomising(false)}>
+        <TutorCustomizer onSaved={() => setTimeout(() => setCustomising(false), 900)} />
+      </Modal>
+
+      <Modal open={historyOpen} title={t("tutor.history")} onClose={() => setHistoryOpen(false)}>
+        <Button variant="secondary" className="mb-3 w-full" onClick={newChat}>
+          <Icon name="plus" className="h-4 w-4" /> {t("tutor.newChat")}
+        </Button>
+        {sessionList}
+      </Modal>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import func, inspect, select, text
 from sqlalchemy.orm import Session
 
 from app.db.models import Badge, Question, Skill, Subtopic, Topic
@@ -50,14 +50,34 @@ def seed(db: Session) -> int:
     return added
 
 
+def add_missing_columns() -> None:
+    """create_all never alters existing tables, so add columns introduced after a database was created."""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    with engine.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if table.name not in tables:
+                continue
+            present = {c["name"] for c in inspector.get_columns(table.name)}
+            for column in table.columns:
+                if column.name in present:
+                    continue
+                ddl = f'ALTER TABLE {table.name} ADD COLUMN {column.name} {column.type.compile(engine.dialect)}'
+                if column.server_default is not None:
+                    ddl += f" DEFAULT '{column.server_default.arg}'"
+                conn.execute(text(ddl))
+
+
 def init_db() -> None:
     Base.metadata.create_all(engine)
+    add_missing_columns()
     with SessionLocal() as db:
         seed(db)
 
 
 if __name__ == "__main__":
     Base.metadata.create_all(engine)
+    add_missing_columns()
     with SessionLocal() as db:
         added = seed(db)
         print(f"added {added} questions; total {db.scalar(select(func.count()).select_from(Question))}")

@@ -48,6 +48,10 @@ def update_me(body: ProfileIn, user: User = Depends(current_user), db: Session =
         user.display_name = body.display_name.strip()
     if body.locale is not None:
         user.locale = body.locale
+    if body.tutor_name is not None:
+        user.tutor_name = body.tutor_name
+    if body.tutor_gender is not None:
+        user.tutor_gender = body.tutor_gender
     db.add(user)
     db.commit()
     return UserOut.of(user)

@@ -3,7 +3,14 @@ const TOKEN_KEY = "aptitude.token";
 
 export type Locale = "en" | "hi" | "ta";
 
-export type User = { id: string; email: string; display_name: string; locale: Locale };
+export type User = {
+  id: string;
+  email: string;
+  display_name: string;
+  locale: Locale;
+  tutor_name: string;
+  tutor_gender: "female" | "male";
+};
 
 export type Question = {
   id: string;

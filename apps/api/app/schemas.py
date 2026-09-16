@@ -1,12 +1,14 @@
 import random
+import unicodedata
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.db.models import Question, User
 
 Locale = Literal["en", "hi", "ta"]
+TutorGender = Literal["female", "male"]
 
 
 class UserOut(BaseModel):
@@ -14,10 +16,19 @@ class UserOut(BaseModel):
     email: str
     display_name: str
     locale: str
+    tutor_name: str
+    tutor_gender: TutorGender
 
     @classmethod
     def of(cls, user: User) -> "UserOut":
-        return cls(id=user.id, email=user.email, display_name=user.display_name, locale=user.locale)
+        return cls(
+            id=user.id,
+            email=user.email,
+            display_name=user.display_name,
+            locale=user.locale,
+            tutor_name=user.tutor_name or "Asha",
+            tutor_gender=user.tutor_gender or "female",
+        )
 
 
 class RegisterIn(BaseModel):
@@ -35,6 +46,24 @@ class LoginIn(BaseModel):
 class ProfileIn(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=100)
     locale: Locale | None = None
+    tutor_name: str | None = None
+    tutor_gender: TutorGender | None = None
+
+    @field_validator("tutor_name")
+    @classmethod
+    def clean_tutor_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        name = " ".join(value.split())
+        # The name is placed into the AI's instructions, so allow only name-like text.
+        if not 1 <= len(name) <= 30 or not all(ch.isalpha() or ch in " .'-" or _is_mark(ch) for ch in name):
+            raise ValueError("Tutor name must be 1-30 letters (spaces, hyphens and apostrophes are fine).")
+        return name
+
+
+def _is_mark(ch: str) -> bool:
+    # Hindi and Tamil names use combining vowel signs, which are not "letters" to str.isalpha().
+    return unicodedata.category(ch).startswith("M")
 
 
 class AuthOut(BaseModel):

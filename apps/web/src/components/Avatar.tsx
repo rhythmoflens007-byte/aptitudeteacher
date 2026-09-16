@@ -11,6 +11,7 @@ type Props = {
   wordTick: number;
   mood: Mood;
   size?: number;
+  gender?: "female" | "male";
 };
 
 const MOUTHS: Record<Viseme, React.ReactNode> = {
@@ -30,7 +31,8 @@ const MOUTHS: Record<Viseme, React.ReactNode> = {
   round: <ellipse cx="100" cy="146" rx="5.5" ry="6.5" fill="#5b1f24" />,
 };
 
-export default function Avatar({ speaking, viseme, wordTick, mood, size = 220 }: Props) {
+export default function Avatar({ speaking, viseme, wordTick, mood, size = 220, gender = "female" }: Props) {
+  const female = gender === "female";
   const [mouth, setMouth] = useState<Viseme>("rest");
   const [blink, setBlink] = useState(false);
   const word = useRef({ tick: wordTick, viseme });
@@ -97,22 +99,28 @@ export default function Avatar({ speaking, viseme, wordTick, mood, size = 220 }:
       width={size}
       height={size * 1.1}
       role="img"
-      aria-label={speaking ? "Asha, your tutor, is speaking" : "Asha, your tutor"}
+      aria-label={speaking ? "Your tutor is speaking" : "Your tutor"}
       className={`max-w-full ${speaking ? "avatar-talking" : ""} ${mood === "listening" ? "avatar-tilt" : ""}`}
     >
       <g className="avatar-head">
         <path d="M30 220 Q34 176 100 170 Q166 176 170 220 Z" fill="var(--color-accent)" />
         <path d="M78 172 Q100 196 122 172 L118 168 Q100 180 82 168 Z" fill="#f3d1b5" />
-        <path d="M62 178 Q70 200 64 220 M138 178 Q130 200 136 220" stroke="var(--color-marker)" strokeWidth="5" fill="none" />
+        {female && <path d="M62 178 Q70 200 64 220 M138 178 Q130 200 136 220" stroke="var(--color-marker)" strokeWidth="5" fill="none" />}
         <rect x="90" y="150" width="20" height="24" rx="8" fill="#d9a07f" />
-        <path d="M46 110 Q40 40 100 36 Q160 40 154 110 Q156 150 140 160 L60 160 Q44 150 46 110 Z" fill="#2b1d1a" />
+        {female && <path d="M46 110 Q40 40 100 36 Q160 40 154 110 Q156 150 140 160 L60 160 Q44 150 46 110 Z" fill="#2b1d1a" />}
         <ellipse cx="100" cy="118" rx="44" ry="50" fill="#e8b690" />
         <ellipse cx="56" cy="122" rx="7" ry="11" fill="#dea57d" />
         <ellipse cx="144" cy="122" rx="7" ry="11" fill="#dea57d" />
-        <circle cx="56" cy="134" r="2.6" fill="var(--color-marker)" />
-        <circle cx="144" cy="134" r="2.6" fill="var(--color-marker)" />
-        <path d="M56 104 Q60 58 100 60 Q134 60 146 100 Q120 78 92 76 Q70 80 56 104 Z" fill="#2b1d1a" />
-        <circle cx="100" cy="92" r="2.6" fill="#b3263a" />
+        {female && <circle cx="56" cy="134" r="2.6" fill="var(--color-marker)" />}
+        {female && <circle cx="144" cy="134" r="2.6" fill="var(--color-marker)" />}
+        {female ? (
+          <>
+            <path d="M56 104 Q60 58 100 60 Q134 60 146 100 Q120 78 92 76 Q70 80 56 104 Z" fill="#2b1d1a" />
+            <circle cx="100" cy="92" r="2.6" fill="#b3263a" />
+          </>
+        ) : (
+          <path d="M55 108 Q52 62 100 58 Q150 60 146 108 Q142 86 130 80 Q112 70 96 78 Q76 76 64 86 Q58 94 55 108 Z" fill="#2b1d1a" />
+        )}
         <path d={leftBrow} stroke="#2b1d1a" strokeWidth="3" fill="none" strokeLinecap="round" />
         <path d={rightBrow} stroke="#2b1d1a" strokeWidth="3" fill="none" strokeLinecap="round" />
         {blink ? (

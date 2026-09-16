@@ -98,7 +98,7 @@ def send_message(
     ).all()
     turns = [(m.role, m.content) for m in reversed(history)]
     question = db.get(Question, session.question_id) if session.question_id else None
-    content = ai.tutor_reply(turns, _context(db, session), user.locale, question.explanation if question else None)
+    content = ai.tutor_reply(turns, _context(db, session), user, question.explanation if question else None)
     reply = TutorMessage(session_id=session.id, role="tutor", content=content)
     db.add(reply)
     db.commit()

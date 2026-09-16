@@ -1,6 +1,7 @@
 import json
 import logging
 from functools import lru_cache
+from typing import Protocol
 
 from google import genai
 from google.genai import types
@@ -13,14 +14,25 @@ log = logging.getLogger("ai")
 LANGUAGES = {"en": "English", "hi": "Hindi", "ta": "Tamil"}
 MISCONCEPTIONS = ("careless_slip", "conceptual_gap", "partial_method", "no_attempt")
 
-TUTOR_PERSONA = (
-    "You are Asha, a warm, patient aptitude teacher preparing students for placement and "
-    "competitive exams (Quantitative Aptitude, Logical Reasoning, Verbal Ability). "
-    "Teach, don't just answer: find what the student doesn't understand, explain the underlying "
-    "concept in small numbered steps, show shortcuts where they exist, and end with one short "
-    "check-for-understanding question. Keep replies under 180 words. Use plain text, no markdown "
-    "tables. Your replies may be read aloud, so avoid symbols that sound odd when spoken."
-)
+class Learner(Protocol):
+    locale: str
+    tutor_name: str
+    tutor_gender: str
+
+
+def persona(learner: Learner) -> str:
+    name = learner.tutor_name or "Asha"
+    woman = (learner.tutor_gender or "female") == "female"
+    return (
+        f"You are {name}, a warm, patient {'woman' if woman else 'man'} who teaches aptitude to students "
+        "preparing for placement and competitive exams (Quantitative Aptitude, Logical Reasoning, Verbal Ability). "
+        "Teach, don't just answer: find what the student doesn't understand, explain the underlying "
+        "concept in small numbered steps, show shortcuts where they exist, and end with one short "
+        "check-for-understanding question. Keep replies under 180 words. Use plain text, no markdown "
+        "tables. Your replies may be read aloud, so avoid symbols that sound odd when spoken. "
+        f"When writing in Hindi or Tamil, use {'feminine' if woman else 'masculine'} grammatical forms "
+        "when referring to yourself."
+    )
 
 
 class AIUnavailable(Exception):
@@ -65,7 +77,8 @@ def _question_block(q: Question) -> str:
     return f"Question: {q.body}\nOptions:\n{options}\nCorrect answer: {q.correct_option}"
 
 
-def explain(q: Question, locale: str) -> str:
+def explain(q: Question, learner: Learner) -> str:
+    locale = learner.locale
     if locale == "en" or not enabled():
         return q.explanation
     try:
@@ -73,7 +86,7 @@ def explain(q: Question, locale: str) -> str:
             f"{_question_block(q)}\nReference explanation: {q.explanation}\n\n"
             f"Rewrite the reference explanation as clear numbered steps in {_language(locale)}. "
             "Keep numbers and option text unchanged.",
-            system=TUTOR_PERSONA,
+            system=persona(learner),
         )
     except AIUnavailable:
         return q.explanation
@@ -110,7 +123,7 @@ def classify_misconception(q: Question, chosen: str | None, time_taken_ms: int |
     return heuristic_misconception(chosen, time_taken_ms)
 
 
-def micro_lesson(q: Question, skill_name: str, misconception: str, locale: str) -> str:
+def micro_lesson(q: Question, skill_name: str, misconception: str, learner: Learner) -> str:
     fallback = (
         f"Let's revisit this step by step. {q.explanation} "
         "Try the next question on the same idea to lock it in."
@@ -118,20 +131,22 @@ def micro_lesson(q: Question, skill_name: str, misconception: str, locale: str) 
     try:
         return _generate(
             f"{_question_block(q)}\nSkill: {skill_name}\nDiagnosed issue: {misconception}\n\n"
-            f"In {_language(locale)}, give a focused micro-lesson (max 120 words) that fixes this exact "
+            f"In {_language(learner.locale)}, give a focused micro-lesson (max 120 words) that fixes this exact "
             "gap: state the core idea, walk through this question with it, and give one memory tip. "
             "Do not ask a follow-up question.",
-            system=TUTOR_PERSONA,
+            system=persona(learner),
         )
     except AIUnavailable:
         return fallback
 
 
-def tutor_reply(history: list[tuple[str, str]], context: str | None, locale: str, worked_solution: str | None = None) -> str:
+def tutor_reply(
+    history: list[tuple[str, str]], context: str | None, learner: Learner, worked_solution: str | None = None
+) -> str:
     if not enabled():
         base = (
-            "I'm running in offline mode right now, so I can't hold a full conversation yet. "
-            "Add a free Gemini API key to apps/api/.env to switch me on."
+            f"I'm {learner.tutor_name or 'Asha'}, running in offline mode right now, so I can't hold a full "
+            "conversation yet. Add a free Gemini API key to apps/api/.env to switch me on."
         )
         return f"{base}\n\nHere's the worked solution meanwhile:\n{worked_solution}" if worked_solution else base
     while history and history[0][0] != "student":
@@ -140,7 +155,7 @@ def tutor_reply(history: list[tuple[str, str]], context: str | None, locale: str
         types.Content(role="user" if role == "student" else "model", parts=[types.Part(text=text)])
         for role, text in history
     ]
-    system = f"{TUTOR_PERSONA}\nAlways reply in {_language(locale)}."
+    system = f"{persona(learner)}\nAlways reply in {_language(learner.locale)}."
     if context:
         system += f"\n\nThe student is asking about this problem:\n{context}"
     try:

@@ -8,6 +8,17 @@ from app.db.models import Question
 from tests.test_api import answer_wrong, correct_answer
 
 
+def learner(locale="en", name="Asha", gender="female"):
+    return SimpleNamespace(locale=locale, tutor_name=name, tutor_gender=gender)
+
+
+def test_persona_uses_name_and_gender():
+    female = ai.persona(learner(name="Meera"))
+    assert "You are Meera" in female and "woman" in female and "feminine grammatical forms" in female
+    male = ai.persona(learner(name="Arjun", gender="male"))
+    assert "You are Arjun" in male and " man " in male and "masculine grammatical forms" in male
+
+
 def sample_question():
     return Question(
         difficulty=2,
@@ -69,8 +80,8 @@ def test_generated_question_rejected_when_invalid(fake_ai, broken):
 def test_explanation_translated_for_hindi_but_not_english(fake_ai):
     fake_ai["responses"]["Rewrite the reference"] = "हिन्दी व्याख्या"
     q = sample_question()
-    assert ai.explain(q, "en") == q.explanation
-    assert ai.explain(q, "hi") == "हिन्दी व्याख्या"
+    assert ai.explain(q, learner("en")) == q.explanation
+    assert ai.explain(q, learner("hi")) == "हिन्दी व्याख्या"
     assert "Hindi" in fake_ai["calls"][-1]["contents"]
 
 
@@ -104,12 +115,14 @@ def sdk(monkeypatch):
 
 def test_tutor_builds_valid_gemini_conversation(sdk):
     history = [("tutor", "Hi!"), ("student", "Explain ratios"), ("tutor", "Sure…"), ("student", "Why 8 parts?")]
-    reply = ai.tutor_reply(history, "Divide 1200 in 3:5", "ta")
+    reply = ai.tutor_reply(history, "Divide 1200 in 3:5", learner("ta", "Kavin", "male"))
     assert reply.startswith("Great question")
     request = sdk.requests[-1]
     roles = [c.role for c in request.contents]
     assert roles == ["user", "model", "user"], "Gemini conversations must start with the user turn"
     assert "Tamil" in request.config.system_instruction
+    assert "You are Kavin" in request.config.system_instruction
+    assert "masculine grammatical forms" in request.config.system_instruction
     assert "Divide 1200 in 3:5" in request.config.system_instruction
     assert request.model == "gemini-2.5-flash"
 
@@ -131,7 +144,7 @@ def test_sdk_errors_become_ai_unavailable(monkeypatch):
 
     monkeypatch.setattr(ai, "enabled", lambda: True)
     monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=boom)))
-    assert "quota" in ai.tutor_reply([("student", "hi")], None, "en")
+    assert "quota" in ai.tutor_reply([("student", "hi")], None, learner("en"))
 
 
 def test_empty_sdk_response_is_treated_as_unavailable(sdk):
