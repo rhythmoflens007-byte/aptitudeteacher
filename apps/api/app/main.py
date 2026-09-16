@@ -1,11 +1,23 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import ai
 from app.config import get_settings
+from app.routes import auth, practice, progress, quizzes, tutor
+from app.seed import init_db
 
 settings = get_settings()
 
-app = FastAPI(title="Aptitude Teacher API")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Aptitude Teacher API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,7 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+for module in (auth, practice, quizzes, tutor, progress):
+    app.include_router(module.router)
+
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok", "environment": settings.environment}
+def health() -> dict[str, str | bool]:
+    return {"status": "ok", "environment": settings.environment, "ai_enabled": ai.enabled()}

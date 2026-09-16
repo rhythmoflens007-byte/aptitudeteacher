@@ -1,54 +1,93 @@
 # Aptitude Teacher
 
-AI-powered aptitude tutoring app (Quantitative, Logical Reasoning, Verbal) with an
-adaptive/misconception-aware practice engine and an AI doubt-solving tutor.
-See the [build blueprint](https://claude.ai/artifact/EtLVxVS8iobdiWKvZQVU3Y) for the full spec.
+AI-powered aptitude tutor for Quantitative Aptitude, Logical Reasoning and Verbal Ability.
+It diagnoses *why* a student gets something wrong, teaches that exact gap, re-tests it with a
+fresh question, and keeps adapting what comes next.
 
-Running entirely on localhost for now — no deployment step needed.
+Runs entirely on localhost. No accounts or API keys are needed to start. Add a free Gemini
+key when you want the full AI tutor.
 
-## Structure
+## Run it
 
-- `apps/web` — Next.js frontend (practice UI, tutor chat, dashboard)
-- `apps/api` — FastAPI backend (routes, adaptive engine, Gemini integration)
-- `db/migrations` — SQL schema
-- `db/seed` — seed data (topics/skills + sample questions)
+You need Node.js 20+ and Python 3.11+.
 
-## One-time setup
-
-1. **Supabase** (DB + Auth + Storage, free tier): create a project at
-   [supabase.com](https://supabase.com), then in the SQL Editor run
-   `db/migrations/0001_init.sql` followed by `db/seed/0001_seed.sql`.
-2. **Gemini API key** (free tier): create one at
-   [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
-3. **Upstash Redis** (free tier, optional until Phase 05+): create a database at
-   [upstash.com](https://upstash.com).
-4. Copy `apps/api/.env.example` to `apps/api/.env` and fill in the values from
-   steps 1-3.
-5. Copy `apps/web/.env.local.example` to `apps/web/.env.local` and fill in your
-   Supabase URL + anon key (Project Settings > API).
-
-## Running locally
-
-Backend:
+**First time only:**
 
 ```bash
 cd apps/api
-.venv/Scripts/activate   # .venv/bin/activate on macOS/Linux
-uvicorn app.main:app --reload --port 8000
+python -m venv .venv
+.venv/Scripts/python -m pip install -r requirements.txt
 ```
 
-Frontend (separate terminal):
+```bash
+cd apps/web
+npm install
+```
+
+**Every time.** Start the backend in one terminal:
+
+```bash
+cd apps/api
+.venv/Scripts/python -m uvicorn app.main:app --reload --port 8000
+```
+
+Then start the frontend in a second terminal:
 
 ```bash
 cd apps/web
 npm run dev
 ```
 
-- Frontend: http://localhost:3000
-- Backend health check: http://localhost:8000/health
+Open http://localhost:3000 and create an account. The database (`apps/api/aptitude.db`) is
+created and seeded with ~50 hand-checked questions automatically on first start. Delete that
+file to reset all data.
 
-## Build order
+On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python`.
 
-Following the blueprint's Phase 00-12 sequence. Currently at **Phase 00 (infra
-bootstrap)** — repo scaffolded, both apps run locally. Next: Phase 01 (auth +
-profile) once Supabase keys are wired in.
+## Turning on the AI (free)
+
+1. Get a key at https://aistudio.google.com/apikey.
+2. Copy `apps/api/.env.example` to `apps/api/.env` and set `GEMINI_API_KEY`.
+3. Restart the backend.
+
+| Feature | Without a key | With a Gemini key |
+| --- | --- | --- |
+| Adaptive practice, quizzes, mock tests, dashboard, XP/streaks/badges | ✅ | ✅ |
+| Step-by-step explanations | ✅ English | ✅ English, Hindi, Tamil |
+| Misconception diagnosis | Time-based estimate | AI reads the wrong option chosen |
+| Micro-lesson after a concept gap | Worked solution | Targeted lesson on that gap |
+| Re-test question | Another seeded question on the skill | Fresh AI-generated question once seeds run out |
+| Tutor chat (text + voice) | Worked solution only | Full conversation |
+| Photo of a question (OCR) | ❌ | ✅ |
+
+## What's inside
+
+**Backend: `apps/api` (FastAPI + SQLAlchemy)**
+- `app/engine/mastery.py`: the adaptive loop. Per-skill mastery scores are weighted by misconception
+  type, the next question comes from pending re-tests first and then the weakest skill, and the
+  daily goal is built from the three weakest skills plus one to reinforce.
+- `app/engine/gamification.py`: XP, levels, day streaks, badges.
+- `app/ai.py`: every Gemini call (tutor persona, diagnosis, lessons, question generation, OCR),
+  each with an offline fallback.
+- `app/routes/`: `auth`, `practice` (questions + attempts), `quizzes` (quiz/mock + reports),
+  `tutor` (chat + OCR), `progress` (dashboard).
+- `app/seed_data.py`: the question bank. Add questions here; they load on a fresh database.
+- API docs: http://localhost:8000/docs
+
+**Frontend: `apps/web` (Next.js 16 + Tailwind 4, installable as a PWA)**
+- `/dashboard`: level/XP, streak, accuracy, speed, daily goal, 7-day trend, topic/skill mastery,
+  weak skills, badges, learning history.
+- `/practice`: adaptive questions with a timer; results with diagnosis, micro-lesson, re-test.
+- `/tests`: timed quizzes and 15-question section-wise mock tests with reports.
+- `/tutor`: chat with Asha by text, voice (browser speech-to-text), or photo; replies are read
+  aloud with a lip-synced 2D avatar, and tapping the mic interrupts her.
+- `/profile`: name and language (English, Hindi, Tamil). Language changes the UI, the tutor's
+  replies and the speech voice.
+
+Voice input works in Chrome and Edge. Text-to-speech voices depend on what the OS has
+installed; Hindi and Tamil voices are standard on Windows and Android.
+
+## Moving to Postgres later
+
+Set `DATABASE_URL` in `apps/api/.env` to a Postgres URL (for example a free Supabase project).
+Tables are created automatically on start.

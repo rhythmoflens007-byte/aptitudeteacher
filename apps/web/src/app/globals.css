@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --paper: #f3f6f4;
+  --surface: #ffffff;
+  --surface-2: #eaefec;
+  --ink: #16211d;
+  --ink-soft: #55665f;
+  --line: #d8e2dc;
+  --accent: #1b7a5c;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2f1ea;
+  --marker: #d97b29;
+  --marker-soft: #fbeedf;
+  --good: #1b7a5c;
+  --good-soft: #e2f1ea;
+  --bad: #b3383b;
+  --bad-soft: #fbe7e6;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --paper: #101513;
+    --surface: #171e1b;
+    --surface-2: #1f2824;
+    --ink: #eaf1ec;
+    --ink-soft: #9fb0a7;
+    --line: #2c3631;
+    --accent: #3fbf8f;
+    --accent-ink: #0b1511;
+    --accent-soft: #173027;
+    --marker: #f0954a;
+    --marker-soft: #3a2816;
+    --good: #3fbf8f;
+    --good-soft: #173027;
+    --bad: #ea7a78;
+    --bad-soft: #3a1d1d;
   }
 }
 
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-marker: var(--marker);
+  --color-marker-soft: var(--marker-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --font-sans: var(--font-plex), system-ui, sans-serif;
+  --font-display: var(--font-newsreader), Georgia, serif;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.avatar-head {
+  transform-origin: 100px 170px;
+  transition: transform 300ms ease;
+}
+
+.avatar-talking .avatar-head {
+  animation: avatar-nod 1.6s ease-in-out infinite;
+}
+
+.avatar-tilt .avatar-head {
+  transform: rotate(-4deg);
+}
+
+@keyframes avatar-nod {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  30% { transform: rotate(1.5deg) translateY(-1px); }
+  70% { transform: rotate(-1.5deg) translateY(1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-talking .avatar-head { animation: none; }
 }
