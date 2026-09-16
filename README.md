@@ -11,7 +11,11 @@ key when you want the full AI tutor.
 
 You need Node.js 20+ and Python 3.11+.
 
-**First time only:**
+**Easiest (Windows):** double-click `start.bat`. The first run installs everything, then it
+starts both servers in their own windows and opens http://localhost:3000. Close those two
+windows to stop the app.
+
+**Manually. First time only:**
 
 ```bash
 cd apps/api
@@ -39,8 +43,9 @@ npm run dev
 ```
 
 Open http://localhost:3000 and create an account. The database (`apps/api/aptitude.db`) is
-created and seeded with ~50 hand-checked questions automatically on first start. Delete that
-file to reset all data.
+created automatically and loaded with 140 hand-checked questions across 28 subtopics. New
+questions added to `app/seed_data.py` are picked up on the next start without touching
+existing progress. Delete the database file to reset all data.
 
 On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python`.
 
@@ -86,6 +91,19 @@ On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python`.
 
 Voice input works in Chrome and Edge. Text-to-speech voices depend on what the OS has
 installed; Hindi and Tamil voices are standard on Windows and Android.
+
+## Tests
+
+```bash
+cd apps/api
+.venv/Scripts/python -m pip install -r requirements-dev.txt
+.venv/Scripts/python -m pytest -q
+```
+
+The suite uses its own temporary database and never calls the real Gemini API. It covers the
+mastery maths, the diagnose → teach → re-test loop, quizzes and mocks, access control, and
+the seed bank (every answer must be among its options, no duplicates). Every AI path runs
+against a stand-in for Gemini, including the exact requests sent to the SDK.
 
 ## Moving to Postgres later
 
