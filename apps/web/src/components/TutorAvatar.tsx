@@ -5,6 +5,7 @@ import { Component, ReactNode, useSyncExternalStore } from "react";
 import type { Viseme } from "@/lib/speech";
 import type { TutorGender } from "@/lib/tutor";
 import Avatar, { Mood } from "./Avatar";
+import type { Framing } from "./Tutor3D";
 
 const Tutor3D = dynamic(() => import("./Tutor3D"), {
   ssr: false,
@@ -16,7 +17,9 @@ export type TutorAvatarProps = {
   speaking?: boolean;
   viseme?: Viseme;
   wordTick?: number;
+  gestureTick?: number;
   mood?: Mood;
+  framing?: Framing;
   className?: string;
   stage?: boolean;
 };
@@ -50,7 +53,9 @@ export default function TutorAvatar({
   speaking = false,
   viseme = "rest",
   wordTick = 0,
+  gestureTick = 0,
   mood = "happy",
+  framing = "portrait",
   className = "",
   stage = true,
 }: TutorAvatarProps) {
@@ -66,12 +71,12 @@ export default function TutorAvatar({
       {stage && (
         <div aria-hidden className="tutor-stage pointer-events-none absolute inset-0 -z-10">
           <span className="tutor-stage-glow" />
-          <span className={`tutor-stage-ring ${speaking ? "tutor-stage-ring--live" : ""}`} />
+          {framing === "full" && <span className={`tutor-stage-ring ${speaking ? "tutor-stage-ring--live" : ""}`} />}
         </div>
       )}
       {webgl ? (
         <RenderGuard fallback={flat}>
-          <Tutor3D gender={gender} speaking={speaking} viseme={viseme} wordTick={wordTick} mood={mood} />
+          <Tutor3D gender={gender} speaking={speaking} viseme={viseme} wordTick={wordTick} gestureTick={gestureTick} mood={mood} framing={framing} />
         </RenderGuard>
       ) : (
         flat

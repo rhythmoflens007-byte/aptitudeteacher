@@ -93,22 +93,18 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
             {mode === "register" && <span className="text-xs font-normal text-ink-soft">At least 8 characters.</span>}
           </label>
           {mode === "register" && (
-            <fieldset className="rise flex flex-col gap-1.5" style={{ "--i": 4 } as CSSProperties}>
-              <legend className="mb-1.5 text-sm font-medium">Preferred language</legend>
-              <div className="grid grid-cols-3 gap-2">
+            <label className="rise flex flex-col gap-1.5 text-sm font-medium" style={{ "--i": 4 } as CSSProperties}>
+              Preferred language
+              <select id="locale" className={field} value={locale} onChange={(e) => setLocale(e.target.value as Locale)}>
                 {LANGUAGES.map((l) => (
-                  <button
-                    key={l.code}
-                    type="button"
-                    aria-pressed={locale === l.code}
-                    onClick={() => setLocale(l.code)}
-                    className={`press rounded-xl border px-3 py-2.5 text-sm transition ${locale === l.code ? "border-accent bg-accent-soft font-medium text-accent" : "border-line bg-surface text-ink-soft hover:text-ink"}`}
-                  >
+                  <option key={l.code} value={l.code}>
                     {l.label}
-                  </button>
+                    {l.label !== l.english ? ` · ${l.english}` : ""}
+                  </option>
                 ))}
-              </div>
-            </fieldset>
+              </select>
+              <span className="text-xs font-normal text-ink-soft">Your tutor explains and speaks in this language. You can change it any time.</span>
+            </label>
           )}
           <ErrorNote message={error} />
           <Button type="submit" disabled={busy} className="mt-2 py-3 text-base">

@@ -7,6 +7,7 @@ import { CSSProperties, useEffect, useState } from "react";
 import TutorAvatar from "@/components/TutorAvatar";
 import { Icon } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
+import { LANGUAGES } from "@/lib/i18n";
 import { DEFAULT_TUTOR, TutorGender } from "@/lib/tutor";
 
 const LOOP = [
@@ -19,7 +20,7 @@ const LOOP = [
 const FEATURES = [
   { icon: "target", title: "Adaptive practice", text: "140+ questions across Quant, Logical and Verbal that follow your weakest skills." },
   { icon: "clipboard", title: "Timed mock tests", text: "Section-wise reports show exactly where marks were lost." },
-  { icon: "mic", title: "Talk it through", text: "Ask by voice, text or a photo of the question, in English, Hindi or Tamil." },
+  { icon: "mic", title: "Talk it through", text: "Ask by voice, text or a photo. Your tutor explains out loud in Hindi, Tamil, Telugu, Bengali and 10 more languages." },
   { icon: "trophy", title: "Streaks & badges", text: "XP, levels and a daily goal keep practice a habit." },
 ];
 
@@ -69,7 +70,7 @@ export default function Home() {
             {[
               ["140+", "questions"],
               ["28", "subtopics"],
-              ["3", "languages"],
+              [String(LANGUAGES.length), "languages"],
             ].map(([n, label]) => (
               <div key={label}>
                 <dt className="sr-only">{label}</dt>
@@ -81,7 +82,7 @@ export default function Home() {
         </div>
 
         <div className="rise relative mx-auto w-full max-w-[520px]" style={{ "--i": 3 } as CSSProperties}>
-          <TutorAvatar gender={gender} mood="happy" className="aspect-square w-full" />
+          <TutorAvatar gender={gender} mood="happy" framing="full" className="aspect-[4/5] w-full" />
 
           <div className="float glass absolute left-0 top-[12%] max-w-[210px] rounded-2xl rounded-bl-md border border-line px-4 py-3 text-sm shadow-[var(--shadow-lg)] sm:-left-6">
             <p className="font-medium">Why do we add the speeds?</p>

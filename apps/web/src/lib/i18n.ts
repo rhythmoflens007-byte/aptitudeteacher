@@ -3,11 +3,25 @@
 import { useAuth } from "./auth";
 import type { Locale } from "./api";
 
-export const LANGUAGES: { code: Locale; label: string; speech: string }[] = [
-  { code: "en", label: "English", speech: "en-IN" },
-  { code: "hi", label: "हिन्दी", speech: "hi-IN" },
-  { code: "ta", label: "தமிழ்", speech: "ta-IN" },
+export const LANGUAGES: { code: Locale; label: string; english: string; speech: string }[] = [
+  { code: "en", label: "English", english: "English", speech: "en-IN" },
+  { code: "hi", label: "हिन्दी", english: "Hindi", speech: "hi-IN" },
+  { code: "bn", label: "বাংলা", english: "Bengali", speech: "bn-IN" },
+  { code: "te", label: "తెలుగు", english: "Telugu", speech: "te-IN" },
+  { code: "mr", label: "मराठी", english: "Marathi", speech: "mr-IN" },
+  { code: "ta", label: "தமிழ்", english: "Tamil", speech: "ta-IN" },
+  { code: "ur", label: "اردو", english: "Urdu", speech: "ur-IN" },
+  { code: "gu", label: "ગુજરાતી", english: "Gujarati", speech: "gu-IN" },
+  { code: "kn", label: "ಕನ್ನಡ", english: "Kannada", speech: "kn-IN" },
+  { code: "ml", label: "മലയാളം", english: "Malayalam", speech: "ml-IN" },
+  { code: "pa", label: "ਪੰਜਾਬੀ", english: "Punjabi", speech: "pa-IN" },
+  { code: "es", label: "Español", english: "Spanish", speech: "es-ES" },
+  { code: "fr", label: "Français", english: "French", speech: "fr-FR" },
+  { code: "ar", label: "العربية", english: "Arabic", speech: "ar-SA" },
 ];
+
+/** Languages with translated app text; every other language falls back to English text while the tutor still uses it. */
+export const UI_LANGUAGES: Locale[] = ["en", "hi", "ta"];
 
 const en = {
   "nav.dashboard": "Dashboard",
@@ -67,6 +81,9 @@ const en = {
   "tutor.save": "Save tutor",
   "tutor.saved": "Tutor updated",
   "tutor.history": "Conversations",
+  "tutor.explainRequest": "Please explain this question step by step.",
+  "tutor.explain": "Explain this question",
+  "tutor.language": "Tutor language",
   "nav.greeting": "Hi",
 };
 
@@ -130,6 +147,9 @@ const hi: Partial<Record<Key, string>> = {
   "tutor.save": "ट्यूटर सहेजें",
   "tutor.saved": "ट्यूटर अपडेट हुआ",
   "tutor.history": "बातचीत",
+  "tutor.explainRequest": "कृपया इस प्रश्न को चरण-दर-चरण समझाइए।",
+  "tutor.explain": "यह प्रश्न समझाएँ",
+  "tutor.language": "ट्यूटर की भाषा",
   "nav.greeting": "नमस्ते",
 };
 
@@ -191,10 +211,13 @@ const ta: Partial<Record<Key, string>> = {
   "tutor.save": "ஆசிரியரைச் சேமி",
   "tutor.saved": "ஆசிரியர் புதுப்பிக்கப்பட்டது",
   "tutor.history": "உரையாடல்கள்",
+  "tutor.explainRequest": "இந்தக் கேள்வியைப் படிப்படியாக விளக்குங்கள்.",
+  "tutor.explain": "இந்தக் கேள்வியை விளக்கு",
+  "tutor.language": "ஆசிரியர் மொழி",
   "nav.greeting": "வணக்கம்",
 };
 
-const dictionaries: Record<Locale, Partial<Record<Key, string>>> = { en, hi, ta };
+const dictionaries: Partial<Record<Locale, Partial<Record<Key, string>>>> = { en, hi, ta };
 
 export function useT() {
   const { user } = useAuth();
@@ -202,6 +225,7 @@ export function useT() {
   return {
     locale,
     speechLang: LANGUAGES.find((l) => l.code === locale)?.speech ?? "en-IN",
-    t: (key: Key) => dictionaries[locale][key] ?? en[key],
+    language: LANGUAGES.find((l) => l.code === locale) ?? LANGUAGES[0],
+    t: (key: Key) => dictionaries[locale]?.[key] ?? en[key],
   };
 }

@@ -1,408 +1,471 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { Canvas, ThreeElements, useFrame, useThree } from "@react-three/fiber";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { Viseme } from "@/lib/speech";
 import type { TutorGender } from "@/lib/tutor";
+import { TutorMotion } from "@/lib/tutorMotion";
 import type { Mood } from "./Avatar";
+import TutorVRM from "./TutorVRM";
+
+export type Framing = "full" | "portrait";
 
 export type Tutor3DProps = {
   gender: TutorGender;
   speaking: boolean;
   viseme: Viseme;
   wordTick: number;
+  gestureTick: number;
   mood: Mood;
+  framing: Framing;
 };
 
-// Target mouth opening per viseme: [width, height]. Height 0 means lips closed.
-const MOUTH: Record<Viseme, [number, number]> = {
-  rest: [1, 0],
-  open: [1, 0.9],
-  wide: [1.35, 0.45],
-  round: [0.72, 0.75],
+// ---------------------------------------------------------------------------------------------
+// Proportions (world units, ground at y = 0, character faces +z towards the camera)
+// ---------------------------------------------------------------------------------------------
+const HIP_Y = 1.55;
+const SPINE = 1.22;
+const SHOULDER = { x: 0.5, y: 1.1 };
+const UPPER_ARM = 0.58;
+const FOREARM = 0.54;
+const THIGH = 0.78;
+const SHIN = 0.72;
+
+const LOOK: Record<TutorGender, Record<string, string>> = {
+  female: {
+    skin: "#e2a37e",
+    hair: "#2e1b14",
+    top: "#e3a52b",
+    trousers: "#efe5cf",
+    shoes: "#7c1f3a",
+    accent: "#8c2447",
+    lips: "#c3313f",
+  },
+  male: {
+    skin: "#d99b74",
+    hair: "#1d1512",
+    top: "#9cc6e8",
+    vest: "#7a2c3b",
+    trousers: "#3e4552",
+    shoes: "#5a3a22",
+    accent: "#2b2b2b",
+    lips: "#9a4b42",
+  },
 };
 
-const BROWS: Record<Mood, { lift: number; tilt: number }> = {
-  neutral: { lift: 0, tilt: 0 },
-  happy: { lift: 0.025, tilt: 0.06 },
-  thinking: { lift: 0.06, tilt: -0.14 },
-  listening: { lift: 0.06, tilt: 0.05 },
-  concerned: { lift: 0.02, tilt: -0.24 },
+// ---------------------------------------------------------------------------------------------
+// Toon materials, shared geometry and ink outlines
+// ---------------------------------------------------------------------------------------------
+type Kit = {
+  toon: (color: string) => THREE.MeshToonMaterial;
+  ink: THREE.MeshBasicMaterial;
+  sphere: THREE.SphereGeometry;
+  cap: (radius: number, length: number) => THREE.CapsuleGeometry;
+  dome: THREE.SphereGeometry;
+  torus: THREE.TorusGeometry;
+  arc: (radius: number, tube: number) => THREE.TorusGeometry;
+  cylinder: (top: number, bottom: number, height: number) => THREE.CylinderGeometry;
 };
+
+const KitContext = createContext<Kit | null>(null);
+
+function useKitFactory(): Kit {
+  const kit = useMemo(() => {
+    const gradient = new THREE.DataTexture(new Uint8Array([95, 95, 95, 255, 185, 185, 185, 255, 255, 255, 255, 255]), 3, 1, THREE.RGBAFormat);
+    gradient.minFilter = THREE.NearestFilter;
+    gradient.magFilter = THREE.NearestFilter;
+    gradient.needsUpdate = true;
+    const materials = new Map<string, THREE.MeshToonMaterial>();
+    const geometries = new Map<string, THREE.BufferGeometry>();
+    const cached = <T extends THREE.BufferGeometry>(key: string, make: () => T) => {
+      if (!geometries.has(key)) geometries.set(key, make());
+      return geometries.get(key) as T;
+    };
+    return {
+      gradient,
+      materials,
+      geometries,
+      toon: (color: string) => {
+        if (!materials.has(color)) materials.set(color, new THREE.MeshToonMaterial({ color, gradientMap: gradient }));
+        return materials.get(color)!;
+      },
+      ink: new THREE.MeshBasicMaterial({ color: "#24170f", side: THREE.BackSide }),
+      sphere: cached("sphere", () => new THREE.SphereGeometry(1, 40, 28)),
+      torus: cached("torus", () => new THREE.TorusGeometry(0.2, 0.035, 12, 40)),
+      dome: cached("dome", () => new THREE.SphereGeometry(1, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2)),
+      cap: (r: number, l: number) => cached(`cap${r}:${l}`, () => new THREE.CapsuleGeometry(r, l, 8, 20)),
+      arc: (r: number, t: number) => cached(`arc${r}:${t}`, () => new THREE.TorusGeometry(r, t, 10, 32, Math.PI)),
+      cylinder: (top: number, bottom: number, h: number) => cached(`cyl${top}:${bottom}:${h}`, () => new THREE.CylinderGeometry(top, bottom, h, 32)),
+    };
+  }, []);
+
+  useEffect(
+    () => () => {
+      kit.gradient.dispose();
+      kit.ink.dispose();
+      kit.materials.forEach((m) => m.dispose());
+      kit.geometries.forEach((g) => g.dispose());
+    },
+    [kit],
+  );
+  return kit;
+}
+
+type PartProps = Omit<ThreeElements["mesh"], "geometry" | "material"> & { geo: THREE.BufferGeometry; color: string; ink?: number };
+
+/** A toon-shaded mesh with an inverted-hull outline, so every shape reads like an inked cartoon. */
+function Part({ geo, color, ink = 0.06, children, ...props }: PartProps) {
+  const kit = useContext(KitContext)!;
+  return (
+    <mesh geometry={geo} material={kit.toon(color)} {...props}>
+      {ink > 0 && <mesh geometry={geo} material={kit.ink} scale={1 + ink} />}
+      {children}
+    </mesh>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+
+const modelChecks = new Map<string, Promise<boolean>>();
+
+/** Custom characters are optional files in public/tutors; the built-in tutor is used when they are absent. */
+function modelExists(url: string) {
+  if (!modelChecks.has(url)) {
+    modelChecks.set(
+      url,
+      fetch(url, { method: "HEAD" })
+        .then((res) => res.ok && !(res.headers.get("content-type") ?? "").includes("text/html"))
+        .catch(() => false),
+    );
+  }
+  return modelChecks.get(url)!;
+}
 
 export default function Tutor3D(props: Tutor3DProps) {
+  const url = `/tutors/${props.gender}.vrm`;
+  const [model, setModel] = useState<{ url: string; usable: boolean } | null>(null);
+  const onFail = useCallback(() => setModel({ url, usable: false }), [url]);
+
+  useEffect(() => {
+    let current = true;
+    modelExists(url).then((usable) => current && setModel({ url, usable }));
+    return () => {
+      current = false;
+    };
+  }, [url]);
+
+  const ready = model?.url === url;
   return (
-    <Canvas
-      dpr={[1, 1.75]}
-      camera={{ position: [0, -0.1, 6.4], fov: 30 }}
-      gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
-      style={{ background: "transparent" }}
-      aria-hidden
-    >
-      <hemisphereLight args={["#fff4e8", "#34473f", 0.9]} />
-      <directionalLight position={[2.5, 3.5, 5]} intensity={2.1} color="#fff1e0" />
-      <directionalLight position={[-4, 1, 3]} intensity={0.8} color="#cdeee0" />
-      <directionalLight position={[-1.5, 2.5, -5]} intensity={2.6} color="#f59a4e" />
-      <directionalLight position={[2, -1, -4]} intensity={1.2} color="#6ee0b3" />
-      <Figure {...props} />
+    <Canvas dpr={[1, 1.75]} camera={{ fov: 30, position: [0, 2.2, 11.5] }} gl={{ antialias: true, alpha: true, powerPreference: "low-power" }} style={{ background: "transparent" }} aria-hidden>
+      <ambientLight intensity={1.1} />
+      <directionalLight position={[3, 6, 6]} intensity={2.2} />
+      <directionalLight position={[-4, 3, -3]} intensity={0.6} color="#ffd9b0" />
+      {ready && model.usable && <TutorVRM key={url} url={url} onFail={onFail} {...props} />}
+      {ready && !model.usable && (
+        <>
+          <CameraRig framing={props.framing} />
+          <Figure key={props.gender} {...props} />
+        </>
+      )}
     </Canvas>
   );
 }
 
-function useHeadGeometry() {
-  return useMemo(() => {
-    // An egg-shaped profile, fuller at the cranium and tapering to the chin, spun into a head.
-    // Listed chin-first so the lathe faces point outwards.
-    const profile = new THREE.SplineCurve(
-      [
-        [0.001, 1.08],
-        [0.4, 1.02],
-        [0.7, 0.86],
-        [0.88, 0.58],
-        [0.93, 0.24],
-        [0.9, -0.08],
-        [0.83, -0.38],
-        [0.7, -0.64],
-        [0.5, -0.86],
-        [0.26, -0.99],
-        [0.001, -1.03],
-      ]
-        .reverse()
-        .map(([r, y]) => new THREE.Vector2(r, y)),
-    );
-    const geometry = new THREE.LatheGeometry(profile.getPoints(48), 72);
-    geometry.computeVertexNormals();
-    return geometry;
-  }, []);
+function CameraRig({ framing }: { framing: Framing }) {
+  const camera = useThree((s) => s.camera);
+  useLayoutEffect(() => {
+    if (framing === "full") {
+      camera.position.set(0, 2.3, 11.8);
+      camera.lookAt(0, 2.2, 0);
+    } else {
+      camera.position.set(0, 3.25, 6.6);
+      camera.lookAt(0, 3.05, 0);
+    }
+    camera.updateProjectionMatrix();
+  }, [camera, framing]);
+  return null;
 }
 
-function Figure({ gender, speaking, viseme, wordTick, mood }: Tutor3DProps) {
-  const root = useRef<THREE.Group>(null);
-  const head = useRef<THREE.Group>(null);
-  const torso = useRef<THREE.Group>(null);
-  const eyes = useRef<THREE.Group[]>([]);
-  const irises = useRef<THREE.Group[]>([]);
-  const brows = useRef<THREE.Mesh[]>([]);
-  const mouthOpen = useRef<THREE.Group>(null);
-  const mouthInner = useRef<THREE.Mesh>(null);
-  const teeth = useRef<THREE.Mesh>(null);
-  const smile = useRef<THREE.Mesh>(null);
-  const cheeks = useRef<THREE.MeshStandardMaterial[]>([]);
-  const headGeometry = useHeadGeometry();
+type ArmRig = { shoulder: THREE.Group | null; elbow: THREE.Group | null; wrist: THREE.Group | null; index: THREE.Group | null; others: THREE.Group[]; thumb: THREE.Group | null };
 
-  const anim = useRef({ blinkAt: 2, mouthW: 1, mouthH: 0, lastTick: wordTick, lastWordAt: -10 });
-  const reducedMotion = useMemo(
-    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    [],
-  );
-
+function Figure({ gender, speaking, viseme, wordTick, gestureTick, mood }: Tutor3DProps) {
+  const kit = useKitFactory();
+  const c = LOOK[gender];
   const female = gender === "female";
-  const materials = useMemo(
-    () => ({
-      skin: new THREE.MeshPhysicalMaterial({ color: "#d99f79", roughness: 0.62, sheen: 0.5, sheenColor: new THREE.Color("#ffcfb3"), sheenRoughness: 0.6 }),
-      skinShade: new THREE.MeshPhysicalMaterial({ color: "#c88c67", roughness: 0.7 }),
-      hair: new THREE.MeshPhysicalMaterial({ color: "#221512", roughness: 0.5, sheen: 1, sheenColor: new THREE.Color("#7a5543"), sheenRoughness: 0.3, clearcoat: 0.15 }),
-      eyeWhite: new THREE.MeshPhysicalMaterial({ color: "#fbf8f3", roughness: 0.12, clearcoat: 1 }),
-      iris: new THREE.MeshPhysicalMaterial({ color: "#4a2c1a", roughness: 0.15, clearcoat: 1 }),
-      pupil: new THREE.MeshStandardMaterial({ color: "#0b0706", roughness: 0.1 }),
-      glint: new THREE.MeshBasicMaterial({ color: "#ffffff" }),
-      lip: new THREE.MeshPhysicalMaterial({ color: female ? "#b4545a" : "#a8625c", roughness: 0.4, clearcoat: female ? 0.5 : 0.1 }),
-      mouth: new THREE.MeshStandardMaterial({ color: "#3a1216", roughness: 0.9 }),
-      teeth: new THREE.MeshStandardMaterial({ color: "#f7f1e8", roughness: 0.35 }),
-      frame: new THREE.MeshPhysicalMaterial({ color: "#2a211e", roughness: 0.35, metalness: 0.5, clearcoat: 0.6 }),
-      lens: new THREE.MeshStandardMaterial({ color: "#dff6ff", roughness: 0, transparent: true, opacity: 0.08, depthWrite: false }),
-      clothes: new THREE.MeshPhysicalMaterial({ color: female ? "#178a63" : "#24506e", roughness: 0.75, sheen: 0.6, sheenColor: new THREE.Color(female ? "#9fe0c6" : "#9cc7e6") }),
-      accent: new THREE.MeshPhysicalMaterial({ color: female ? "#e2761f" : "#f3efe6", roughness: 0.6, sheen: 0.5, sheenColor: new THREE.Color("#ffd9b0") }),
-      gold: new THREE.MeshPhysicalMaterial({ color: "#d9a441", metalness: 1, roughness: 0.25 }),
-      bindi: new THREE.MeshPhysicalMaterial({ color: "#b3263a", roughness: 0.3, clearcoat: 1 }),
-    }),
-    [female],
-  );
 
-  useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
-  useEffect(() => () => headGeometry.dispose(), [headGeometry]);
+  const root = useRef<THREE.Group>(null);
+  const hips = useRef<THREE.Group>(null);
+  const spine = useRef<THREE.Group>(null);
+  const head = useRef<THREE.Group>(null);
+  const legs = useRef<(THREE.Group | null)[]>([]);
+  const knees = useRef<(THREE.Group | null)[]>([]);
+  const eyes = useRef<(THREE.Group | null)[]>([]);
+  const pupils = useRef<(THREE.Group | null)[]>([]);
+  const brows = useRef<(THREE.Mesh | null)[]>([]);
+  const mouthInner = useRef<THREE.Mesh>(null);
+  const smile = useRef<THREE.Mesh>(null);
+  const rigs = useRef<ArmRig[]>([0, 1].map(() => ({ shoulder: null, elbow: null, wrist: null, index: null, others: [], thumb: null })));
 
-  useFrame((state, delta) => {
-    const t = state.clock.elapsedTime;
-    const a = anim.current;
+  const reducedMotion = useMemo(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+
+  const motion = useRef(new TutorMotion(wordTick, gestureTick));
+  const yaw = useRef(0);
+
+  useFrame(({ clock, pointer }, delta) => {
+    const t = clock.elapsedTime;
+    const m = motion.current;
     const damp = THREE.MathUtils.damp;
-    const motion = reducedMotion ? 0 : 1;
-    const { pointer } = state;
+    const still = reducedMotion ? 0 : 1;
+    m.step(t, delta, { gender, speaking, viseme, wordTick, gestureTick, mood }, reducedMotion);
 
-    if (root.current) root.current.position.y = -0.2 + Math.sin(t * 1.4) * 0.02 * motion;
-    if (torso.current) torso.current.scale.set(1 + Math.sin(t * 1.4) * 0.006 * motion, 1 + Math.sin(t * 1.4) * 0.012 * motion, 1);
-
-    if (head.current) {
-      const talkNod = speaking ? Math.sin(t * 5.2) * 0.03 + Math.sin(t * 2.3) * 0.02 : 0;
-      const targetY = (pointer.x * 0.32 + Math.sin(t * 0.45) * 0.05) * motion + (mood === "thinking" ? 0.2 : 0);
-      const targetX =
-        (-pointer.y * 0.15 + talkNod) * motion + (mood === "thinking" ? -0.13 : mood === "listening" ? 0.07 : mood === "concerned" ? 0.06 : 0);
-      const targetZ = mood === "listening" ? 0.1 : mood === "thinking" ? -0.08 : Math.sin(t * 0.6) * 0.02 * motion;
-      head.current.rotation.y = damp(head.current.rotation.y, targetY, 4, delta);
-      head.current.rotation.x = damp(head.current.rotation.x, targetX, 4, delta);
-      head.current.rotation.z = damp(head.current.rotation.z, targetZ, 3, delta);
-    }
-
-    if (t > a.blinkAt + 0.15) a.blinkAt = t + 2.2 + Math.random() * 3.3;
-    const blinking = t > a.blinkAt && t < a.blinkAt + 0.15;
-    for (const eye of eyes.current) if (eye) eye.scale.y = damp(eye.scale.y, blinking ? 0.08 : 1, 45, delta);
-
-    const lookX = mood === "thinking" ? 0.04 : THREE.MathUtils.clamp(pointer.x, -1, 1) * 0.03;
-    const lookY = mood === "thinking" ? 0.04 : THREE.MathUtils.clamp(pointer.y, -1, 1) * 0.022;
-    for (const iris of irises.current) {
-      if (!iris) continue;
-      iris.position.x = damp(iris.position.x, lookX, 8, delta);
-      iris.position.y = damp(iris.position.y, lookY, 8, delta);
-    }
-
-    const brow = BROWS[mood];
-    brows.current.forEach((b, i) => {
-      if (!b) return;
-      const side = i === 0 ? -1 : 1;
-      b.position.y = damp(b.position.y, 0.42 + brow.lift + (speaking ? Math.max(0, Math.sin(t * 3.1)) * 0.018 : 0), 6, delta);
-      b.rotation.z = damp(b.rotation.z, Math.PI / 2 - side * brow.tilt, 6, delta);
+    m.arms.forEach((cur, i) => {
+      const side = i === 0 ? 1 : -1;
+      const rig = rigs.current[i];
+      rig.shoulder?.rotation.set(cur.sx, 0, side * cur.sz);
+      rig.elbow?.rotation.set(cur.ex, 0, -side * cur.ez);
+      rig.wrist?.rotation.set(cur.wx, side * cur.wy, 0);
+      if (rig.index) rig.index.rotation.z = -side * cur.index;
+      for (const finger of rig.others) finger.rotation.z = -side * cur.others;
+      if (rig.thumb) rig.thumb.rotation.z = -side * cur.thumb * 0.9;
+      if (rig.shoulder) rig.shoulder.position.y = SHOULDER.y + m.shrug;
     });
 
-    // Lip-sync: word-boundary events set the shape; a speech rhythm covers voices that don't send them.
-    if (wordTick !== a.lastTick) {
-      a.lastTick = wordTick;
-      a.lastWordAt = t;
+    // Weight shift and breathing
+    const sway = m.sway;
+    if (hips.current) {
+      hips.current.position.x = sway * 0.035;
+      hips.current.rotation.z = sway * 0.025;
     }
-    let [w, h] = MOUTH.rest;
-    if (speaking) {
-      const sinceWord = t - a.lastWordAt;
-      if (sinceWord < 0.45) {
-        [w, h] = sinceWord < 0.18 ? MOUTH[viseme] : [1, 0.2];
-      } else {
-        const syllable = Math.abs(Math.sin(t * 11)) * (0.55 + 0.45 * Math.sin(t * 3.7));
-        w = 1 + syllable * 0.15;
-        h = 0.08 + syllable * 0.7;
-      }
-    }
-    a.mouthW = damp(a.mouthW, w, 22, delta);
-    a.mouthH = damp(a.mouthH, h, 22, delta);
-    const open = a.mouthH;
-    if (mouthOpen.current) mouthOpen.current.scale.set(a.mouthW, 1, 1);
-    if (mouthInner.current) {
-      mouthInner.current.visible = open > 0.03;
-      mouthInner.current.scale.set(1, Math.max(0.001, open), 1);
-    }
-    if (teeth.current) {
-      teeth.current.visible = open > 0.12;
-      teeth.current.scale.y = Math.min(1, open * 1.6);
+    legs.current.forEach((leg, i) => {
+      if (leg) leg.rotation.z = -sway * 0.025 + (i === 0 ? -0.02 : 0.02);
+    });
+    knees.current.forEach((knee, i) => {
+      if (knee) knee.rotation.x = (female ? (i === 1 ? 0.2 : 0.02) : 0.04) + Math.max(0, i === 0 ? sway : -sway) * 0.05;
+    });
+    if (spine.current) {
+      spine.current.rotation.set(m.lean + Math.sin(t * 1.5) * 0.01 * still, (speaking ? Math.sin(t * 0.9) * 0.08 : 0) * still, -sway * 0.03);
+      spine.current.scale.y = 1 + Math.sin(t * 1.5) * 0.008 * still;
     }
 
-    if (smile.current) {
-      const closed = Math.max(0, 1 - open * 4);
-      const curve = mood === "happy" ? 1 : mood === "concerned" ? -0.35 : mood === "thinking" ? 0.25 : 0.6;
-      const width = mood === "happy" ? 1.1 : 0.9;
-      smile.current.scale.x = damp(smile.current.scale.x, width * (closed * 0.9 + 0.1), 12, delta);
-      smile.current.scale.y = damp(smile.current.scale.y, curve * closed + 0.02, 12, delta);
+    if (head.current) {
+      yaw.current = damp(yaw.current, THREE.MathUtils.clamp(pointer.x, -1, 1) * 0.35 * still + (mood === "thinking" ? 0.2 : 0), 3, delta);
+      const nod = speaking ? Math.sin(t * 4.8) * 0.035 * still + m.beat * 0.05 : 0;
+      head.current.rotation.set(-m.lookUp - THREE.MathUtils.clamp(pointer.y, -1, 1) * 0.12 * still + nod, yaw.current, m.tilt + Math.sin(t * 0.6) * 0.02 * still);
     }
-    for (const c of cheeks.current) if (c) c.opacity = damp(c.opacity, mood === "happy" ? 0.38 : 0.14, 5, delta);
+
+    for (const eye of eyes.current) if (eye) eye.scale.y = 1 - m.blink * 0.9;
+    for (const pupil of pupils.current) {
+      if (!pupil) continue;
+      pupil.position.x = damp(pupil.position.x, mood === "thinking" ? 0.03 : THREE.MathUtils.clamp(pointer.x, -1, 1) * 0.03, 8, delta);
+      pupil.position.y = damp(pupil.position.y, mood === "thinking" ? 0.045 : THREE.MathUtils.clamp(pointer.y, -1, 1) * 0.03, 8, delta);
+    }
+    const browLift = mood === "thinking" || mood === "listening" ? 0.04 : mood === "happy" ? 0.02 : 0;
+    brows.current.forEach((brow, i) => {
+      if (!brow) return;
+      const side = i === 0 ? 1 : -1;
+      const worry = mood === "concerned" ? 0.28 : mood === "thinking" && i === 0 ? -0.2 : 0;
+      brow.position.y = damp(brow.position.y, 0.27 + browLift + (speaking ? m.beat * 0.025 : 0), 8, delta);
+      brow.rotation.z = damp(brow.rotation.z, Math.PI / 2 + side * worry, 8, delta);
+    });
+
+    if (mouthInner.current) {
+      mouthInner.current.visible = m.mouthH > 0.04;
+      mouthInner.current.scale.set(0.085 * m.mouthW, 0.075 * Math.max(0.01, m.mouthH), 0.04);
+    }
+    if (smile.current) {
+      const closed = Math.max(0, 1 - m.mouthH * 3);
+      const curve = mood === "concerned" ? -0.4 : mood === "thinking" ? 0.3 : mood === "happy" ? 1.1 : 0.75;
+      smile.current.visible = closed > 0.05;
+      smile.current.scale.set(damp(smile.current.scale.x, 1 * closed + 0.001, 14, delta), damp(smile.current.scale.y, curve * closed + 0.001, 14, delta), 1);
+    }
+    if (root.current) root.current.position.y = Math.sin(t * 1.5) * 0.008 * still;
   });
 
+  const bindArm = (i: number, key: keyof Omit<ArmRig, "others">) => (g: THREE.Group | null) => {
+    rigs.current[i][key] = g;
+  };
+
   return (
-    <group ref={root}>
-      {/* Shoulders and clothing */}
-      <group ref={torso} position={[0, -2.45, -0.15]}>
-        <mesh material={materials.clothes} scale={[1.5, 0.85, 0.82]}>
-          <capsuleGeometry args={[1, 0.9, 16, 40]} />
-        </mesh>
-        {female ? (
-          <mesh material={materials.accent} position={[0.12, 0.12, 0.72]} rotation={[0.25, 0, -0.95]}>
-            <capsuleGeometry args={[0.16, 2.2, 8, 24]} />
-          </mesh>
-        ) : (
-          <group position={[0, 0.72, 0.52]}>
-            {[-1, 1].map((side) => (
-              <mesh key={side} material={materials.accent} position={[side * 0.2, 0, 0.02]} rotation={[0.35, 0, side * 0.6]}>
-                <boxGeometry args={[0.44, 0.16, 0.06]} />
-              </mesh>
-            ))}
-          </group>
-        )}
-      </group>
-
-      {/* Neck */}
-      <mesh material={materials.skinShade} position={[0, -1.35, -0.1]}>
-        <cylinderGeometry args={[0.32, 0.4, 0.9, 32]} />
-      </mesh>
-
-      <group ref={head}>
-        <mesh geometry={headGeometry} material={materials.skin} scale={[0.92, 1, 0.9]} />
-        {[-1, 1].map((side) => (
-          <mesh key={`ear${side}`} material={materials.skin} position={[side * 0.86, 0.02, -0.08]} scale={[0.12, 0.22, 0.1]}>
-            <sphereGeometry args={[1, 24, 24]} />
-          </mesh>
-        ))}
-
-        {/* Eyes */}
-        {[-1, 1].map((side, i) => (
-          <group
-            key={`eye${side}`}
-            position={[side * 0.31, 0.14, 0.75]}
-            ref={(g) => {
-              if (g) eyes.current[i] = g;
-            }}
-          >
-            <mesh material={materials.eyeWhite} scale={[0.145, 0.115, 0.07]}>
-              <sphereGeometry args={[1, 32, 32]} />
-            </mesh>
+    <KitContext.Provider value={kit}>
+      <group ref={root}>
+        {/* ---------------- Hips and legs ---------------- */}
+        <group ref={hips} position={[0, HIP_Y, 0]}>
+          <Part geo={kit.sphere} color={c.trousers} scale={[female ? 0.44 : 0.47, 0.3, 0.32]} position={[0, 0.02, 0]} />
+          {[1, -1].map((side, i) => (
             <group
+              key={`leg${side}`}
+              position={[side * 0.2, -0.05, 0]}
               ref={(g) => {
-                if (g) irises.current[i] = g;
+                legs.current[i] = g;
               }}
             >
-              <mesh material={materials.iris} position={[0, 0, 0.058]} scale={[0.078, 0.078, 0.025]}>
-                <sphereGeometry args={[1, 24, 24]} />
-              </mesh>
-              <mesh material={materials.pupil} position={[0, 0, 0.078]} scale={[0.036, 0.036, 0.012]}>
-                <sphereGeometry args={[1, 16, 16]} />
-              </mesh>
-              <mesh material={materials.glint} position={[0.026, 0.028, 0.09]} scale={0.013}>
-                <sphereGeometry args={[1, 8, 8]} />
-              </mesh>
+              <Part geo={kit.cap(female ? 0.15 : 0.17, THIGH - 0.2)} color={c.trousers} position={[0, -THIGH / 2, 0]} />
+              <group
+                position={[0, -THIGH, 0]}
+                ref={(g) => {
+                  knees.current[i] = g;
+                }}
+              >
+                <Part geo={kit.cap(female ? 0.13 : 0.15, SHIN - 0.14)} color={c.trousers} position={[0, -SHIN / 2, 0]} />
+                {female && <Part geo={kit.sphere} color={c.skin} scale={[0.09, 0.06, 0.1]} position={[0, -SHIN + 0.04, 0.03]} ink={0.1} />}
+                <Part geo={kit.sphere} color={c.shoes} scale={[0.13, female ? 0.07 : 0.085, 0.25]} position={[0, -SHIN - 0.02, 0.1]} />
+              </group>
             </group>
-            {/* Upper lash line */}
-            <mesh material={materials.hair} position={[0, 0.012, 0.035]} rotation={[0.2, 0, 0]} scale={[1, 0.95, 1]}>
-              <torusGeometry args={[0.132, female ? 0.013 : 0.008, 8, 24, Math.PI]} />
-            </mesh>
-          </group>
-        ))}
-
-        {/* Eyebrows */}
-        {[-1, 1].map((side, i) => (
-          <mesh
-            key={`brow${side}`}
-            material={materials.hair}
-            position={[side * 0.31, 0.42, 0.8]}
-            rotation={[0.3, side * 0.2, Math.PI / 2]}
-            ref={(m) => {
-              if (m) brows.current[i] = m;
-            }}
-          >
-            <capsuleGeometry args={[female ? 0.022 : 0.036, 0.22, 6, 12]} />
-          </mesh>
-        ))}
-
-        {/* Nose */}
-        <mesh material={materials.skin} position={[0, -0.12, 0.86]} scale={[0.085, 0.14, 0.1]}>
-          <sphereGeometry args={[1, 24, 24]} />
-        </mesh>
-        <mesh material={materials.skinShade} position={[0, -0.22, 0.86]} scale={[0.1, 0.045, 0.07]}>
-          <sphereGeometry args={[1, 16, 16]} />
-        </mesh>
-
-        {/* Mouth: a thin smile when closed, an opening that follows the speech when talking */}
-        <group position={[0, -0.46, 0.8]} rotation={[-0.15, 0, 0]}>
-          <mesh ref={smile} material={materials.lip} position={[0, 0.03, 0]} rotation={[0, 0, Math.PI]} scale={[0.9, 0.6, 0.6]}>
-            <torusGeometry args={[0.12, 0.019, 10, 40, Math.PI]} />
-          </mesh>
-          <group ref={mouthOpen}>
-            <mesh ref={mouthInner} material={materials.mouth} scale={[1, 0.001, 1]}>
-              <sphereGeometry args={[0.12, 32, 16, 0, Math.PI * 2, 0, Math.PI]} />
-            </mesh>
-            <mesh ref={teeth} material={materials.teeth} position={[0, 0.035, 0.05]} scale={[1, 0.001, 1]}>
-              <boxGeometry args={[0.15, 0.035, 0.03]} />
-            </mesh>
-          </group>
-        </group>
-
-        {/* Cheeks */}
-        {[-1, 1].map((side, i) => (
-          <mesh key={`cheek${side}`} position={[side * 0.48, -0.2, 0.67]} rotation={[0, side * 0.5, 0]} scale={[0.15, 0.085, 0.04]}>
-            <sphereGeometry args={[1, 16, 16]} />
-            <meshStandardMaterial
-              ref={(m: THREE.MeshStandardMaterial | null) => {
-                if (m) cheeks.current[i] = m;
-              }}
-              color="#e8837a"
-              transparent
-              opacity={0.14}
-              depthWrite={false}
-            />
-          </mesh>
-        ))}
-
-        {/* Glasses */}
-        <group position={[0, 0.14, 0.86]}>
-          {[-1, 1].map((side) => (
-            <group key={`lens${side}`} position={[side * 0.31, 0, 0]}>
-              <mesh material={materials.frame}>
-                <torusGeometry args={[0.175, 0.013, 12, 48]} />
-              </mesh>
-              <mesh material={materials.lens}>
-                <circleGeometry args={[0.17, 32]} />
-              </mesh>
-            </group>
-          ))}
-          <mesh material={materials.frame} position={[0, 0.02, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.011, 0.011, 0.28, 8]} />
-          </mesh>
-          {[-1, 1].map((side) => (
-            <mesh key={`arm${side}`} material={materials.frame} position={[side * 0.5, 0.02, -0.42]} rotation={[Math.PI / 2, 0, side * 0.08]}>
-              <cylinderGeometry args={[0.01, 0.01, 0.85, 8]} />
-            </mesh>
           ))}
         </group>
 
-        {female ? <FemaleHair materials={materials} /> : <MaleHair materials={materials} />}
+        {/* ---------------- Torso, arms and head ---------------- */}
+        <group ref={spine} position={[0, HIP_Y, 0]}>
+          {female ? (
+            <>
+              <Part geo={kit.cylinder(0.34, 0.52, 1.25)} color={c.top} position={[0, 0.5, 0]} scale={[1, 1, 0.7]} />
+              <Part geo={kit.sphere} color={c.top} position={[0, 1.02, 0]} scale={[0.5, 0.26, 0.34]} />
+              <Part geo={kit.sphere} color={c.skin} position={[0, 1.1, 0.14]} scale={[0.15, 0.1, 0.14]} ink={0} />
+              <mesh geometry={kit.torus} material={kit.toon(c.accent)} position={[0, 1.15, 0.05]} rotation={[Math.PI / 2 + 0.25, 0, 0]} scale={[1, 0.85, 1]} />
+            </>
+          ) : (
+            <>
+              <Part geo={kit.cylinder(0.44, 0.46, 1.18)} color={c.top} position={[0, 0.58, 0]} scale={[1, 1, 0.7]} />
+              <Part geo={kit.cylinder(0.455, 0.475, 0.92)} color={c.vest} position={[0, 0.46, 0.01]} scale={[1, 1, 0.72]} />
+              <Part geo={kit.sphere} color={c.top} position={[0, 1.06, 0]} scale={[0.55, 0.26, 0.36]} />
+              <Part geo={kit.cylinder(0.48, 0.48, 0.07)} color={c.accent} position={[0, 0.02, 0]} scale={[1, 1, 0.72]} ink={0.04} />
+              {[1, -1].map((side) => (
+                <Part key={`collar${side}`} geo={kit.sphere} color="#f4f8fb" position={[side * 0.1, 1.17, 0.22]} rotation={[0.4, 0, side * 0.6]} scale={[0.1, 0.05, 0.03]} ink={0.12} />
+              ))}
+            </>
+          )}
+
+          {[1, -1].map((side, i) => (
+            <group key={`arm${side}`} position={[side * SHOULDER.x, SHOULDER.y, 0]} ref={bindArm(i, "shoulder")}>
+              <Part geo={kit.cap(female ? 0.1 : 0.12, UPPER_ARM - 0.12)} color={c.top} position={[0, -UPPER_ARM / 2, 0]} />
+              <group position={[0, -UPPER_ARM, 0]} ref={bindArm(i, "elbow")}>
+                <Part geo={kit.cap(female ? 0.078 : 0.09, FOREARM - 0.1)} color={c.skin} position={[0, -FOREARM / 2, 0]} />
+                {!female && <Part geo={kit.cylinder(0.125, 0.125, 0.1)} color={c.top} position={[0, -0.02, 0]} ink={0.05} />}
+                <group position={[0, -FOREARM, 0]} ref={bindArm(i, "wrist")}>
+                  <Part geo={kit.sphere} color={c.skin} position={[0, -0.08, 0]} scale={[0.05, 0.09, 0.075]} ink={0.12} />
+                  {[
+                    { z: 0.05, len: 0.07, index: true },
+                    { z: 0.017, len: 0.08 },
+                    { z: -0.017, len: 0.07 },
+                    { z: -0.047, len: 0.05 },
+                  ].map((finger, f) => (
+                    <group
+                      key={f}
+                      position={[0, -0.155, finger.z]}
+                      ref={(g) => {
+                        if (!g) return;
+                        if (finger.index) rigs.current[i].index = g;
+                        else rigs.current[i].others[f - 1] = g;
+                      }}
+                    >
+                      <Part geo={kit.cap(0.019, finger.len)} color={c.skin} position={[0, -finger.len / 2 - 0.015, 0]} ink={0.16} />
+                    </group>
+                  ))}
+                  <group position={[-side * 0.02, -0.05, 0.07]} rotation={[0.55, 0, 0]} ref={bindArm(i, "thumb")}>
+                    <Part geo={kit.cap(0.021, 0.055)} color={c.skin} position={[0, -0.045, 0]} ink={0.16} />
+                  </group>
+                </group>
+              </group>
+            </group>
+          ))}
+
+          <group position={[0, SPINE, 0]}>
+            <Part geo={kit.cylinder(0.12, 0.14, 0.32)} color={c.skin} position={[0, 0.06, 0]} ink={0.05} />
+            <group ref={head} position={[0, 0.16, 0]}>
+              <group position={[0, 0.6, 0]}>
+                <Part geo={kit.sphere} color={c.skin} scale={female ? [0.56, 0.62, 0.55] : [0.6, 0.63, 0.57]} ink={0.035} />
+                {[1, -1].map((side) => (
+                  <Part key={`ear${side}`} geo={kit.sphere} color={c.skin} position={[side * 0.55, -0.02, -0.03]} scale={[0.06, 0.11, 0.06]} ink={0.1} />
+                ))}
+
+                {/* Eyes */}
+                {[1, -1].map((side, i) => (
+                  <group
+                    key={`eye${side}`}
+                    position={[side * 0.17, 0.08, 0.46]}
+                    ref={(g) => {
+                      eyes.current[i] = g;
+                    }}
+                  >
+                    <Part geo={kit.sphere} color="#fffdf8" scale={[0.115, 0.135, 0.08]} ink={0.09} />
+                    <group
+                      ref={(g) => {
+                        pupils.current[i] = g;
+                      }}
+                    >
+                      <Part geo={kit.sphere} color="#1b120e" position={[0, 0, 0.075]} scale={[0.035, 0.04, 0.02]} ink={0} />
+                      <mesh geometry={kit.sphere} position={[0.012, 0.016, 0.092]} scale={0.009}>
+                        <meshBasicMaterial color="#ffffff" />
+                      </mesh>
+                    </group>
+                    {female && (
+                      <Part geo={kit.cap(0.012, 0.06)} color="#1b120e" position={[side * 0.1, 0.1, 0.02]} rotation={[0, 0, side * 0.9]} ink={0} />
+                    )}
+                  </group>
+                ))}
+
+                {/* Brows */}
+                {[1, -1].map((side, i) => (
+                  <Part
+                    key={`brow${side}`}
+                    geo={kit.cap(female ? 0.014 : 0.024, 0.11)}
+                    color={c.hair}
+                    position={[side * 0.17, 0.27, 0.5]}
+                    rotation={[0.2, 0, Math.PI / 2]}
+                    ink={0}
+                    ref={(m: THREE.Mesh | null) => {
+                      brows.current[i] = m;
+                    }}
+                  />
+                ))}
+
+                {/* Nose */}
+                <Part geo={kit.sphere} color={c.skin} position={[0, -0.07, 0.54]} scale={[0.055, 0.07, 0.065]} ink={0.12} />
+
+                {/* Mouth */}
+                <group position={[0, -0.28, 0.47]} rotation={[-0.25, 0, 0]}>
+                  <mesh ref={smile} geometry={kit.arc(0.085, 0.017)} material={kit.toon(c.lips)} rotation={[0, 0, Math.PI]} />
+                  <mesh ref={mouthInner} geometry={kit.sphere} material={kit.toon("#3b1216")} visible={false}>
+                    <mesh geometry={kit.sphere} material={kit.ink} scale={1.12} />
+                    <mesh geometry={kit.sphere} material={kit.toon("#f7f1e8")} position={[0, 0.55, 0.5]} scale={[0.75, 0.35, 0.5]} />
+                  </mesh>
+                </group>
+
+                {female ? (
+                  <>
+                    {[1, -1].map((side) => (
+                      <mesh key={`blush${side}`} geometry={kit.sphere} position={[side * 0.33, -0.13, 0.41]} scale={[0.07, 0.04, 0.02]}>
+                        <meshBasicMaterial color="#ef8a86" transparent opacity={0.45} depthWrite={false} />
+                      </mesh>
+                    ))}
+                    <Part geo={kit.sphere} color="#b3263a" position={[0, 0.31, 0.53]} scale={0.022} ink={0} />
+                    {[1, -1].map((side) => (
+                      <Part key={`earring${side}`} geo={kit.sphere} color="#e3b341" position={[side * 0.56, -0.15, 0]} scale={0.035} ink={0.15} />
+                    ))}
+                    {/* Hair: crown, side-swept fringe, fullness at the back and a high bun */}
+                    <Part geo={kit.dome} color={c.hair} position={[0, 0.03, -0.02]} rotation={[-0.55, 0, 0]} scale={[0.6, 0.67, 0.59]} ink={0.04} />
+                    <Part geo={kit.sphere} color={c.hair} position={[-0.17, 0.43, 0.4]} rotation={[0.55, 0, 0.45]} scale={[0.33, 0.13, 0.18]} ink={0.06} />
+                    <Part geo={kit.sphere} color={c.hair} position={[0, -0.04, -0.2]} scale={[0.57, 0.6, 0.42]} ink={0.04} />
+                    <Part geo={kit.sphere} color={c.hair} position={[0, 0.74, -0.2]} scale={0.21} ink={0.08} />
+                  </>
+                ) : (
+                  <>
+                    {/* Hair with a side part, sideburns, a trimmed beard and moustache */}
+                    <Part geo={kit.dome} color={c.hair} position={[0, 0.05, -0.03]} rotation={[-0.72, 0, 0]} scale={[0.62, 0.66, 0.6]} ink={0.04} />
+                    <Part geo={kit.sphere} color={c.hair} position={[0.12, 0.5, 0.36]} rotation={[0.6, 0, -0.35]} scale={[0.34, 0.12, 0.24]} ink={0.06} />
+                    {[1, -1].map((side) => (
+                      <Part key={`burn${side}`} geo={kit.sphere} color={c.hair} position={[side * 0.53, 0.05, 0.1]} scale={[0.04, 0.14, 0.08]} ink={0.08} />
+                    ))}
+                    <Part geo={kit.sphere} color={c.hair} position={[0, -0.5, 0.33]} rotation={[0.3, 0, 0]} scale={[0.16, 0.12, 0.14]} ink={0.08} />
+                    <mesh geometry={kit.arc(0.075, 0.024)} material={kit.toon(c.hair)} position={[0, -0.21, 0.52]} rotation={[-0.25, 0, 0]} scale={[1.1, 0.55, 1]} />
+                  </>
+                )}
+              </group>
+            </group>
+          </group>
+        </group>
       </group>
-    </group>
-  );
-}
-
-type Materials = Record<string, THREE.Material>;
-
-function FemaleHair({ materials }: { materials: Materials }) {
-  return (
-    <group>
-      {/* Crown, tilted back so the hairline sits well above the brows */}
-      <mesh material={materials.hair} position={[0, 0.08, -0.04]} rotation={[-0.62, 0, 0]} scale={[1.05, 1.1, 1.05]}>
-        <sphereGeometry args={[1.0, 64, 32, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
-      </mesh>
-      {/* Volume behind the head and hair falling past the ears */}
-      <mesh material={materials.hair} position={[0, -0.2, -0.3]} scale={[0.98, 1.06, 0.72]}>
-        <sphereGeometry args={[1, 48, 32]} />
-      </mesh>
-      {[-1, 1].map((side) => (
-        <mesh key={`fall${side}`} material={materials.hair} position={[side * 0.83, -0.2, -0.12]} rotation={[0.15, 0, side * -0.1]} scale={[0.14, 0.66, 0.4]}>
-          <sphereGeometry args={[1, 24, 24]} />
-        </mesh>
-      ))}
-      {/* Bun */}
-      <mesh material={materials.hair} position={[0, 0.72, -0.82]} scale={[0.38, 0.36, 0.34]}>
-        <sphereGeometry args={[1, 32, 32]} />
-      </mesh>
-      <mesh material={materials.bindi} position={[0, 0.3, 0.9]} scale={[0.038, 0.038, 0.015]}>
-        <sphereGeometry args={[1, 16, 16]} />
-      </mesh>
-      {[-1, 1].map((side) => (
-        <mesh key={`earring${side}`} material={materials.gold} position={[side * 0.87, -0.26, -0.02]}>
-          <sphereGeometry args={[0.045, 16, 16]} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function MaleHair({ materials }: { materials: Materials }) {
-  return (
-    <group>
-      <mesh material={materials.hair} position={[0, 0.1, -0.06]} rotation={[-0.72, 0, 0]} scale={[1.03, 1.08, 1.04]}>
-        <sphereGeometry args={[1.0, 64, 32, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
-      </mesh>
-      {/* Side-swept front */}
-      <mesh material={materials.hair} position={[0.12, 0.86, 0.4]} rotation={[0.75, 0.1, -0.25]} scale={[0.62, 0.2, 0.34]}>
-        <sphereGeometry args={[1, 32, 16]} />
-      </mesh>
-      {[-1, 1].map((side) => (
-        <mesh key={`burn${side}`} material={materials.hair} position={[side * 0.84, 0.16, 0.08]} scale={[0.06, 0.2, 0.12]}>
-          <sphereGeometry args={[1, 16, 16]} />
-        </mesh>
-      ))}
-    </group>
+    </KitContext.Provider>
   );
 }

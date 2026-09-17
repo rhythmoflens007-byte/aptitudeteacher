@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.db.models import Question, User
 
-Locale = Literal["en", "hi", "ta"]
+Locale = Literal["en", "hi", "bn", "te", "mr", "ta", "ur", "gu", "kn", "ml", "pa", "es", "fr", "ar"]
 TutorGender = Literal["female", "male"]
 
 

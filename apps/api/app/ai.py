@@ -11,7 +11,22 @@ from app.db.models import Question
 
 log = logging.getLogger("ai")
 
-LANGUAGES = {"en": "English", "hi": "Hindi", "ta": "Tamil"}
+LANGUAGES = {
+    "en": "English",
+    "hi": "Hindi",
+    "bn": "Bengali",
+    "te": "Telugu",
+    "mr": "Marathi",
+    "ta": "Tamil",
+    "ur": "Urdu",
+    "gu": "Gujarati",
+    "kn": "Kannada",
+    "ml": "Malayalam",
+    "pa": "Punjabi",
+    "es": "Spanish",
+    "fr": "French",
+    "ar": "Arabic",
+}
 MISCONCEPTIONS = ("careless_slip", "conceptual_gap", "partial_method", "no_attempt")
 
 class Learner(Protocol):
@@ -30,8 +45,8 @@ def persona(learner: Learner) -> str:
         "concept in small numbered steps, show shortcuts where they exist, and end with one short "
         "check-for-understanding question. Keep replies under 180 words. Use plain text, no markdown "
         "tables. Your replies may be read aloud, so avoid symbols that sound odd when spoken. "
-        f"When writing in Hindi or Tamil, use {'feminine' if woman else 'masculine'} grammatical forms "
-        "when referring to yourself."
+        "In languages with grammatical gender (such as Hindi, Urdu, Marathi, Punjabi, Gujarati, Spanish, French and "
+        f"Arabic), use {'feminine' if woman else 'masculine'} grammatical forms when referring to yourself."
     )
 
 
@@ -155,7 +170,11 @@ def tutor_reply(
         types.Content(role="user" if role == "student" else "model", parts=[types.Part(text=text)])
         for role, text in history
     ]
-    system = f"{persona(learner)}\nAlways reply in {_language(learner.locale)}."
+    language = _language(learner.locale)
+    system = (
+        f"{persona(learner)}\nReply in {language}. If the student's latest message is written in a language other "
+        f"than {language} and English, reply in the student's language instead."
+    )
     if context:
         system += f"\n\nThe student is asking about this problem:\n{context}"
     try:

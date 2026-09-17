@@ -37,7 +37,8 @@ def test_register_login_and_profile(client):
     token = client.post("/auth/login", json={"email": "asha.test@example.com", "password": "password123"}).json()["token"]
     headers = {"Authorization": f"Bearer {token}"}
     assert client.patch("/auth/me", headers=headers, json={"locale": "ta"}).json()["locale"] == "ta"
-    assert client.patch("/auth/me", headers=headers, json={"locale": "fr"}).status_code == 422
+    assert client.patch("/auth/me", headers=headers, json={"locale": "te"}).json()["locale"] == "te"
+    assert client.patch("/auth/me", headers=headers, json={"locale": "xx"}).status_code == 422
 
 
 def test_tutor_defaults_and_customisation(client, user):

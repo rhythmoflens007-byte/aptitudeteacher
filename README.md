@@ -58,11 +58,11 @@ On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python`.
 | Feature | Without a key | With a Gemini key |
 | --- | --- | --- |
 | Adaptive practice, quizzes, mock tests, dashboard, XP/streaks/badges | ✅ | ✅ |
-| Step-by-step explanations | ✅ English | ✅ English, Hindi, Tamil |
+| Step-by-step explanations | ✅ English, read aloud | ✅ In any of the 14 languages, read aloud |
 | Misconception diagnosis | Time-based estimate | AI reads the wrong option chosen |
 | Micro-lesson after a concept gap | Worked solution | Targeted lesson on that gap |
 | Re-test question | Another seeded question on the skill | Fresh AI-generated question once seeds run out |
-| Tutor chat (text + voice) | Worked solution only | Full conversation |
+| Tutor chat (text + voice) | Worked solution, read aloud | Full conversation in the student's language |
 | Photo of a question (OCR) | ❌ | ✅ |
 
 ## What's inside
@@ -84,13 +84,32 @@ On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python`.
   weak skills, badges, learning history.
 - `/practice`: adaptive questions with a timer; results with diagnosis, micro-lesson, re-test.
 - `/tests`: timed quizzes and 15-question section-wise mock tests with reports.
-- `/tutor`: chat with Asha by text, voice (browser speech-to-text), or photo; replies are read
-  aloud with a lip-synced 2D avatar, and tapping the mic interrupts her.
-- `/profile`: name and language (English, Hindi, Tamil). Language changes the UI, the tutor's
-  replies and the speech voice.
+- `/tutor`: chat with the tutor by text, voice (browser speech-to-text), or photo. Questions opened
+  from practice or a photo are explained automatically; replies are spoken sentence by sentence
+  with lip-sync, gestures and the current sentence highlighted, and tapping the mic interrupts.
+- `/profile`: tutor name and gender, display name, and language. 14 languages: English, Hindi,
+  Bengali, Telugu, Marathi, Tamil, Urdu, Gujarati, Kannada, Malayalam, Punjabi, Spanish, French and
+  Arabic. The tutor replies and speaks in the chosen language (and mirrors the student's language
+  if they write in another one); app menus are translated into English, Hindi and Tamil.
 
-Voice input works in Chrome and Edge. Text-to-speech voices depend on what the OS has
-installed; Hindi and Tamil voices are standard on Windows and Android.
+Voice input works in Chrome and Edge.
+
+## Tutor characters
+
+The tutor is a 3D character that lip-syncs to its speech and gestures while explaining. Out of the
+box it uses built-in cartoon tutors. To use your own characters, add VRM models (for example
+from [VRoid Hub](https://hub.vroid.com) or made in VRoid Studio):
+
+- `apps/web/public/tutors/female.vrm`
+- `apps/web/public/tutors/male.vrm`
+
+Only use models whose conditions of use allow them in apps (and commercial use, if you sell the
+app), and give credit if the model's license asks for it. The app picks the files up on the next
+page load; a missing or unreadable file falls back to the built-in tutor.
+
+Speech uses the voices installed in the browser. Microsoft Edge has natural voices for most
+Indian languages; Chrome on Windows has fewer, and the app shows a note when a language has no
+voice.
 
 ## Tests
 

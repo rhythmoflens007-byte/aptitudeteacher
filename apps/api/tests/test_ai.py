@@ -120,7 +120,8 @@ def test_tutor_builds_valid_gemini_conversation(sdk):
     request = sdk.requests[-1]
     roles = [c.role for c in request.contents]
     assert roles == ["user", "model", "user"], "Gemini conversations must start with the user turn"
-    assert "Tamil" in request.config.system_instruction
+    assert "Reply in Tamil" in request.config.system_instruction
+    assert "reply in the student's language instead" in request.config.system_instruction
     assert "You are Kavin" in request.config.system_instruction
     assert "masculine grammatical forms" in request.config.system_instruction
     assert "Divide 1200 in 3:5" in request.config.system_instruction

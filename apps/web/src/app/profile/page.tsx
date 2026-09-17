@@ -73,7 +73,7 @@ function Profile() {
           </label>
           <fieldset className="flex flex-col gap-1.5">
             <legend className="mb-1.5 text-sm font-medium">{t("profile.language")}</legend>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {LANGUAGES.map((l) => (
                 <button
                   key={l.code}
@@ -82,11 +82,17 @@ function Profile() {
                   onClick={() => setLocale(l.code)}
                   className={`press rounded-xl border px-3 py-3 text-sm transition ${locale === l.code ? "border-accent bg-accent-soft font-medium text-accent" : "border-line bg-surface text-ink-soft hover:text-ink"}`}
                 >
-                  {l.label}
+                  <span className="block" dir="auto">
+                    {l.label}
+                  </span>
+                  {l.label !== l.english && <span className="block text-[11px] opacity-70">{l.english}</span>}
                 </button>
               ))}
             </div>
-            <span className="text-xs text-ink-soft">Changes the app, the tutor&apos;s replies, and the voice used for speaking and listening.</span>
+            <span className="text-xs text-ink-soft">
+              Your tutor replies, explains and speaks in this language, and listens for it when you use the mic. App menus are translated into English,
+              Hindi and Tamil; other languages show English menus.
+            </span>
           </fieldset>
           <ErrorNote message={error} />
           <div className="flex items-center gap-3">

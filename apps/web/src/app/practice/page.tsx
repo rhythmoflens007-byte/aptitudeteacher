@@ -8,8 +8,9 @@ import TutorAvatar from "@/components/TutorAvatar";
 import { Button, Card, Confetti, DIFFICULTY, ErrorNote, Icon, Label, MISCONCEPTION_LABEL, Pill, ProgressBar, Skeleton } from "@/components/ui";
 import { api, AttemptResult, Question, Topic, TutorSession } from "@/lib/api";
 import { useT } from "@/lib/i18n";
-import { speak, stopSpeaking, Viseme, visemeFor } from "@/lib/speech";
+import { useMedia } from "@/lib/useMedia";
 import { useTutor } from "@/lib/tutor";
+import { useTutorVoice } from "@/lib/useTutorVoice";
 
 type Reason = "retest" | "weakest_skill" | "new_skill";
 
@@ -28,7 +29,7 @@ export default function PracticePage() {
 }
 
 function Practice() {
-  const { t, speechLang } = useT();
+  const { t } = useT();
   const tutor = useTutor();
   const router = useRouter();
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -44,13 +45,12 @@ function Practice() {
   const [qKey, setQKey] = useState(0);
   const startedAt = useRef(0);
 
-  const [speaking, setSpeaking] = useState(false);
-  const [viseme, setViseme] = useState<Viseme>("rest");
-  const [wordTick, setWordTick] = useState(0);
+  const voice = useTutorVoice();
+  const { stop: stopVoice } = voice;
+  const wide = useMedia("(min-width: 1024px)");
 
   const show = useCallback((q: Question, r: Reason) => {
-    stopSpeaking();
-    setSpeaking(false);
+    stopVoice();
     setQuestion(q);
     setReason(r);
     setSelected(null);
@@ -59,7 +59,7 @@ function Practice() {
     setQKey((k) => k + 1);
     startedAt.current = Date.now();
     setElapsed(0);
-  }, []);
+  }, [stopVoice]);
 
   const fetchNext = useCallback(
     async (topic: string | null) => {
@@ -86,7 +86,6 @@ function Practice() {
       .then((res) => show(res.question, res.reason))
       .catch((e) => setError(e.message))
       .finally(() => setBusy(false));
-    return () => stopSpeaking();
   }, [show]);
 
   useEffect(() => {
@@ -94,25 +93,6 @@ function Practice() {
     const id = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt.current) / 1000)), 1000);
     return () => clearInterval(id);
   }, [question, result]);
-
-  const talk = useCallback(
-    (text: string) => {
-      speak(
-        text,
-        speechLang,
-        {
-          onStart: () => setSpeaking(true),
-          onEnd: () => setSpeaking(false),
-          onWord: (w) => {
-            setViseme(visemeFor(w));
-            setWordTick((n) => n + 1);
-          },
-        },
-        tutor.gender,
-      );
-    },
-    [speechLang, tutor.gender],
-  );
 
   const submit = useCallback(
     async (answer: string | null) => {
@@ -157,6 +137,11 @@ function Practice() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function toggleListen(text: string, key: string) {
+    if (voice.activeKey === key) voice.stop();
+    else voice.say(text, key);
   }
 
   async function askTutor() {
@@ -318,8 +303,13 @@ function Practice() {
                 </div>
                 {result.misconception_type && <p className="relative mt-2 text-sm text-ink-soft">{MISCONCEPTION_LABEL[result.misconception_type].hint}</p>}
                 <div className="relative mt-5 rounded-2xl bg-surface-2/60 p-4">
-                  <Label>{t("practice.explanation")}</Label>
-                  <p className="mt-2 whitespace-pre-line leading-relaxed">{result.explanation}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>{t("practice.explanation")}</Label>
+                    <ListenButton active={voice.activeKey === "explanation"} onToggle={() => toggleListen(result.explanation, "explanation")} />
+                  </div>
+                  <p className="mt-2 whitespace-pre-line leading-relaxed" dir="auto">
+                    {result.explanation}
+                  </p>
                 </div>
               </Card>
 
@@ -334,21 +324,11 @@ function Practice() {
                         {t("practice.lesson")} · {tutor.name}
                       </Label>
                     </div>
-                    <Button
-                      variant="secondary"
-                      className="px-3 py-1.5"
-                      onClick={() => {
-                        if (speaking) {
-                          stopSpeaking();
-                          setSpeaking(false);
-                        } else talk(result.micro_lesson!);
-                      }}
-                    >
-                      <Icon name={speaking ? "stop" : "speaker"} className="h-4 w-4" />
-                      {speaking ? "Stop" : "Listen"}
-                    </Button>
+                    <ListenButton active={voice.activeKey === "lesson"} onToggle={() => toggleListen(result.micro_lesson!, "lesson")} />
                   </div>
-                  <p className="mt-3 whitespace-pre-line leading-relaxed">{result.micro_lesson}</p>
+                  <p className="mt-3 whitespace-pre-line leading-relaxed" dir="auto">
+                    {result.micro_lesson}
+                  </p>
                 </Card>
               )}
 
@@ -381,11 +361,13 @@ function Practice() {
           <Card className="flex items-center gap-4 p-4 lg:flex-col lg:p-5">
             <TutorAvatar
               gender={tutor.gender}
-              speaking={speaking}
-              viseme={viseme}
-              wordTick={wordTick}
-              mood={mood}
-              className="aspect-square w-28 shrink-0 sm:w-36 lg:w-full"
+              speaking={voice.speaking}
+              viseme={voice.viseme}
+              wordTick={voice.wordTick}
+              gestureTick={voice.gestureTick}
+              mood={voice.speaking ? "neutral" : mood}
+              framing={wide ? "full" : "portrait"}
+              className="aspect-square w-28 shrink-0 sm:w-36 lg:aspect-[4/5] lg:w-full"
             />
             <div className="min-w-0 lg:text-center">
               <p className="font-display text-xl font-semibold">{tutor.name}</p>
@@ -396,7 +378,9 @@ function Practice() {
                     : selected
                       ? "Happy with that? Check your answer."
                       : "Take your time and set the problem up first."
-                  : result.is_correct
+                  : voice.speaking
+                    ? "Explaining it step by step…"
+                    : result.is_correct
                     ? "Nicely done! That skill just got stronger."
                     : result.micro_lesson
                       ? "Let's fix this idea together. Read the quick lesson."
@@ -450,5 +434,14 @@ function Practice() {
         </aside>
       </div>
     </div>
+  );
+}
+
+function ListenButton({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+  return (
+    <Button variant="secondary" className="shrink-0 px-3 py-1.5" onClick={onToggle}>
+      <Icon name={active ? "stop" : "speaker"} className="h-4 w-4" />
+      {active ? "Stop" : "Listen"}
+    </Button>
   );
 }

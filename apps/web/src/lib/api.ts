@@ -1,7 +1,7 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const TOKEN_KEY = "aptitude.token";
 
-export type Locale = "en" | "hi" | "ta";
+export type Locale = "en" | "hi" | "bn" | "te" | "mr" | "ta" | "ur" | "gu" | "kn" | "ml" | "pa" | "es" | "fr" | "ar";
 
 export type User = {
   id: string;
