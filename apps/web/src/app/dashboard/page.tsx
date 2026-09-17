@@ -12,7 +12,8 @@ import { useT } from "@/lib/i18n";
 import { useTutor } from "@/lib/tutor";
 
 function plural(n: number, word: string) {
-  return `${n} ${word}${n === 1 ? "" : "s"}`;
+  if (n === 1) return `${n} ${word}`;
+  return `${n} ${/[^aeiou]y$/.test(word) ? `${word.slice(0, -1)}ies` : `${word}s`}`;
 }
 
 const TOPIC_STYLE = [

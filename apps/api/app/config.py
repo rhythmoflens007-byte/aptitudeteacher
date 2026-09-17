@@ -19,8 +19,14 @@ class Settings(BaseSettings):
 
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.6-flash"
-    # Used automatically when the main model is overloaded. Empty disables the fallback.
-    gemini_fallback_model: str = "gemini-3.5-flash"
+    # Comma-separated, tried in order when the main model is overloaded or out of quota. The free tier
+    # allows only ~20 requests a day per model, so a chain of models keeps the tutor working all day.
+    # Empty disables the fallback.
+    gemini_fallback_models: str = "gemini-3.8-flash,gemini-flash-latest,gemini-3.5-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+
+    def gemini_models(self) -> list[str]:
+        fallbacks = [name.strip() for name in self.gemini_fallback_models.split(",") if name.strip()]
+        return list(dict.fromkeys([self.gemini_model, *fallbacks]))
 
 
 @lru_cache

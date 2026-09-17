@@ -119,8 +119,8 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
         </div>
 
         <ErrorNote message={error} />
-        <div className="flex items-center gap-3">
-          <Button type="submit" variant="spark" disabled={busy || !name.trim()}>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" variant="spark" disabled={busy || !name.trim()} className="shrink-0 whitespace-nowrap">
             <Icon name="sparkles" className="h-4 w-4" />
             {busy ? "Saving…" : t("tutor.save")}
           </Button>

@@ -5,7 +5,7 @@ the complete memory of both sessions: who the user is, how to work with them, wh
 decision and why, what is built, what is verified or untested, and the traps we hit. After reading it,
 check the real state of the repo (`git status`, `git log`), because things may have changed.
 
-Last updated: 2026-09-17. Project folder: `C:\Users\fazil\aptitude-teacher` (Windows 11; Git Bash and
+Last updated: 2026-09-17 (session 3: full test pass). Project folder: `C:\Users\fazil\aptitude-teacher` (Windows 11; Git Bash and
 PowerShell both available). Latest commit when written: `3a7ada8`.
 
 ---
@@ -116,7 +116,7 @@ and continuously adapt the learning path."
   backend/frontend" windows, opens http://localhost:3000).
 - **Manual:** `apps/api`: `.venv/Scripts/python -m uvicorn app.main:app --port 8000`; `apps/web`: `npm run dev`.
 - **Claude preview:** `.claude/launch.json` has `api` and `web` configs (preview_start by name).
-- **Backend tests:** `cd apps/api && .venv/Scripts/python -m pytest -q` → **66 passed** at last run.
+- **Backend tests:** `cd apps/api && .venv/Scripts/python -m pytest -q` → **70 passed** at last run.
 - **Frontend checks:** `cd apps/web && npx tsc --noEmit && npx eslint src && npx next build` → all clean.
   If tsc complains about a deleted route in `.next/dev/types`, delete `apps/web/.next/dev/types`.
 - **AI key:** `apps/api/.env` (git-ignored) has `GEMINI_API_KEY` (user-provided, 53 chars, works),
@@ -132,11 +132,14 @@ TypeScript), root `README.md`, `start.bat`, `aptitude-teacher-blueprint.html`, `
 
 ### Backend `apps/api/app`
 - `config.py` — pydantic-settings, absolute `.env` path; `gemini_model="gemini-3.6-flash"`,
-  `gemini_fallback_model="gemini-3.5-flash"`, SQLite default, CORS localhost:3000.
+  `gemini_fallback_models` (comma list: 3.8-flash, flash-latest, 3.5-flash, 3.5-flash-lite, 3.1-flash-lite),
+  `gemini_models()`, SQLite default (15 s busy timeout), CORS localhost:3000.
 - `db/models.py` — UTCDateTime decorator; tables users (tutor_name default "Asha", tutor_gender "female",
   locale), topics/subtopics/skills/questions/question_skills, attempts, skill_mastery, quizzes,
   tutor_sessions, **tutor_messages (content + `emotions` JSON, nullable)**, daily_goals, gamification,
   badges, user_badges. String UUID ids.
+- `routes/tutor.py` `send_message` calls the AI BEFORE writing anything (an open SQLite write during the
+  AI wait locked the whole DB → "database is locked" 500s elsewhere).
 - `auth.py` — PBKDF2-SHA256 hashing, PyJWT HS256 bearer tokens.
 - `schemas.py` — `Locale = Literal["en","hi","ta","te"]`; ProfileIn tutor_name validator (letters/space/.'-,
   blocks prompt-injection-like text); QuestionOut shuffles options; **TutorMessageOut.emotions: list[str]**.
@@ -236,6 +239,15 @@ highlight; phone width 375 has no horizontal overflow; language retirement migra
 - Gemini latency was 15–20 s at times (free tier); Google occasionally 503s (retry + fallback exist).
 - Old procedural blueprint HTML still describes the original plan (not updated).
 
+### Session 3 full test (2026-09-17)
+Live-tested all 4 languages via API + browser: tutor chat, question-linked tutor, wrong answer → diagnosis +
+lesson + translated explanation, question generation, quiz + mock submit/report, dashboard, register (Telugu),
+tutor customiser save, missing-voice notice. Fixed: model quota chain, DB lock during tutor AI call, localized
+busy reply + fallback lesson, English replies spelling numbers as words, negative SVG mouth width, "trys",
+maths-only careless-slip copy, report note shown with no misses, Telugu save button clipping. Test accounts
+`qa-*@example.com` (password `qa-password-1`) were created. Still open: most page body text is English in
+hi/ta/te (only nav/headings translated); TTS voices untested (pane has none); suggestion chips English.
+
 ## 8. Gotchas learned the hard way
 
 - **Next.js 16 is not the Next you know** — read `apps/web/node_modules/next/dist/docs/` before using APIs.
@@ -259,8 +271,11 @@ highlight; phone width 375 has no horizontal overflow; language retirement migra
 - System Python (not the venv) has Pillow and httpx for scratch scripts.
 - SQLite `create_all` never alters tables → `add_missing_columns()`.
 - Chrome cuts long utterances (~15 s) → per-sentence speech queue (implemented).
-- Gemini free tier: `gemini-2.5-flash` unavailable to new keys; model list has 3.x flash models; 503 "high
-  demand" happens.
+- Gemini free tier: `gemini-2.5-flash` unavailable to new keys; 503 "high demand" happens. **Newer flash
+  models allow only ~20 requests/DAY each** (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`). `_generate`
+  walks the model chain and rests a model for 1 h after a daily-quota 429 (60 s for per-minute). Lite models
+  answer but are weaker (seen: muddled Telugu reasoning, a Tamil letter inside Telugu text).
+- AI `info` logs are not shown by uvicorn; only warnings reach the console.
 
 ## 9. Possible next steps (ask the user which)
 

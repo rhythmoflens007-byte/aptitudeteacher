@@ -3,6 +3,7 @@ import logging
 import re
 import time
 from functools import lru_cache
+from collections.abc import Callable
 from typing import Protocol
 
 from google import genai
@@ -21,6 +22,10 @@ LANGUAGES = {
 }
 MISCONCEPTIONS = ("careless_slip", "conceptual_gap", "partial_method", "no_attempt")
 RETRY_PAUSES = (1.5,)
+# A daily free-tier limit resets once a day; checking back hourly costs one request.
+QUOTA_REST_SECONDS = 60 * 60
+MINUTE_REST_SECONDS = 60
+_resting_until: dict[str, float] = {}
 
 
 class Learner(Protocol):
@@ -67,32 +72,40 @@ def _generate(contents, system: str | None = None, as_json: bool = False) -> str
         temperature=0.4,
         response_mime_type="application/json" if as_json else None,
     )
-    # The free tier sometimes answers "busy" (503) or "slow down" (429): retry briefly, then
-    # hand over to the fallback model, which is usually less loaded at the same moment.
-    settings = get_settings()
-    models = [settings.gemini_model] + ([settings.gemini_fallback_model] if settings.gemini_fallback_model else [])
+    # The free tier sometimes answers "busy" (503): retry briefly, then hand over to the next model.
+    # A 429 means that model's quota is used up, so retrying is pointless: rest it and move on.
+    now = time.monotonic()
+    models = [m for m in get_settings().gemini_models() if _resting_until.get(m, 0) <= now]
+    if not models:
+        raise AIUnavailable("Every Gemini model is out of free quota for now")
     response = None
-    for index, model in enumerate(models):
-        last_model = index == len(models) - 1
+    last_error: Exception | None = None
+    for model in models:
         for pause in RETRY_PAUSES + (None,):
             try:
                 response = _client().models.generate_content(model=model, contents=contents, config=config)
                 break
             except Exception as exc:
-                transient = getattr(exc, "code", None) in (429, 500, 503) or "UNAVAILABLE" in str(exc)
-                if not transient:
+                last_error = exc
+                code = getattr(exc, "code", None)
+                if code == 429 or "RESOURCE_EXHAUSTED" in str(exc):
+                    rest = QUOTA_REST_SECONDS if "PerDay" in str(exc) else MINUTE_REST_SECONDS
+                    _resting_until[model] = time.monotonic() + rest
+                    log.info("%s is out of quota, resting it for %ds", model, rest)
+                    break
+                if not (code in (500, 503) or "UNAVAILABLE" in str(exc)):
                     log.warning("Gemini call failed: %s", exc)
                     raise AIUnavailable(str(exc)) from exc
                 if pause is None:
-                    log.info("%s is busy, %s", model, "giving up" if last_model else "switching to the fallback model")
-                    if last_model:
-                        log.warning("Gemini call failed: %s", exc)
-                        raise AIUnavailable(str(exc)) from exc
+                    log.info("%s is busy, trying the next model", model)
                     break
                 log.info("%s is busy, retrying in %.1fs", model, pause)
                 time.sleep(pause)
         if response is not None:
             break
+    if response is None:
+        log.warning("Gemini call failed on every model: %s", last_error)
+        raise AIUnavailable(str(last_error)) from last_error
     if not response.text:
         raise AIUnavailable("Empty response from Gemini")
     return response.text
@@ -105,12 +118,11 @@ def _language(locale: str) -> str:
 def _write_in(locale: str) -> str:
     """Instruction to write in a language using its own script, not romanised letters."""
     language = _language(locale)
+    # Without this the "read aloud" persona makes the model spell numbers out as words.
+    digits = "Keep all numbers as the digits 0-9 so they match the question."
     if language == "English":
-        return f"Write in {language}."
-    return (
-        f"Write in {language} using the {language} script itself, never transliterated into Latin letters. "
-        "Keep all numbers as the digits 0-9 so they match the question."
-    )
+        return f"Write in {language}. {digits}"
+    return f"Write in {language} using the {language} script itself, never transliterated into Latin letters. {digits}"
 
 
 NO_GREETING = "Do not greet the student or introduce yourself; start directly with the explanation."
@@ -148,11 +160,34 @@ def heuristic_misconception(chosen: str | None, time_taken_ms: int | None) -> st
 RETEACH = ("conceptual_gap", "partial_method")
 
 
-def diagnose(q: Question, chosen: str | None, time_taken_ms: int | None, skill_name: str, learner: Learner) -> tuple[str, str | None]:
-    """Classifies why an answer was wrong and, for real gaps, writes the micro-lesson in the same AI call."""
+FALLBACK_LESSON = {
+    "en": "Let's revisit this step by step. {solution} Try the next question on the same idea to lock it in.",
+    "hi": "चलिए इसे कदम-दर-कदम फिर से देखते हैं। {solution} इसी विचार पर अगला सवाल हल करके इसे पक्का कीजिए।",
+    "ta": "இதைப் படிப்படியாக மீண்டும் பார்ப்போம். {solution} இதே கருத்தில் அடுத்த கேள்வியை முயற்சி செய்து இதை உறுதியாக்குங்கள்.",
+    "te": "దీన్ని దశలవారీగా మళ్ళీ చూద్దాం. {solution} ఇదే ఆలోచనపై తదుపరి ప్రశ్నను ప్రయత్నించి దీన్ని గట్టిగా గుర్తుంచుకోండి.",
+}
+
+
+def diagnose(
+    q: Question,
+    chosen: str | None,
+    time_taken_ms: int | None,
+    skill_name: str,
+    learner: Learner,
+    solution: Callable[[], str] | None = None,
+) -> tuple[str, str | None]:
+    """Classifies why an answer was wrong and, for real gaps, writes the micro-lesson in the same AI call.
+
+    `solution` returns the explanation in the learner's language; the offline lesson is built from it
+    so a Tamil student never gets an English fallback.
+    """
     if not chosen:
         return "no_attempt", None
-    fallback_lesson = f"Let's revisit this step by step. {q.explanation} Try the next question on the same idea to lock it in."
+
+    def fallback_lesson() -> str:
+        template = FALLBACK_LESSON.get(learner.locale, FALLBACK_LESSON["en"])
+        return template.format(solution=solution() if solution else q.explanation)
+
     try:
         raw = _generate(
             f"{_question_block(q)}\nSkill: {skill_name}\nStudent chose: {chosen}\n"
@@ -176,12 +211,19 @@ def diagnose(q: Question, chosen: str | None, time_taken_ms: int | None, skill_n
             lesson = str(data.get("lesson") or "").strip()
             if label not in RETEACH:
                 return label, None
-            return label, lesson or fallback_lesson
+            return label, lesson or fallback_lesson()
     except (AIUnavailable, ValueError, AttributeError):
         pass
     label = heuristic_misconception(chosen, time_taken_ms)
-    return label, fallback_lesson if label in RETEACH else None
+    return label, fallback_lesson() if label in RETEACH else None
 
+
+BUSY_REPLY = {
+    "en": "I couldn't reach the AI service just now (it may be busy, or the free daily limit may be used up). Please try again in a minute.",
+    "hi": "अभी AI सेवा से संपर्क नहीं हो पाया (वह व्यस्त हो सकती है, या आज की मुफ़्त सीमा खत्म हो गई है)। कृपया एक मिनट बाद फिर से कोशिश करें।",
+    "ta": "இப்போது AI சேவையை அணுக முடியவில்லை (அது பிஸியாக இருக்கலாம், அல்லது இன்றைய இலவச வரம்பு முடிந்திருக்கலாம்). ஒரு நிமிடம் கழித்து மீண்டும் முயற்சிக்கவும்.",
+    "te": "ప్రస్తుతం AI సేవ అందుబాటులో లేదు (అది బిజీగా ఉండవచ్చు, లేదా ఈ రోజు ఉచిత పరిమితి ముగిసి ఉండవచ్చు). దయచేసి ఒక నిమిషం తర్వాత మళ్ళీ ప్రయత్నించండి.",
+}
 
 EMOTIONS = ("excited", "proud", "encouraging", "curious", "careful", "empathetic", "playful", "thinking", "neutral")
 _EMOTION_TAG = re.compile(r"\[(" + "|".join(EMOTIONS) + r")\]\s*", re.IGNORECASE)
@@ -225,7 +267,7 @@ def tutor_reply(
     try:
         return split_emotions(_generate(contents, system=system))
     except AIUnavailable:
-        return "I couldn't reach the AI service just now (it may be busy, or the free daily limit may be used up). Please try again in a minute.", ["empathetic"]
+        return BUSY_REPLY.get(learner.locale, BUSY_REPLY["en"]), ["empathetic"]
 
 
 def generate_question(subtopic: str, skill: str, difficulty: int, examples: list[Question]) -> dict | None:

@@ -513,7 +513,7 @@ export function Icon({ name, className = "h-5 w-5" }: { name: keyof typeof ICONS
 }
 
 export const MISCONCEPTION_LABEL: Record<string, { title: string; hint: string }> = {
-  careless_slip: { title: "Careless slip", hint: "Your method looks right — re-check calculations and read options carefully." },
+  careless_slip: { title: "Careless slip", hint: "Your method looks right — slow down, re-check each step and read the options carefully." },
   conceptual_gap: { title: "Concept gap", hint: "The underlying idea needs another look. A short lesson is below." },
   partial_method: { title: "Almost there", hint: "Right approach, but one step went off track." },
   no_attempt: { title: "Guess or skip", hint: "Take a moment to set up the problem before choosing." },

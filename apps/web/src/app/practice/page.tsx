@@ -186,7 +186,7 @@ function Practice() {
         ? "Yes!! That skill just levelled up. 🎉"
         : result.micro_lesson
           ? "Oops — let's fix this idea together."
-          : "So close! Double-check the maths next time.";
+          : "So close! Re-read it slowly next time.";
 
   return (
     <div className="flex flex-col gap-6">

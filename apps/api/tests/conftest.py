@@ -10,6 +10,8 @@ _db_dir = tempfile.mkdtemp(prefix="aptitude-tests-")
 os.environ["DATABASE_URL"] = f"sqlite:///{Path(_db_dir, 'test.db').as_posix()}"
 os.environ["GEMINI_API_KEY"] = ""
 os.environ["JWT_SECRET"] = "test-secret"
+os.environ["GEMINI_MODEL"] = "gemini-3.6-flash"
+os.environ["GEMINI_FALLBACK_MODELS"] = "gemini-3.8-flash,gemini-3.5-flash"
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -17,6 +19,12 @@ from app import ai  # noqa: E402
 from app.main import app  # noqa: E402
 
 _emails = itertools.count()
+
+
+@pytest.fixture(autouse=True)
+def fresh_model_quota():
+    """Models rested after a quota error in one test must not stay rested in the next."""
+    ai._resting_until.clear()
 
 
 @pytest.fixture(scope="session")

@@ -72,7 +72,8 @@ const HAND_SHAPES: HandShape[] = ["open", "fist", "point", "two", "three", "four
 function mouthPath(m: MouthParams, smile: number, shift: number) {
   const cx = MOUTH.x + shift;
   const cy = MOUTH.y;
-  const hw = 12.5 * m.w * (1 - 0.3 * m.round) * (1 + Math.max(0, smile) * 0.08);
+  // Springs can overshoot the width below zero; a negative half-width would flip the mouth inside out.
+  const hw = Math.max(3, 12.5 * m.w * (1 - 0.3 * m.round) * (1 + Math.max(0, smile) * 0.08));
   const corner = cy - smile * 3.4;
   const upper = cy - 0.8 - m.open * 1.6 + smile * 2.6 - m.round * 1.4;
   const lower = cy - 0.3 + (m.bite ? m.open * 4 : m.open * 13) + smile * 3.6 + m.round * 2.2;

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import ai
 from app.auth import current_user
-from app.db.models import Question, TutorMessage, TutorSession, User
+from app.db.models import Question, TutorMessage, TutorSession, User, utcnow
 from app.db.session import get_db
 from app.schemas import TutorMessageIn, TutorMessageOut, TutorSessionIn
 
@@ -87,18 +87,20 @@ def send_message(
     session_id: str, body: TutorMessageIn, db: Session = Depends(get_db), user: User = Depends(current_user)
 ):
     session = _load(db, session_id, user)
-    db.add(TutorMessage(session_id=session.id, role="student", content=body.content.strip()))
-    db.flush()
-
+    text = body.content.strip()
+    asked_at = utcnow()
     history = db.scalars(
         select(TutorMessage)
         .where(TutorMessage.session_id == session.id)
         .order_by(TutorMessage.created_at.desc())
-        .limit(HISTORY_TURNS)
+        .limit(HISTORY_TURNS - 1)
     ).all()
-    turns = [(m.role, m.content) for m in reversed(history)]
+    turns = [(m.role, m.content) for m in reversed(history)] + [("student", text)]
     question = db.get(Question, session.question_id) if session.question_id else None
+    # Nothing is written until the AI has answered: an open SQLite write would lock the whole
+    # database for every other request during the 5-20 seconds the AI takes.
     content, emotions = ai.tutor_reply(turns, _context(db, session), user, question.explanation if question else None)
+    db.add(TutorMessage(session_id=session.id, role="student", content=text, created_at=asked_at))
     reply = TutorMessage(session_id=session.id, role="tutor", content=content, emotions=emotions or None)
     db.add(reply)
     db.commit()

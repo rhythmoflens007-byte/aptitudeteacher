@@ -53,6 +53,13 @@ def test_diagnosis_falls_back_on_bad_output(fake_ai, raw):
     assert label == "conceptual_gap" and lesson.startswith("Let's revisit")
 
 
+def test_fallback_lesson_is_in_the_learners_language(fake_ai):
+    fake_ai["responses"]["Classify"] = "not json"
+    label, lesson = ai.diagnose(sample_question(), "10", 40000, "Percentages", learner("ta"), solution=lambda: "தமிழ் விளக்கம்")
+    assert label == "conceptual_gap"
+    assert lesson == ai.FALLBACK_LESSON["ta"].format(solution="தமிழ் விளக்கம்")
+
+
 def test_diagnosis_falls_back_when_quota_exhausted(fake_ai):
     fake_ai["responses"]["Classify"] = ai.AIUnavailable("429 quota")
     assert ai.diagnose(sample_question(), "10", 10000, "Percentages", learner()) == ("careless_slip", None)
@@ -205,8 +212,44 @@ def test_overloaded_main_model_hands_over_to_the_fallback(monkeypatch):
     monkeypatch.setattr(ai, "enabled", lambda: True)
     monkeypatch.setattr(ai, "RETRY_PAUSES", (0,))
     monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=main_busy)))
+    assert ai._generate("hello") == "answered by gemini-3.8-flash"
+    assert used == ["gemini-3.6-flash", "gemini-3.6-flash", "gemini-3.8-flash"]
+
+
+def test_out_of_quota_models_are_skipped_until_they_rest(monkeypatch):
+    class Quota(Exception):
+        code = 429
+
+    used = []
+
+    def daily_limit(model, **_):
+        used.append(model)
+        if model != "gemini-3.5-flash":
+            raise Quota("429 RESOURCE_EXHAUSTED quotaId GenerateRequestsPerDayPerProjectPerModel-FreeTier")
+        return SimpleNamespace(text=f"answered by {model}")
+
+    monkeypatch.setattr(ai, "enabled", lambda: True)
+    monkeypatch.setattr(ai, "RETRY_PAUSES", (0,))
+    monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=daily_limit)))
     assert ai._generate("hello") == "answered by gemini-3.5-flash"
-    assert used == ["gemini-3.6-flash", "gemini-3.6-flash", "gemini-3.5-flash"]
+    # Quota errors are not retried on the same model.
+    assert used == ["gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.5-flash"]
+
+    used.clear()
+    assert ai._generate("again") == "answered by gemini-3.5-flash"
+    assert used == ["gemini-3.5-flash"]
+
+
+def test_busy_tutor_reply_is_in_the_learners_language(monkeypatch):
+    def boom(**_):
+        raise RuntimeError("503 UNAVAILABLE")
+
+    monkeypatch.setattr(ai, "enabled", lambda: True)
+    monkeypatch.setattr(ai, "RETRY_PAUSES", (0,))
+    monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=boom)))
+    for locale in ai.LANGUAGES:
+        text, emotions = ai.tutor_reply([("student", "hi")], None, learner(locale))
+        assert text == ai.BUSY_REPLY[locale] and emotions == ["empathetic"]
 
 
 def test_non_transient_errors_are_not_retried(monkeypatch):
@@ -286,3 +329,22 @@ def test_tutor_conversation_with_ai(client, user, fake_ai):
     assert "Two trains approach each other" in fake_ai["calls"][-1]["system"]
     history = client.get(f"/tutor/sessions/{session['id']}", headers=user).json()["messages"]
     assert [m["role"] for m in history] == ["student", "tutor"]
+
+
+def test_database_stays_writable_while_the_tutor_waits_for_the_ai(client, user, fake_ai):
+    from app.db.models import TutorSession
+    from app.db.session import SessionLocal
+
+    session = client.post("/tutor/sessions", headers=user, json={"question_text": "Ratios"}).json()
+    user_id = client.get("/auth/me", headers=user).json()["id"]
+
+    def slow_ai(_):
+        # Another request saving something while the AI is still thinking must not hit "database is locked".
+        with SessionLocal() as other:
+            other.add(TutorSession(user_id=user_id, question_text="written meanwhile"))
+            other.commit()
+        return "Compare parts to the whole."
+
+    fake_ai["responses"]["Content"] = slow_ai
+    reply = client.post(f"/tutor/sessions/{session['id']}/messages", headers=user, json={"content": "help"})
+    assert reply.status_code == 200 and reply.json()["content"] == "Compare parts to the whole."

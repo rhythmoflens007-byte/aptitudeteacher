@@ -93,7 +93,9 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     misconception, lesson = (None, None)
     if not is_correct:
         skill_name = question.skills[0].name if question.skills else ""
-        misconception, lesson = ai.diagnose(question, body.chosen_answer, body.time_taken_ms, skill_name, learner)
+        misconception, lesson = ai.diagnose(
+            question, body.chosen_answer, body.time_taken_ms, skill_name, learner, solution=explanation.result
+        )
 
     attempt = Attempt(
         user_id=user.id,

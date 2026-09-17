@@ -437,7 +437,7 @@ function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) 
                 ))}
               </ul>
             )}
-            <p className="mt-4 text-xs text-ink-soft">These now get extra attention in your practice.</p>
+            {report.weak_skills.length > 0 && <p className="mt-4 text-xs text-ink-soft">These now get extra attention in your practice.</p>}
           </div>
         </FadeIn>
       </div>
