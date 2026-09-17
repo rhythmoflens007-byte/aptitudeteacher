@@ -39,6 +39,25 @@ def test_register_login_and_profile(client):
     assert client.patch("/auth/me", headers=headers, json={"locale": "ta"}).json()["locale"] == "ta"
     assert client.patch("/auth/me", headers=headers, json={"locale": "te"}).json()["locale"] == "te"
     assert client.patch("/auth/me", headers=headers, json={"locale": "xx"}).status_code == 422
+    assert client.patch("/auth/me", headers=headers, json={"locale": "bn"}).status_code == 422, "retired language"
+
+
+def test_retired_languages_fall_back_to_english(tmp_path, monkeypatch):
+    import sqlalchemy as sa
+
+    from app import seed
+
+    old = sa.create_engine(f"sqlite:///{(tmp_path / 'langs.db').as_posix()}")
+    with old.begin() as conn:
+        conn.execute(sa.text("CREATE TABLE users (id VARCHAR(36) PRIMARY KEY, locale VARCHAR(10))"))
+        conn.execute(sa.text("INSERT INTO users VALUES ('a', 'bn'), ('b', 'te'), ('c', 'fr'), ('d', 'hi')"))
+    monkeypatch.setattr(seed, "engine", old)
+
+    seed.retire_unsupported_locales()
+
+    with old.connect() as conn:
+        rows = dict(conn.execute(sa.text("SELECT id, locale FROM users")).all())
+    assert rows == {"a": "en", "b": "te", "c": "en", "d": "hi"}
 
 
 def test_tutor_defaults_and_customisation(client, user):

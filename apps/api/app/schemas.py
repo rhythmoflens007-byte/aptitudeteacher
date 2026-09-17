@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.db.models import Question, User
 
-Locale = Literal["en", "hi", "bn", "te", "mr", "ta", "ur", "gu", "kn", "ml", "pa", "es", "fr", "ar"]
+Locale = Literal["en", "hi", "ta", "te"]
 TutorGender = Literal["female", "male"]
 
 
@@ -173,4 +173,5 @@ class TutorMessageOut(BaseModel):
     id: str
     role: str
     content: str
+    emotions: list[str] = []
     created_at: datetime

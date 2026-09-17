@@ -32,7 +32,7 @@ def _context(db: Session, session: TutorSession) -> str | None:
 
 
 def _message_out(m: TutorMessage) -> TutorMessageOut:
-    return TutorMessageOut(id=m.id, role=m.role, content=m.content, created_at=m.created_at)
+    return TutorMessageOut(id=m.id, role=m.role, content=m.content, emotions=m.emotions or [], created_at=m.created_at)
 
 
 def _session_out(db: Session, session: TutorSession) -> dict:
@@ -98,8 +98,8 @@ def send_message(
     ).all()
     turns = [(m.role, m.content) for m in reversed(history)]
     question = db.get(Question, session.question_id) if session.question_id else None
-    content = ai.tutor_reply(turns, _context(db, session), user, question.explanation if question else None)
-    reply = TutorMessage(session_id=session.id, role="tutor", content=content)
+    content, emotions = ai.tutor_reply(turns, _context(db, session), user, question.explanation if question else None)
+    reply = TutorMessage(session_id=session.id, role="tutor", content=content, emotions=emotions or None)
     db.add(reply)
     db.commit()
     return _message_out(reply)

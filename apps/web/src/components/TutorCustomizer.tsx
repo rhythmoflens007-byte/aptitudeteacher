@@ -1,29 +1,20 @@
 "use client";
 
-import { CSSProperties, FormEvent, useState } from "react";
+import { motion } from "motion/react";
+import { FormEvent, useState } from "react";
 import type { Locale } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { DEFAULT_TUTOR, NAME_IDEAS, TutorGender, useTutor } from "@/lib/tutor";
 import { useTutorVoice } from "@/lib/useTutorVoice";
 import TutorAvatar from "./TutorAvatar";
-import { Button, ErrorNote, Icon, Segmented } from "./ui";
+import { Button, ErrorNote, Icon, Segmented, SparkGlow } from "./ui";
 
 const GREETING: Record<Locale, (name: string) => string> = {
-  en: (n) => `Hi! I'm ${n}. Let's practise together and close your gaps one by one.`,
+  en: (n) => `Hi! I'm ${n}. Let's learn what you don't know yet — together!`,
   hi: (n) => `नमस्ते! मैं ${n} हूँ। चलिए साथ मिलकर अभ्यास करते हैं।`,
-  bn: (n) => `নমস্কার! আমি ${n}। চলো একসাথে অনুশীলন করি।`,
-  te: (n) => `నమస్కారం! నేను ${n}. కలిసి సాధన చేద్దాం.`,
-  mr: (n) => `नमस्कार! मी ${n}. चला, एकत्र सराव करूया.`,
   ta: (n) => `வணக்கம்! நான் ${n}. சேர்ந்து பயிற்சி செய்வோம்.`,
-  ur: (n) => `السلام علیکم! میں ${n} ہوں۔ آئیے مل کر مشق کریں۔`,
-  gu: (n) => `નમસ્તે! હું ${n} છું. ચાલો સાથે મળીને અભ્યાસ કરીએ.`,
-  kn: (n) => `ನಮಸ್ಕಾರ! ನಾನು ${n}. ಒಟ್ಟಿಗೆ ಅಭ್ಯಾಸ ಮಾಡೋಣ.`,
-  ml: (n) => `നമസ്കാരം! ഞാൻ ${n} ആണ്. നമുക്ക് ഒരുമിച്ച് പരിശീലിക്കാം.`,
-  pa: (n) => `ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ${n} ਹਾਂ। ਆਓ ਇਕੱਠੇ ਅਭਿਆਸ ਕਰੀਏ।`,
-  es: (n) => `¡Hola! Soy ${n}. Practiquemos juntos.`,
-  fr: (n) => `Bonjour ! Je suis ${n}. Entraînons-nous ensemble.`,
-  ar: (n) => `مرحبًا! أنا ${n}. لنتدرّب معًا.`,
+  te: (n) => `నమస్కారం! నేను ${n}. కలిసి సాధన చేద్దాం.`,
 };
 
 export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
@@ -66,17 +57,14 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
   return (
     <form onSubmit={onSubmit} className="grid items-center gap-6 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
       <div className="flex flex-col items-center gap-3">
-        <TutorAvatar
-          gender={gender}
-          speaking={voice.speaking}
-          word={voice.word}
-          wordTick={voice.wordTick}
-          gestureTick={voice.gestureTick}
-          mood="happy"
-          framing="full"
-          className="aspect-[4/5] w-full max-w-[260px]"
-        />
-        <p className="font-display text-2xl">{shownName}</p>
+        <SparkGlow active={voice.speaking} className="w-full max-w-[280px] rounded-[32px]">
+          <div className="overflow-hidden rounded-[32px] bg-gradient-to-b from-iris-soft to-surface">
+            <TutorAvatar gender={gender} voice={voice} mood={voice.speaking ? "neutral" : "happy"} framing="full" className="aspect-[4/5] w-full" />
+          </div>
+        </SparkGlow>
+        <motion.p key={shownName} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="font-display text-3xl">
+          {shownName}
+        </motion.p>
         <Button type="button" variant="secondary" onClick={() => (voice.speaking ? voice.stop() : voice.say(GREETING[locale](shownName), "hello", gender))}>
           <Icon name={voice.speaking ? "stop" : "speaker"} className="h-4 w-4" />
           {voice.speaking ? "Stop" : "Say hello"}
@@ -85,7 +73,7 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
 
       <div className="flex flex-col gap-5">
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 text-sm font-medium">{t("tutor.gender")}</legend>
+          <legend className="mb-2 text-sm font-semibold">{t("tutor.gender")}</legend>
           <Segmented
             id="tutor-gender"
             label={t("tutor.gender")}
@@ -95,7 +83,7 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
           />
         </fieldset>
 
-        <label className="flex flex-col gap-2 text-sm font-medium">
+        <label className="flex flex-col gap-2 text-sm font-semibold">
           {t("tutor.name")}
           <input
             id="tutor-name"
@@ -106,37 +94,38 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
             }}
             maxLength={30}
             required
-            className="rounded-lg border border-line bg-surface px-3.5 py-2.5 text-base font-normal shadow-[var(--shadow-sm)] outline-none transition focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)]"
+            className="rounded-2xl bg-surface-2 px-4 py-3.5 text-base font-normal outline-none ring-2 ring-transparent transition focus:bg-surface focus:ring-iris"
           />
         </label>
 
         <div className="flex flex-wrap gap-2" aria-label="Name ideas">
           {NAME_IDEAS[gender].map((idea, i) => (
-            <button
-              key={idea}
+            <motion.button
+              key={`${gender}-${idea}`}
               type="button"
-              style={{ "--i": i } as CSSProperties}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20, delay: i * 0.04 }}
+              whileTap={{ scale: 0.92 }}
               onClick={() => {
                 setName(idea);
                 setSaved(false);
               }}
-              className={`pop press rounded-md border px-3 py-1 text-sm ${
-                name === idea ? "border-ink bg-primary text-primary-ink" : "border-line bg-surface text-ink-soft hover:border-line-strong hover:text-ink"
-              }`}
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${name === idea ? "bg-iris text-white" : "bg-surface-2 text-ink-soft hover:text-ink"}`}
             >
               {idea}
-            </button>
+            </motion.button>
           ))}
         </div>
 
         <ErrorNote message={error} />
         <div className="flex items-center gap-3">
-          <Button type="submit" disabled={busy || !name.trim()}>
+          <Button type="submit" variant="spark" disabled={busy || !name.trim()}>
             <Icon name="sparkles" className="h-4 w-4" />
             {busy ? "Saving…" : t("tutor.save")}
           </Button>
           {saved && (
-            <span className="pop flex items-center gap-1 text-sm text-good" role="status">
+            <span className="pop flex items-center gap-1 text-sm font-semibold text-success" role="status">
               <Icon name="check" className="h-4 w-4" /> {t("tutor.saved")}
             </span>
           )}

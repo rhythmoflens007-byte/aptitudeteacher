@@ -136,6 +136,8 @@ class TutorMessage(Base):
     session_id: Mapped[str] = mapped_column(ForeignKey("tutor_sessions.id", ondelete="CASCADE"), index=True)
     role: Mapped[str] = mapped_column(String(10))
     content: Mapped[str] = mapped_column(Text)
+    # One emotion per sentence for tutor replies (drives the avatar's expressions); null for older messages.
+    emotions: Mapped[list | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 

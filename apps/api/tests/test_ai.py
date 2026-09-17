@@ -131,12 +131,13 @@ def sdk(monkeypatch):
 
 def test_tutor_builds_valid_gemini_conversation(sdk):
     history = [("tutor", "Hi!"), ("student", "Explain ratios"), ("tutor", "Sure…"), ("student", "Why 8 parts?")]
-    reply = ai.tutor_reply(history, "Divide 1200 in 3:5", learner("ta", "Kavin", "male"))
-    assert reply.startswith("Great question")
+    reply, emotions = ai.tutor_reply(history, "Divide 1200 in 3:5", learner("ta", "Kavin", "male"))
+    assert reply.startswith("Great question") and emotions == []
     request = sdk.requests[-1]
     roles = [c.role for c in request.contents]
     assert roles == ["user", "model", "user"], "Gemini conversations must start with the user turn"
     assert "Reply in Tamil" in request.config.system_instruction
+    assert "[excited]" in request.config.system_instruction and "playful" in request.config.system_instruction
     assert "reply in the student's language instead" in request.config.system_instruction
     assert "You are Kavin" in request.config.system_instruction
     assert "masculine grammatical forms" in request.config.system_instruction
@@ -161,7 +162,13 @@ def test_sdk_errors_become_ai_unavailable(monkeypatch):
 
     monkeypatch.setattr(ai, "enabled", lambda: True)
     monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=boom)))
-    assert "busy" in ai.tutor_reply([("student", "hi")], None, learner("en"))
+    assert "busy" in ai.tutor_reply([("student", "hi")], None, learner("en"))[0]
+
+
+def test_emotion_tags_are_split_from_the_spoken_text():
+    text, emotions = ai.split_emotions("[Excited] Great question!\n[thinking] 1. Add the speeds. [unknown] Keep this.")
+    assert text == "Great question!\n1. Add the speeds. [unknown] Keep this."
+    assert emotions == ["excited", "thinking"]
 
 
 def test_busy_service_is_retried_then_succeeds(monkeypatch):

@@ -109,34 +109,24 @@ export function sentenceLines(text: string): string[][] {
 }
 
 const SCRIPTS: [RegExp, string][] = [
-  [/[ऀ-ॿ]/g, "deva"],
-  [/[ঀ-৿]/g, "bn-IN"],
-  [/[਀-੿]/g, "pa-IN"],
-  [/[઀-૿]/g, "gu-IN"],
+  [/[ऀ-ॿ]/g, "hi-IN"],
   [/[஀-௿]/g, "ta-IN"],
   [/[ఀ-౿]/g, "te-IN"],
-  [/[ಀ-೿]/g, "kn-IN"],
-  [/[ഀ-ൿ]/g, "ml-IN"],
-  [/[؀-ۿ]/g, "arab"],
-  [/[A-Za-z]/g, "latn"],
+  [/[A-Za-z]/g, "en-IN"],
 ];
 
 /** Picks the voice language from the script the reply is actually written in, since the tutor may answer in the student's language. */
 export function detectSpeechLang(text: string, preferred: string): string {
   let best = "";
   let bestCount = 0;
-  for (const [pattern, script] of SCRIPTS) {
+  for (const [pattern, lang] of SCRIPTS) {
     const count = text.match(pattern)?.length ?? 0;
     if (count > bestCount) {
-      best = script;
+      best = lang;
       bestCount = count;
     }
   }
-  if (!best) return preferred;
-  if (best === "deva") return ["hi-IN", "mr-IN"].includes(preferred) ? preferred : "hi-IN";
-  if (best === "arab") return ["ur-IN", "ar-SA"].includes(preferred) ? preferred : "ur-IN";
-  if (best === "latn") return ["en-IN", "es-ES", "fr-FR"].includes(preferred) ? preferred : "en-IN";
-  return best;
+  return best || preferred;
 }
 
 // Browsers don't expose a voice's gender, so infer it from well-known system voice names.

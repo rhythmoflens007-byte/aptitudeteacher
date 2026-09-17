@@ -58,7 +58,7 @@ On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python`.
 | Feature | Without a key | With a Gemini key |
 | --- | --- | --- |
 | Adaptive practice, quizzes, mock tests, dashboard, XP/streaks/badges | ✅ | ✅ |
-| Step-by-step explanations | ✅ English, read aloud | ✅ In any of the 14 languages, read aloud |
+| Step-by-step explanations | ✅ English, read aloud | ✅ In English, Hindi, Tamil or Telugu, read aloud |
 | Misconception diagnosis | Time-based estimate | AI reads the wrong option chosen |
 | Micro-lesson after a concept gap | Worked solution | Targeted lesson on that gap |
 | Re-test question | Another seeded question on the skill | Fresh AI-generated question once seeds run out |
@@ -87,10 +87,9 @@ On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python`.
 - `/tutor`: chat with the tutor by text, voice (browser speech-to-text), or photo. Questions opened
   from practice or a photo are explained automatically; replies are spoken sentence by sentence
   with lip-sync, gestures and the current sentence highlighted, and tapping the mic interrupts.
-- `/profile`: tutor name and gender, display name, and language. 14 languages: English, Hindi,
-  Bengali, Telugu, Marathi, Tamil, Urdu, Gujarati, Kannada, Malayalam, Punjabi, Spanish, French and
-  Arabic. The tutor replies and speaks in the chosen language (and mirrors the student's language
-  if they write in another one); app menus are translated into English, Hindi and Tamil.
+- `/profile`: tutor name and gender, display name, and language: English, Hindi, Tamil or Telugu.
+  The tutor replies and speaks in the chosen language (and mirrors the student's language if they
+  write in another of the four), and the app menus are fully translated into all four.
 
 Voice input works in Chrome and Edge.
 
@@ -103,9 +102,13 @@ a small state machine in `apps/web/src/lib/tutorRig.ts` and drawn by
 
 - **Lip-sync:** each spoken word is broken into mouth shapes (visemes), including Indian scripts,
   and the mouth morphs smoothly between them.
-- **Body language:** a different explaining gesture per sentence, beats and nods on words,
-  and reactions for thinking, listening, correct (thumbs-up) and incorrect (concerned) answers.
-- **Life:** breathing, blinking, eye movements that follow the pointer, and a wave hello.
+- **Playful body language:** 15 expressions (laugh, wink, proud, curious, oops…) and 20 gestures
+  (counting on fingers, clapping, jazz hands, finger wag, temple tap…). The AI tags every sentence
+  with an emotion, and words in all four languages trigger cues: praise gets a clap, "careful" a
+  finger wag, "first/second/third" or a number up to five shows that many fingers, "not" a head shake.
+- **Reactions:** a celebration for correct answers, an "oops" then encouragement for wrong ones,
+  a hand-on-chin while thinking, and nods while you type.
+- **Life:** breathing, blinking, winks, eye movements that follow the pointer, idle moments and a wave hello.
 - Animation pauses when the tutor is off-screen, and calms down for people who turn on
   "reduce motion" in their system settings.
 

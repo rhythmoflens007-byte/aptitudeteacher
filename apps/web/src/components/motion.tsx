@@ -12,8 +12,7 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
-import Crest from "./Crest";
-import { MouseEvent, ReactNode, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { MouseEvent, ReactNode, useEffect, useRef, useState } from "react";
 
 export const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -184,78 +183,28 @@ export function SmoothScroll() {
   return null;
 }
 
-const INTRO_KEY = "aptitude.intro.seen";
-const noopSubscribe = () => () => {};
-function readIntroSeen() {
-  try {
-    return sessionStorage.getItem(INTRO_KEY) === "1";
-  } catch {
-    return true;
-  }
-}
-
-/**
- * First-visit title card: the crest and wordmark appear on Oxford blue,
- * then the curtain lifts to reveal the page. Plays once per browser session.
- */
-export function IntroCurtain() {
-  const seen = useSyncExternalStore(noopSubscribe, readIntroSeen, () => false);
-  const reduce = useReducedMotion();
-  const [done, setDone] = useState(false);
-
+/** A living gradient orb that breathes and leans toward the pointer. */
+export function Orb({ className = "" }: { className?: string }) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 40, damping: 16 });
+  const sy = useSpring(y, { stiffness: 40, damping: 16 });
   useEffect(() => {
-    if (seen || reduce) return;
-    const id = window.setTimeout(() => setDone(true), 1900);
-    return () => window.clearTimeout(id);
-  }, [seen, reduce]);
-
-  if (seen || reduce) return null;
-
+    const onMove = (e: PointerEvent) => {
+      x.set((e.clientX / window.innerWidth - 0.5) * 60);
+      y.set((e.clientY / window.innerHeight - 0.5) * 40);
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [x, y]);
   return (
-    <motion.div
-      aria-hidden
-      className="grain fixed inset-0 z-[100] grid place-items-center bg-navy text-navy-ink"
-      initial={{ clipPath: "inset(0% 0% 0% 0%)" }}
-      animate={done ? { clipPath: "inset(0% 0% 100% 0%)" } : undefined}
-      transition={{ duration: 1.1, ease: [0.76, 0, 0.24, 1] }}
-      onAnimationComplete={() => {
-        // Remember only after the curtain has fully lifted, so re-renders don't cut the animation short.
-        if (!done) return;
-        try {
-          sessionStorage.setItem(INTRO_KEY, "1");
-        } catch {}
-      }}
-      style={{ pointerEvents: done ? "none" : "auto" }}
-    >
-      <div className="flex flex-col items-center gap-5">
-        <motion.div initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }} animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }} transition={{ duration: 1, ease: EASE }}>
-          <Crest className="h-16 w-16" />
-        </motion.div>
-        <div className="overflow-hidden">
-          <motion.p
-            className="font-display text-3xl sm:text-4xl"
-            initial={{ y: "110%" }}
-            animate={{ y: "0%" }}
-            transition={{ duration: 1, ease: EASE, delay: 0.25 }}
-          >
-            Aptitude Teacher
-          </motion.p>
-        </div>
-        <motion.span
-          className="h-px w-40 origin-left bg-gold"
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 1.2, ease: EASE, delay: 0.5 }}
-        />
-        <motion.p
-          className="text-[11px] font-semibold uppercase tracking-[0.3em] text-navy-ink/60"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-        >
-          The adaptive aptitude school
-        </motion.p>
-      </div>
+    <motion.div aria-hidden style={{ x: sx, y: sy }} className={`pointer-events-none ${className}`}>
+      <motion.div
+        className="h-full w-full rounded-full opacity-80 blur-3xl"
+        style={{ background: "conic-gradient(from 0deg, #5b5bf5, #9b5cf6, #ff6b5c, #ffc53d, #16c2c2, #5b5bf5)" }}
+        animate={{ rotate: 360, scale: [1, 1.08, 0.96, 1] }}
+        transition={{ rotate: { duration: 24, repeat: Infinity, ease: "linear" }, scale: { duration: 9, repeat: Infinity, ease: "easeInOut" } }}
+      />
     </motion.div>
   );
 }

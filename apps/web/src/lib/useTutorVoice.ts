@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useT } from "./i18n";
-import { detectSpeechLang, hasVoiceFor, speak, stopSpeaking, Viseme, visemeFor } from "./speech";
+import { detectSpeechLang, hasVoiceFor, sentenceLines, speak, stopSpeaking, Viseme, visemeFor } from "./speech";
 import { TutorGender, useTutor } from "./tutor";
 
-/** Drives the tutor's voice and the avatar state that follows it. */
+/** Drives the tutor's voice and everything the avatar needs to act it out. */
 export function useTutorVoice() {
   const { speechLang } = useT();
   const tutor = useTutor();
@@ -16,6 +16,8 @@ export function useTutorVoice() {
   const [gestureTick, setGestureTick] = useState(0);
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [sentence, setSentence] = useState(-1);
+  const [sentenceText, setSentenceText] = useState("");
+  const [emotion, setEmotion] = useState<string | null>(null);
   const [missingVoice, setMissingVoice] = useState<string | null>(null);
 
   useEffect(() => () => stopSpeaking(), []);
@@ -27,9 +29,14 @@ export function useTutorVoice() {
     setSentence(-1);
   }, []);
 
+  /**
+   * Speaks `text` sentence by sentence. `emotions` (one per sentence, from the AI) lets the tutor act out
+   * the intended tone; without them the tutor reads the words themselves for cues.
+   */
   const say = useCallback(
-    (text: string, key = "default", gender: TutorGender = tutor.gender) => {
+    (text: string, key = "default", gender: TutorGender = tutor.gender, emotions: string[] = []) => {
       const lang = detectSpeechLang(text, speechLang);
+      const sentences = sentenceLines(text).flat();
       hasVoiceFor(lang).then((ok) => setMissingVoice(ok ? null : lang));
       setActiveKey(key);
       setSentence(-1);
@@ -45,6 +52,8 @@ export function useTutorVoice() {
           },
           onSentence: (index) => {
             setSentence(index);
+            setSentenceText(sentences[index] ?? "");
+            setEmotion(emotions[index] ?? null);
             setGestureTick((n) => n + 1);
           },
           onWord: (spoken) => {
@@ -59,5 +68,5 @@ export function useTutorVoice() {
     [speechLang, tutor.gender],
   );
 
-  return { speaking, viseme, word, wordTick, gestureTick, activeKey, sentence, missingVoice, say, stop };
+  return { speaking, viseme, word, wordTick, gestureTick, sentenceText, emotion, activeKey, sentence, missingVoice, say, stop };
 }

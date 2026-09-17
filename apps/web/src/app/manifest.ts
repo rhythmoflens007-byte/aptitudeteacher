@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Adaptive aptitude practice with an AI tutor.",
     start_url: "/dashboard",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#002147",
+    background_color: "#fbfaf7",
+    theme_color: "#5b5bf5",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
   };
 }

@@ -4,8 +4,6 @@ import { AnimatePresence, motion } from "motion/react";
 import { ReactNode, useEffect } from "react";
 import { Icon } from "./ui";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
-
 export default function Modal({ open, title, onClose, children }: { open: boolean; title: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
     if (!open) return;
@@ -26,23 +24,23 @@ export default function Modal({ open, title, onClose, children }: { open: boolea
           <motion.button
             aria-label="Close"
             onClick={onClose}
-            className="absolute inset-0 bg-navy/45 backdrop-blur-[6px]"
+            className="absolute inset-0 bg-ink/25 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.35 }}
           />
           <motion.div
-            className="relative max-h-[92dvh] w-full max-w-3xl overflow-y-auto rounded-t-2xl border border-line bg-surface p-5 shadow-[var(--shadow-lg)] sm:rounded-2xl sm:p-8"
-            initial={{ opacity: 0, y: 40, scale: 0.97, filter: "blur(10px)" }}
-            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: 24, scale: 0.98, filter: "blur(6px)" }}
-            transition={{ duration: 0.6, ease: EASE }}
+            className="relative max-h-[92dvh] w-full max-w-3xl overflow-y-auto rounded-t-[32px] bg-surface p-6 shadow-[var(--shadow-lg)] sm:rounded-[32px] sm:p-8"
+            initial={{ opacity: 0, y: 60, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 320, damping: 30 }}
           >
-            <div className="mb-6 flex items-center justify-between gap-4 border-b border-line pb-4">
+            <div className="mb-6 flex items-center justify-between gap-4">
               <h2 className="font-display text-2xl">{title}</h2>
-              <button onClick={onClose} aria-label="Close" className="press rounded-md p-1.5 text-ink-soft hover:bg-surface-2 hover:text-ink">
-                <Icon name="x" />
+              <button onClick={onClose} aria-label="Close" className="press grid h-9 w-9 place-items-center rounded-full bg-surface-2 text-ink-soft hover:text-ink">
+                <Icon name="x" className="h-4 w-4" />
               </button>
             </div>
             {children}

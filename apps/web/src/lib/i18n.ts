@@ -6,22 +6,9 @@ import type { Locale } from "./api";
 export const LANGUAGES: { code: Locale; label: string; english: string; speech: string }[] = [
   { code: "en", label: "English", english: "English", speech: "en-IN" },
   { code: "hi", label: "हिन्दी", english: "Hindi", speech: "hi-IN" },
-  { code: "bn", label: "বাংলা", english: "Bengali", speech: "bn-IN" },
-  { code: "te", label: "తెలుగు", english: "Telugu", speech: "te-IN" },
-  { code: "mr", label: "मराठी", english: "Marathi", speech: "mr-IN" },
   { code: "ta", label: "தமிழ்", english: "Tamil", speech: "ta-IN" },
-  { code: "ur", label: "اردو", english: "Urdu", speech: "ur-IN" },
-  { code: "gu", label: "ગુજરાતી", english: "Gujarati", speech: "gu-IN" },
-  { code: "kn", label: "ಕನ್ನಡ", english: "Kannada", speech: "kn-IN" },
-  { code: "ml", label: "മലയാളം", english: "Malayalam", speech: "ml-IN" },
-  { code: "pa", label: "ਪੰਜਾਬੀ", english: "Punjabi", speech: "pa-IN" },
-  { code: "es", label: "Español", english: "Spanish", speech: "es-ES" },
-  { code: "fr", label: "Français", english: "French", speech: "fr-FR" },
-  { code: "ar", label: "العربية", english: "Arabic", speech: "ar-SA" },
+  { code: "te", label: "తెలుగు", english: "Telugu", speech: "te-IN" },
 ];
-
-/** Languages with translated app text; every other language falls back to English text while the tutor still uses it. */
-export const UI_LANGUAGES: Locale[] = ["en", "hi", "ta"];
 
 const en = {
   "nav.dashboard": "Dashboard",
@@ -217,7 +204,71 @@ const ta: Partial<Record<Key, string>> = {
   "nav.greeting": "வணக்கம்",
 };
 
-const dictionaries: Partial<Record<Locale, Partial<Record<Key, string>>>> = { en, hi, ta };
+const te: Partial<Record<Key, string>> = {
+  "nav.dashboard": "డాష్‌బోర్డ్",
+  "nav.practice": "అభ్యాసం",
+  "nav.tests": "పరీక్షలు",
+  "nav.tutor": "ట్యూటర్",
+  "nav.profile": "ప్రొఫైల్",
+  "nav.signOut": "సైన్ అవుట్",
+  "dash.greeting": "తిరిగి స్వాగతం",
+  "dash.level": "స్థాయి",
+  "dash.streak": "రోజుల వరుస",
+  "dash.accuracy": "ఖచ్చితత్వం",
+  "dash.speed": "ఒక్కో ప్రశ్నకు సగటు సమయం",
+  "dash.goal": "నేటి లక్ష్యం",
+  "dash.goalStart": "ఇప్పుడే అభ్యాసం చేయండి",
+  "dash.mastery": "విషయ ప్రావీణ్యం",
+  "dash.weak": "శ్రద్ధ అవసరం",
+  "dash.badges": "బ్యాడ్జ్‌లు",
+  "dash.history": "నేర్చుకున్న చరిత్ర",
+  "dash.trend": "గత 7 రోజులు",
+  "practice.title": "అనుకూల అభ్యాసం",
+  "practice.all": "అన్ని విషయాలు",
+  "practice.submit": "సమాధానం తనిఖీ చేయండి",
+  "practice.skip": "నాకు తెలియదు",
+  "practice.next": "తదుపరి ప్రశ్న",
+  "practice.retest": "ఇలాంటి ప్రశ్న ప్రయత్నించండి",
+  "practice.askTutor": "ట్యూటర్‌ను అడగండి",
+  "practice.correct": "సరైనది!",
+  "practice.incorrect": "కొంచెం తప్పింది",
+  "practice.explanation": "దశలవారీ పరిష్కారం",
+  "practice.lesson": "ఈ భావనపై చిన్న పాఠం",
+  "tests.title": "క్విజ్‌లు & మాక్ టెస్ట్‌లు",
+  "tests.quiz": "చిన్న క్విజ్",
+  "tests.mock": "పూర్తి మాక్ టెస్ట్",
+  "tests.start": "ప్రారంభించండి",
+  "tests.submit": "పరీక్ష సమర్పించండి",
+  "tests.review": "సమాధానాల సమీక్ష",
+  "tutor.title": "AI ట్యూటర్",
+  "tutor.placeholder": "మీ సందేహం అడగండి లేదా ప్రశ్నను అతికించండి…",
+  "tutor.send": "పంపండి",
+  "tutor.newChat": "కొత్త సంభాషణ",
+  "tutor.photo": "ప్రశ్న ఫోటో",
+  "tutor.speak": "సమాధానాలు చదివి వినిపించు",
+  "tutor.listening": "వింటున్నాను…",
+  "tutor.listeningFemale": "వింటున్నాను…",
+  "profile.title": "ప్రొఫైల్",
+  "profile.name": "ప్రదర్శన పేరు",
+  "profile.language": "భాష",
+  "profile.save": "మార్పులు సేవ్ చేయండి",
+  "profile.saved": "సేవ్ అయింది",
+  "tutor.customise": "ట్యూటర్‌ను మార్చండి",
+  "tutor.yourTutor": "మీ ట్యూటర్",
+  "tutor.name": "ట్యూటర్ పేరు",
+  "tutor.gender": "ట్యూటర్",
+  "tutor.female": "మహిళ",
+  "tutor.male": "పురుషుడు",
+  "tutor.save": "ట్యూటర్‌ను సేవ్ చేయండి",
+  "tutor.saved": "ట్యూటర్ నవీకరించబడింది",
+  "tutor.history": "సంభాషణలు",
+  "tutor.explainRequest": "దయచేసి ఈ ప్రశ్నను దశలవారీగా వివరించండి.",
+  "tutor.explain": "ఈ ప్రశ్నను వివరించు",
+  "tutor.language": "ట్యూటర్ భాష",
+  "nav.greeting": "నమస్కారం",
+};
+
+const dictionaries: Record<Locale, Partial<Record<Key, string>>> = { en, hi, ta, te };
 
 export function useT() {
   const { user } = useAuth();

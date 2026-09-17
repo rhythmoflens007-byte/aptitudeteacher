@@ -1,12 +1,17 @@
 "use client";
 
-import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
-import { Button, Card, Confetti, ErrorNote, Icon, IconTile, Label, PageHeader, Pill, ProgressBar, Ring, Segmented } from "@/components/ui";
+import { FadeIn } from "@/components/motion";
+import { Button, Confetti, ErrorNote, Icon, IconTile, PageHeader, Pill, ProgressBar, Ring, Segmented, SpotlightCard } from "@/components/ui";
 import { api, Quiz, QuizReport, Topic } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 
 type HistoryItem = { id: string; kind: "quiz" | "mock"; score: number; total: number; submitted_at: string };
+
+const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
+const SECTION_TONES = ["iris", "coral", "lagoon"] as const;
 
 function clock(seconds: number) {
   const s = Math.max(0, Math.floor(seconds));
@@ -66,114 +71,102 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <PageHeader eyebrow="Timed practice under exam conditions" title={t("tests.title")} />
+    <div className="flex flex-col gap-6">
+      <PageHeader eyebrow="Practise under the clock" title={t("tests.title")} />
       <ErrorNote message={error} />
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="rise flex flex-col gap-5 p-0">
-          <div className="px-6 pt-6">
-            <IconTile name="bolt" tone="accent" />
-            <h2 className="mt-4 font-display text-2xl">{t("tests.quiz")}</h2>
-            <p className="mt-1 text-sm text-ink-soft">Timed, one minute per question. Pick a section or mix all three.</p>
-          </div>
-          <div className="flex flex-col gap-4 px-6 pb-6">
+      <div className="grid gap-5 md:grid-cols-2">
+        <FadeIn>
+          <SpotlightCard tint="lagoon" className="flex h-full flex-col gap-6 p-7">
             <div>
-              <p className="mb-2 text-sm font-medium">Section</p>
-              <div className="flex flex-wrap gap-2">
-                {[{ id: "", name: "All sections" }, ...topics].map((tp) => (
-                  <button
-                    key={tp.id || "all"}
-                    onClick={() => setTopicId(tp.id)}
-                    aria-pressed={topicId === tp.id}
-                    className={`press rounded-md border px-3 py-1.5 text-sm ${topicId === tp.id ? "border-ink bg-primary font-medium text-primary-ink" : "border-line text-ink-soft hover:border-line-strong hover:text-ink"}`}
-                  >
-                    {tp.name}
-                  </button>
-                ))}
-              </div>
+              <IconTile name="bolt" tone="lagoon" />
+              <h2 className="mt-5 font-display text-3xl">{t("tests.quiz")}</h2>
+              <p className="mt-1 text-ink-soft">One minute a question. Pick a section, or mix them all.</p>
             </div>
-            <div>
-              <p className="mb-2 text-sm font-medium">Length</p>
-              <Segmented
-                id="quiz-length"
-                label="Quiz length"
-                value={String(count)}
-                options={[5, 10, 15].map((n) => ({ value: String(n), label: `${n} Qs · ${n}m` }))}
-                onChange={(v) => setCount(Number(v))}
-              />
+            <div className="flex flex-wrap gap-2">
+              {[{ id: "", name: "All sections" }, ...topics].map((tp) => (
+                <button
+                  key={tp.id || "all"}
+                  onClick={() => setTopicId(tp.id)}
+                  aria-pressed={topicId === tp.id}
+                  className={`press rounded-full px-4 py-2 text-sm font-semibold ${topicId === tp.id ? "bg-lagoon text-white shadow-[0_8px_20px_-8px_rgb(22_194_194/0.7)]" : "bg-surface-2 text-ink-soft hover:text-ink"}`}
+                >
+                  {tp.name}
+                </button>
+              ))}
             </div>
-            <Button variant="secondary" onClick={() => start("quiz")} disabled={busy} className="self-start px-6 py-3">
+            <Segmented id="quiz-length" label="Quiz length" value={String(count)} options={[5, 10, 15].map((n) => ({ value: String(n), label: `${n} Qs` }))} onChange={(v) => setCount(Number(v))} />
+            <Button variant="secondary" onClick={() => start("quiz")} disabled={busy} className="mt-auto self-start px-6 py-3">
               {t("tests.start")} <Icon name="arrow" className="h-4 w-4" />
             </Button>
-          </div>
-        </Card>
+          </SpotlightCard>
+        </FadeIn>
 
-        <Card className="rise relative flex flex-col gap-5 p-0" style={{ "--i": 1 } as CSSProperties}>
-          <span className="absolute right-5 top-5">
-            <Pill tone="accent">Recommended</Pill>
-          </span>
-          <div className="px-6 pt-6">
-            <IconTile name="trophy" tone="marker" />
-            <h2 className="mt-4 font-display text-2xl">{t("tests.mock")}</h2>
-            <p className="mt-1 text-sm text-ink-soft">15 questions in 15 minutes across all sections, like a real placement test.</p>
+        <FadeIn delay={0.08}>
+          <div className="relative h-full overflow-hidden rounded-3xl bg-gradient-to-br from-iris via-violet to-coral p-7 text-white shadow-[var(--shadow-lg)]">
+            <motion.div aria-hidden className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-sun/40 blur-3xl" animate={{ scale: [1, 1.25, 1] }} transition={{ duration: 6, repeat: Infinity }} />
+            <div className="relative flex h-full flex-col gap-6">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white/20">
+                    <Icon name="trophy" className="h-5 w-5" />
+                  </span>
+                  <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">Recommended</span>
+                </div>
+                <h2 className="mt-5 font-display text-3xl">{t("tests.mock")}</h2>
+                <p className="mt-1 text-white/80">15 questions, 15 minutes, all three sections — just like the real thing.</p>
+              </div>
+              <ul className="flex flex-col gap-2">
+                {["Quantitative Aptitude", "Logical Reasoning", "Verbal Ability"].map((name) => (
+                  <li key={name} className="flex items-center justify-between rounded-2xl bg-white/15 px-4 py-2.5 text-sm backdrop-blur">
+                    {name}
+                    <span className="font-semibold">5 questions</span>
+                  </li>
+                ))}
+              </ul>
+              <button onClick={() => start("mock")} disabled={busy} className="press shine mt-auto inline-flex items-center gap-2 self-start rounded-full bg-white px-6 py-3 font-semibold text-ink disabled:opacity-50">
+                {t("tests.start")} mock <Icon name="arrow" className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-          <div className="flex flex-1 flex-col gap-4 px-6 pb-6">
-            <ul className="divide-y divide-line rounded-lg border border-line">
-              {[
-                ["brain", "Quantitative Aptitude", "5 questions"],
-                ["chart", "Logical Reasoning", "5 questions"],
-                ["book", "Verbal Ability", "5 questions"],
-              ].map(([icon, name, n]) => (
-                <li key={name} className="flex items-center gap-3 px-3 py-2.5 text-sm">
-                  <Icon name={icon} className="h-4 w-4 text-ink-soft" />
-                  <span className="flex-1">{name}</span>
-                  <span className="text-ink-soft tabular">{n}</span>
-                </li>
-              ))}
-            </ul>
-            <Button onClick={() => start("mock")} disabled={busy} className="mt-auto self-start px-6 py-3">
-              {t("tests.start")} mock <Icon name="arrow" className="h-4 w-4" />
-            </Button>
-          </div>
-        </Card>
+        </FadeIn>
       </div>
 
-      <Card className="rise" style={{ "--i": 2 } as CSSProperties}>
-        <Label>Past results</Label>
-        {history.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-8 text-center text-sm text-ink-soft">
-            <Icon name="clipboard" className="h-8 w-8 text-accent" />
-            Your completed tests will appear here.
-          </div>
-        ) : (
-          <ul className="mt-3 flex flex-col gap-2">
-            {history.map((h) => {
-              const pct = h.total ? (100 * h.score) / h.total : 0;
-              return (
-                <li key={h.id}>
-                  <button
-                    onClick={() => api<QuizReport>(`/quizzes/${h.id}/report`).then(onOpenReport).catch((e) => setError(e.message))}
-                    className="press flex w-full items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5 text-left text-sm hover:border-line-strong hover:bg-surface-2/60"
-                  >
-                    <Ring value={Math.max(pct, 2)} size={44} stroke={5} tone={pct >= 60 ? "accent" : pct >= 35 ? "marker" : "bad"}>
-                      <span className="text-[10px] font-semibold tabular">{Math.round(pct)}%</span>
-                    </Ring>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium">
-                        {h.kind === "mock" ? "Mock test" : "Quiz"} · <span className="tabular">{h.score}/{h.total}</span>
-                      </p>
-                      <p className="text-xs text-ink-soft">{new Date(h.submitted_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
-                    </div>
-                    <span className="flex items-center gap-1 text-ink-soft">
-                      Report <Icon name="chevron" className="h-4 w-4" />
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </Card>
+      <FadeIn>
+        <div className="rounded-[32px] bg-surface p-2 shadow-[var(--shadow-md)]">
+          <h2 className="px-5 pb-2 pt-4 font-display text-2xl">Past results</h2>
+          {history.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-10 text-center text-ink-soft">
+              <IconTile name="clipboard" tone="iris" />
+              Your finished tests will show up here.
+            </div>
+          ) : (
+            <ul className="flex flex-col">
+              {history.map((h) => {
+                const pct = h.total ? (100 * h.score) / h.total : 0;
+                return (
+                  <li key={h.id}>
+                    <button
+                      onClick={() => api<QuizReport>(`/quizzes/${h.id}/report`).then(onOpenReport).catch((e) => setError(e.message))}
+                      className="press flex w-full items-center gap-4 rounded-3xl px-4 py-3 text-left hover:bg-surface-2"
+                    >
+                      <Ring value={Math.max(pct, 3)} size={48} stroke={6} tone={pct >= 60 ? "lagoon" : pct >= 35 ? "sun" : "coral"}>
+                        <span className="text-[11px] font-bold tabular">{Math.round(pct)}%</span>
+                      </Ring>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">
+                          {h.kind === "mock" ? "Mock test" : "Quiz"} · <span className="tabular">{h.score}/{h.total}</span>
+                        </p>
+                        <p className="text-xs text-ink-soft">{new Date(h.submitted_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
+                      </div>
+                      <Icon name="chevron" className="h-4 w-4 text-ink-faint" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </FadeIn>
     </div>
   );
 }
@@ -244,23 +237,24 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
   const low = remaining < 60;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="glass sticky top-14 z-20 -mx-4 flex items-center gap-3 border-b border-line px-4 py-2.5 sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-10 lg:px-10">
-        <Ring value={(100 * remaining) / quiz.duration_seconds} size={46} stroke={5} tone={low ? "bad" : "accent"}>
-          <Icon name="clock" className={`h-4 w-4 ${low ? "text-bad" : "text-accent"}`} />
+    <div className="flex flex-col gap-5">
+      <div className="glass sticky top-16 z-20 flex items-center gap-4 rounded-full p-2 pr-3 shadow-[var(--shadow-md)] ring-1 ring-black/[0.04] lg:top-4">
+        <Ring value={(100 * remaining) / quiz.duration_seconds} size={52} stroke={6} tone={low ? "coral" : "iris"}>
+          <Icon name="clock" className={`h-4 w-4 ${low ? "text-coral" : "text-iris"}`} />
         </Ring>
         <div className="min-w-0">
-          <p className={`font-display text-2xl font-semibold leading-none tabular ${low ? "text-bad" : ""}`} aria-live={low ? "polite" : "off"}>
+          <motion.p animate={low ? { scale: [1, 1.08, 1] } : undefined} transition={{ duration: 1, repeat: Infinity }} className={`font-display text-2xl leading-none tabular ${low ? "text-coral-600" : ""}`} aria-live={low ? "polite" : "off"}>
             {clock(remaining)}
-          </p>
+          </motion.p>
           <p className="text-xs text-ink-soft tabular">
             {answered}/{quiz.questions.length} answered
           </p>
         </div>
         <div className="mx-2 hidden flex-1 sm:block">
-          <ProgressBar value={(100 * answered) / quiz.questions.length} />
+          <ProgressBar value={(100 * answered) / quiz.questions.length} tone="spark" />
         </div>
         <Button
+          variant="spark"
           className="ml-auto"
           onClick={() => {
             const unanswered = quiz.questions.length - answered;
@@ -273,87 +267,87 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
       </div>
       <ErrorNote message={error} />
 
-      <div className="grid gap-4 md:grid-cols-[1fr_240px]">
-        <Card key={q.id} className="fade p-5 sm:p-7">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-xs font-semibold text-primary-ink tabular">{index + 1}</span>
-            <Pill>{q.topic}</Pill>
-            <Pill>{q.subtopic}</Pill>
-          </div>
-          <p className="mt-4 whitespace-pre-line font-display text-xl leading-snug sm:text-2xl">{q.body}</p>
-          <ul className="mt-6 flex flex-col gap-2.5">
-            {q.options.map((option, i) => {
-              const chosen = answers[q.id] === option;
-              return (
-                <li key={option} className="rise" style={{ "--i": i } as CSSProperties}>
-                  <button
-                    onClick={() => setAnswers((a) => ({ ...a, [q.id]: option }))}
-                    aria-pressed={chosen}
-                    className={`press flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left ${
-                      chosen ? "border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]" : "border-line bg-surface hover:border-line-strong hover:bg-surface-2/60"
-                    }`}
-                  >
-                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md border text-xs font-medium ${chosen ? "border-transparent bg-accent text-accent-ink" : "border-line bg-surface-2 text-ink-soft"}`}>
-                      {String.fromCharCode(65 + i)}
-                    </span>
-                    {option}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="mt-6 flex items-center justify-between gap-2">
-            <Button variant="secondary" onClick={() => go(index - 1)} disabled={index === 0}>
-              ← Previous
-            </Button>
-            {answers[q.id] && (
-              <Button
-                variant="ghost"
-                onClick={() =>
-                  setAnswers((a) => {
-                    const next = { ...a };
-                    delete next[q.id];
-                    return next;
-                  })
-                }
-              >
-                Clear
+      <div className="grid gap-5 md:grid-cols-[1fr_240px]">
+        <AnimatePresence mode="wait">
+          <motion.div key={q.id} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={SPRING} className="rounded-[32px] bg-surface p-6 shadow-[var(--shadow-md)] sm:p-8">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-spark text-sm font-bold text-white tabular">{index + 1}</span>
+              <Pill>{q.topic}</Pill>
+              <Pill>{q.subtopic}</Pill>
+            </div>
+            <p className="mt-5 whitespace-pre-line font-display text-2xl leading-snug sm:text-[28px]">{q.body}</p>
+            <ul className="mt-7 flex flex-col gap-3">
+              {q.options.map((option, i) => {
+                const chosen = answers[q.id] === option;
+                return (
+                  <motion.li key={option} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING, delay: i * 0.04 }}>
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setAnswers((a) => ({ ...a, [q.id]: option }))}
+                      aria-pressed={chosen}
+                      className={`flex w-full items-center gap-3 rounded-3xl px-4 py-4 text-left text-[17px] font-medium ring-2 transition-colors duration-300 ${
+                        chosen ? "bg-iris-soft ring-iris" : "bg-surface-2 ring-transparent hover:bg-surface hover:ring-line-strong"
+                      }`}
+                    >
+                      <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-2xl text-sm font-bold ${chosen ? "bg-iris text-white" : "bg-surface text-ink-soft"}`}>{String.fromCharCode(65 + i)}</span>
+                      {option}
+                    </motion.button>
+                  </motion.li>
+                );
+              })}
+            </ul>
+            <div className="mt-7 flex items-center justify-between gap-2">
+              <Button variant="secondary" onClick={() => go(index - 1)} disabled={index === 0}>
+                ← Previous
               </Button>
-            )}
-            <Button variant={index === quiz.questions.length - 1 ? "secondary" : "primary"} onClick={() => go(index + 1)} disabled={index === quiz.questions.length - 1}>
-              Next →
-            </Button>
-          </div>
-        </Card>
-        <Card className="self-start md:sticky md:top-32 lg:top-24">
-          <Label>Questions</Label>
-          <div className="mt-3 grid grid-cols-5 gap-2">
+              {answers[q.id] && (
+                <Button
+                  variant="ghost"
+                  onClick={() =>
+                    setAnswers((a) => {
+                      const next = { ...a };
+                      delete next[q.id];
+                      return next;
+                    })
+                  }
+                >
+                  Clear
+                </Button>
+              )}
+              <Button variant={index === quiz.questions.length - 1 ? "secondary" : "primary"} onClick={() => go(index + 1)} disabled={index === quiz.questions.length - 1}>
+                Next →
+              </Button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="self-start rounded-[32px] bg-surface p-5 shadow-[var(--shadow-md)] md:sticky md:top-36 lg:top-28">
+          <p className="font-semibold">Questions</p>
+          <div className="mt-4 grid grid-cols-5 gap-2">
             {quiz.questions.map((item, i) => (
-              <button
+              <motion.button
                 key={item.id}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={() => go(i)}
                 aria-label={`Question ${i + 1}${answers[item.id] ? ", answered" : ""}`}
-                className={`press h-9 rounded-md border text-sm font-medium tabular ${
-                  i === index
-                    ? "border-ink text-ink ring-2 ring-ink/15"
-                    : answers[item.id]
-                      ? "border-transparent bg-accent text-accent-ink"
-                      : "border-line bg-surface text-ink-soft hover:border-line-strong"
+                className={`h-10 rounded-2xl text-sm font-bold tabular transition-colors ${
+                  i === index ? "bg-ink text-white" : answers[item.id] ? "bg-iris text-white" : "bg-surface-2 text-ink-soft"
                 }`}
               >
                 {i + 1}
-              </button>
+              </motion.button>
             ))}
           </div>
           <div className="mt-4 flex flex-col gap-1.5 text-xs text-ink-soft">
             <span className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded bg-accent" /> Answered
+              <span className="h-3 w-3 rounded-md bg-iris" /> Answered
             </span>
             <span className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded border border-line" /> Not answered
+              <span className="h-3 w-3 rounded-md bg-surface-2 ring-1 ring-line-strong" /> Not answered
             </span>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );
@@ -361,118 +355,128 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
 
 function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) {
   const { t } = useT();
-  const [burst] = useState(() => (report.accuracy >= 70 ? 1 : 0));
-  const tone = report.accuracy >= 60 ? "accent" : report.accuracy >= 35 ? "marker" : "bad";
-  const verdict = report.accuracy >= 80 ? "Outstanding!" : report.accuracy >= 60 ? "Solid work" : report.accuracy >= 35 ? "Getting there" : "Lots to learn from this one";
+  const [burst] = useState(() => (report.accuracy >= 60 ? 1 : 0));
+  const tone = report.accuracy >= 60 ? "spark" : report.accuracy >= 35 ? "sun" : "coral";
+  const verdict = report.accuracy >= 80 ? "Outstanding! 🏆" : report.accuracy >= 60 ? "Solid work! 💪" : report.accuracy >= 35 ? "Getting there 🌱" : "Lots to learn here 📚";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <Confetti burst={burst} />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Label>{report.kind === "mock" ? "Mock test report" : "Quiz report"}</Label>
-          <h1 className="font-display text-3xl font-semibold sm:text-4xl">{verdict}</h1>
-        </div>
-        <Button variant="secondary" onClick={onDone}>
-          ← Back to tests
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow={report.kind === "mock" ? "Mock test report" : "Quiz report"}
+        title={verdict}
+        actions={
+          <Button variant="secondary" onClick={onDone}>
+            ← Back to tests
+          </Button>
+        }
+      />
 
-      <Card className="rise grid items-center gap-6 sm:grid-cols-[auto_1fr]">
-        <Ring value={report.accuracy} size={150} stroke={13} tone={tone}>
-          <div>
-            <p className="font-display text-4xl font-semibold tabular">
-              {report.score}
-              <span className="text-lg text-ink-soft">/{report.total}</span>
-            </p>
-            <p className="text-xs font-medium text-ink-soft tabular">{report.accuracy}% accuracy</p>
-          </div>
-        </Ring>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-line bg-paper p-4">
-            <Label>Time used</Label>
-            <p className="mt-1 font-display text-2xl font-semibold tabular">{clock(report.time_used_ms / 1000)}</p>
-            <p className="text-xs text-ink-soft tabular">of {clock(report.duration_seconds)}</p>
-          </div>
-          <div className="rounded-xl border border-line bg-paper p-4">
-            <Label>Per question</Label>
-            <p className="mt-1 font-display text-2xl font-semibold tabular">{report.total ? Math.round(report.time_used_ms / report.total / 1000) : 0}s</p>
-            <p className="text-xs text-ink-soft">average</p>
+      <FadeIn>
+        <div className="grid items-center gap-8 rounded-[32px] bg-surface p-7 shadow-[var(--shadow-md)] sm:grid-cols-[auto_1fr]">
+          <motion.div initial={{ scale: 0.6, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 180, damping: 14 }} className="mx-auto">
+            <Ring value={report.accuracy} size={170} stroke={18} tone={tone}>
+              <div>
+                <p className="font-display text-5xl tabular">
+                  {report.score}
+                  <span className="text-xl text-ink-soft">/{report.total}</span>
+                </p>
+                <p className="text-sm font-semibold text-ink-soft tabular">{report.accuracy}%</p>
+              </div>
+            </Ring>
+          </motion.div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-3xl bg-iris-soft p-5">
+              <p className="text-sm font-semibold text-iris">Time used</p>
+              <p className="mt-1 font-display text-3xl tabular">{clock(report.time_used_ms / 1000)}</p>
+              <p className="text-xs text-ink-soft tabular">of {clock(report.duration_seconds)}</p>
+            </div>
+            <div className="rounded-3xl bg-lagoon-soft p-5">
+              <p className="text-sm font-semibold text-lagoon-600">Per question</p>
+              <p className="mt-1 font-display text-3xl tabular">{report.total ? Math.round(report.time_used_ms / report.total / 1000) : 0}s</p>
+              <p className="text-xs text-ink-soft">on average</p>
+            </div>
           </div>
         </div>
-      </Card>
+      </FadeIn>
 
-      <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
-        <Card className="rise" style={{ "--i": 1 } as CSSProperties}>
-          <Label>Section-wise</Label>
-          <ul className="mt-4 flex flex-col gap-5">
-            {report.sections.map((s, i) => (
-              <li key={s.topic} style={{ "--i": i } as CSSProperties}>
-                <div className="mb-1.5 flex justify-between text-sm">
-                  <span className="font-medium">{s.topic}</span>
-                  <span className="tabular text-ink-soft">
-                    <span className="font-semibold text-ink">
-                      {s.correct}/{s.total}
-                    </span>{" "}
-                    · {s.total ? Math.round(s.time_ms / s.total / 1000) : 0}s avg
-                  </span>
-                </div>
-                <ProgressBar value={s.total ? (100 * s.correct) / s.total : 0} thick />
-              </li>
-            ))}
-          </ul>
-        </Card>
-        <Card className="rise" style={{ "--i": 2 } as CSSProperties}>
-          <Label>Skills to work on</Label>
-          {report.weak_skills.length === 0 ? (
-            <p className="mt-3 text-sm text-ink-soft">No misses. Try a harder mix next time.</p>
-          ) : (
-            <ul className="mt-3 flex flex-col gap-2 text-sm">
-              {report.weak_skills.map((w, i) => (
-                <li key={w.skill} className="pop flex items-center justify-between gap-2 rounded-lg border border-line px-3 py-2" style={{ "--i": i } as CSSProperties}>
-                  <span className="truncate">{w.skill}</span>
-                  <Pill tone="bad">missed {w.missed}</Pill>
+      <div className="grid gap-5 md:grid-cols-[1.4fr_1fr]">
+        <FadeIn>
+          <div className="h-full rounded-[32px] bg-surface p-7 shadow-[var(--shadow-md)]">
+            <h2 className="font-display text-2xl">By section</h2>
+            <ul className="mt-5 flex flex-col gap-5">
+              {report.sections.map((s, i) => (
+                <li key={s.topic}>
+                  <div className="mb-2 flex justify-between text-sm">
+                    <span className="font-semibold">{s.topic}</span>
+                    <span className="tabular text-ink-soft">
+                      <span className="font-bold text-ink">
+                        {s.correct}/{s.total}
+                      </span>{" "}
+                      · {s.total ? Math.round(s.time_ms / s.total / 1000) : 0}s avg
+                    </span>
+                  </div>
+                  <ProgressBar value={s.total ? (100 * s.correct) / s.total : 0} tone={SECTION_TONES[i % 3]} thick />
                 </li>
               ))}
             </ul>
-          )}
-          <p className="mt-4 text-xs text-ink-soft">These now carry more weight in your adaptive practice.</p>
-        </Card>
+          </div>
+        </FadeIn>
+        <FadeIn delay={0.08}>
+          <div className="h-full rounded-[32px] bg-surface p-7 shadow-[var(--shadow-md)]">
+            <h2 className="font-display text-2xl">Work on next</h2>
+            {report.weak_skills.length === 0 ? (
+              <p className="mt-3 text-ink-soft">No misses at all! Try a harder mix next time. 🚀</p>
+            ) : (
+              <ul className="mt-4 flex flex-col gap-2">
+                {report.weak_skills.map((w, i) => (
+                  <motion.li key={w.skill} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ ...SPRING, delay: i * 0.06 }} className="flex items-center justify-between gap-2 rounded-2xl bg-surface-2 px-4 py-2.5 text-sm">
+                    <span className="truncate">{w.skill}</span>
+                    <Pill tone="coral">missed {w.missed}</Pill>
+                  </motion.li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-4 text-xs text-ink-soft">These now get extra attention in your practice.</p>
+          </div>
+        </FadeIn>
       </div>
 
-      <Card className="rise" style={{ "--i": 3 } as CSSProperties}>
-        <Label>{t("tests.review")}</Label>
-        <ol className="mt-3 flex flex-col gap-2">
-          {report.questions.map((item, i) => (
-            <li key={item.question.id}>
-              <details className="group rounded-xl border border-line bg-surface transition open:border-line-strong">
-                <summary className="flex cursor-pointer list-none items-center gap-3 p-3">
-                  <span
-                    className={`grid h-7 w-7 shrink-0 place-items-center rounded-md text-xs font-semibold ${
-                      item.is_correct ? "bg-good-soft text-good" : item.chosen_answer ? "bg-bad-soft text-bad" : "bg-surface-2 text-ink-soft"
-                    }`}
-                  >
-                    {item.is_correct ? <Icon name="check" className="h-4 w-4" /> : item.chosen_answer ? <Icon name="x" className="h-4 w-4" /> : i + 1}
-                  </span>
-                  <span className="min-w-0 flex-1 text-sm">{item.question.body}</span>
-                  <Icon name="arrow" className="h-4 w-4 shrink-0 text-ink-soft transition-transform group-open:rotate-90" />
-                </summary>
-                <div className="flex flex-col gap-2 px-3 pb-4 pl-14 text-sm">
-                  {!item.is_correct && (
+      <FadeIn>
+        <div className="rounded-[32px] bg-surface p-2 shadow-[var(--shadow-md)]">
+          <h2 className="px-5 pb-2 pt-4 font-display text-2xl">{t("tests.review")}</h2>
+          <ol className="flex flex-col gap-1 p-2">
+            {report.questions.map((item, i) => (
+              <li key={item.question.id}>
+                <details className="group rounded-3xl transition-colors open:bg-surface-2">
+                  <summary className="flex cursor-pointer list-none items-center gap-3 rounded-3xl p-3 hover:bg-surface-2">
+                    <span
+                      className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                        item.is_correct ? "bg-success-soft text-success" : item.chosen_answer ? "bg-danger-soft text-danger" : "bg-surface-2 text-ink-soft"
+                      }`}
+                    >
+                      {item.is_correct ? <Icon name="check" className="h-4 w-4" /> : item.chosen_answer ? <Icon name="x" className="h-4 w-4" /> : i + 1}
+                    </span>
+                    <span className="min-w-0 flex-1 text-sm">{item.question.body}</span>
+                    <Icon name="chevron" className="h-4 w-4 shrink-0 text-ink-faint transition-transform duration-300 group-open:rotate-90" />
+                  </summary>
+                  <div className="flex flex-col gap-2 px-3 pb-4 pl-14 text-sm">
+                    {!item.is_correct && (
+                      <p>
+                        Your answer: <span className="font-semibold text-danger">{item.chosen_answer ?? "Skipped"}</span>
+                      </p>
+                    )}
                     <p>
-                      Your answer: <span className="font-medium text-bad">{item.chosen_answer ?? "Skipped"}</span>
+                      Correct answer: <span className="font-semibold text-success">{item.correct_option}</span>
                     </p>
-                  )}
-                  <p>
-                    Correct answer: <span className="font-medium text-good">{item.correct_option}</span>
-                  </p>
-                  <p className="whitespace-pre-line rounded-lg border border-line bg-paper p-3 leading-relaxed">{item.explanation}</p>
-                </div>
-              </details>
-            </li>
-          ))}
-        </ol>
-      </Card>
+                    <p className="whitespace-pre-line rounded-2xl bg-surface p-4 leading-relaxed">{item.explanation}</p>
+                  </div>
+                </details>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </FadeIn>
     </div>
   );
 }

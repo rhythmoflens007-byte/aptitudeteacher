@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import time
 from functools import lru_cache
 from typing import Protocol
@@ -15,18 +16,8 @@ log = logging.getLogger("ai")
 LANGUAGES = {
     "en": "English",
     "hi": "Hindi",
-    "bn": "Bengali",
-    "te": "Telugu",
-    "mr": "Marathi",
     "ta": "Tamil",
-    "ur": "Urdu",
-    "gu": "Gujarati",
-    "kn": "Kannada",
-    "ml": "Malayalam",
-    "pa": "Punjabi",
-    "es": "Spanish",
-    "fr": "French",
-    "ar": "Arabic",
+    "te": "Telugu",
 }
 MISCONCEPTIONS = ("careless_slip", "conceptual_gap", "partial_method", "no_attempt")
 RETRY_PAUSES = (1.5,)
@@ -42,14 +33,16 @@ def persona(learner: Learner) -> str:
     name = learner.tutor_name or "Asha"
     woman = (learner.tutor_gender or "female") == "female"
     return (
-        f"You are {name}, a warm, patient {'woman' if woman else 'man'} who teaches aptitude to students "
+        f"You are {name}, a playful, upbeat {'woman' if woman else 'man'} who teaches aptitude to students "
         "preparing for placement and competitive exams (Quantitative Aptitude, Logical Reasoning, Verbal Ability). "
+        "Your style is fun and witty: friendly energy, light humour and vivid everyday analogies, and you "
+        "celebrate wins. When a student is wrong you stay kind and encouraging, and you never mock them. "
+        "Being playful never costs accuracy. "
         "Teach, don't just answer: find what the student doesn't understand, explain the underlying "
         "concept in small numbered steps, show shortcuts where they exist, and end with one short "
         "check-for-understanding question. Keep replies under 180 words. Use plain text, no markdown "
         "tables. Your replies may be read aloud, so avoid symbols that sound odd when spoken. "
-        "In languages with grammatical gender (such as Hindi, Urdu, Marathi, Punjabi, Gujarati, Spanish, French and "
-        f"Arabic), use {'feminine' if woman else 'masculine'} grammatical forms when referring to yourself."
+        f"In Hindi and Telugu, use {'feminine' if woman else 'masculine'} grammatical forms when referring to yourself."
     )
 
 
@@ -112,7 +105,7 @@ def _language(locale: str) -> str:
 def _write_in(locale: str) -> str:
     """Instruction to write in a language using its own script, not romanised letters."""
     language = _language(locale)
-    if language in ("English", "Spanish", "French"):
+    if language == "English":
         return f"Write in {language}."
     return (
         f"Write in {language} using the {language} script itself, never transliterated into Latin letters. "
@@ -190,15 +183,28 @@ def diagnose(q: Question, chosen: str | None, time_taken_ms: int | None, skill_n
     return label, fallback_lesson if label in RETEACH else None
 
 
+EMOTIONS = ("excited", "proud", "encouraging", "curious", "careful", "empathetic", "playful", "thinking", "neutral")
+_EMOTION_TAG = re.compile(r"\[(" + "|".join(EMOTIONS) + r")\]\s*", re.IGNORECASE)
+
+
+def split_emotions(text: str) -> tuple[str, list[str]]:
+    """Removes the [emotion] tags the tutor puts before each sentence, returning clean text and the tags in order."""
+    emotions = [match.lower() for match in _EMOTION_TAG.findall(text)]
+    clean = _EMOTION_TAG.sub("", text)
+    clean = re.sub(r"[ \t]+\n", "\n", clean).strip()
+    return clean, emotions
+
+
 def tutor_reply(
     history: list[tuple[str, str]], context: str | None, learner: Learner, worked_solution: str | None = None
-) -> str:
+) -> tuple[str, list[str]]:
+    """Returns the tutor's reply and one emotion per sentence, which drives the avatar's body language."""
     if not enabled():
         base = (
             f"I'm {learner.tutor_name or 'Asha'}, running in offline mode right now, so I can't hold a full "
             "conversation yet. Add a free Gemini API key to apps/api/.env to switch me on."
         )
-        return f"{base}\n\nHere's the worked solution meanwhile:\n{worked_solution}" if worked_solution else base
+        return (f"{base}\n\nHere's the worked solution meanwhile:\n{worked_solution}" if worked_solution else base), []
     while history and history[0][0] != "student":
         history = history[1:]
     contents = [
@@ -207,15 +213,19 @@ def tutor_reply(
     ]
     language = _language(learner.locale)
     system = (
-        f"{persona(learner)}\nReply in {language}. If the student's latest message is written in a language other "
-        f"than {language} and English, reply in the student's language instead."
+        f"{persona(learner)}\nReply in {language}. {_write_in(learner.locale)} If the student's latest message is "
+        f"written in a language other than {language} and English, reply in the student's language instead. "
+        "Only introduce yourself in your first reply of a conversation.\n"
+        "Put an emotion tag in square brackets at the start of EVERY sentence, describing how you say it. "
+        f"Use only these tags: {', '.join(f'[{e}]' for e in EMOTIONS)}. "
+        "Example: [excited] Great question! [thinking] Let's see how the speeds combine."
     )
     if context:
         system += f"\n\nThe student is asking about this problem:\n{context}"
     try:
-        return _generate(contents, system=system)
+        return split_emotions(_generate(contents, system=system))
     except AIUnavailable:
-        return "I couldn't reach the AI service just now (it may be busy, or the free daily limit may be used up). Please try again in a minute."
+        return "I couldn't reach the AI service just now (it may be busy, or the free daily limit may be used up). Please try again in a minute.", ["empathetic"]
 
 
 def generate_question(subtopic: str, skill: str, difficulty: int, examples: list[Question]) -> dict | None:

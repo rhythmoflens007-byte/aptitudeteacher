@@ -1,123 +1,149 @@
 "use client";
 
-import { motion } from "motion/react";
-import { ButtonHTMLAttributes, CSSProperties, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { motion, useMotionTemplate, useMotionValue, useSpring } from "motion/react";
+import {
+  ButtonHTMLAttributes,
+  CSSProperties,
+  MouseEvent,
+  ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "marker";
+/* ---------------- Buttons ---------------- */
+
+type Variant = "primary" | "secondary" | "ghost" | "spark" | "marker";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "shine bg-primary text-primary-ink shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
-  secondary: "border border-line-strong bg-surface text-ink hover:border-ink/40 hover:bg-surface-2",
+  primary: "shine bg-iris text-white shadow-[var(--shadow-iris)] hover:bg-iris-600",
+  secondary: "bg-surface text-ink shadow-[var(--shadow-sm)] ring-1 ring-line hover:ring-line-strong hover:shadow-[var(--shadow-md)]",
   ghost: "text-ink-soft hover:bg-surface-2 hover:text-ink",
-  marker: "shine bg-accent text-accent-ink shadow-[var(--shadow-glow)] hover:brightness-110",
+  spark: "shine bg-spark text-white shadow-[0_12px_32px_-12px_rgb(155_92_246_/_0.6)] hover:shadow-[0_16px_40px_-12px_rgb(255_107_92_/_0.55)]",
+  marker: "shine bg-coral text-white shadow-[0_10px_28px_-10px_rgb(255_107_92_/_0.6)] hover:bg-coral-600",
 };
 
 export const BUTTON_BASE =
-  "press inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2.5 text-sm font-medium tracking-[0.01em] disabled:cursor-not-allowed disabled:opacity-50";
+  "press inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 text-[15px] font-semibold tracking-[-0.01em] disabled:cursor-not-allowed disabled:opacity-50";
 
 /** Class string for links styled as buttons. */
 export function buttonClass(variant: Variant = "primary", className = "") {
   return `${BUTTON_BASE} ${VARIANTS[variant]} ${className}`;
 }
 
-export function Button({
-  variant = "primary",
-  className = "",
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+export function Button({ variant = "primary", className = "", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
   return <button {...props} className={buttonClass(variant, className)} />;
 }
 
-/** Consistent page title block: small eyebrow, title, optional description and actions. */
-export function PageHeader({
-  eyebrow,
-  title,
-  description,
-  actions,
-}: {
-  eyebrow?: ReactNode;
-  title: ReactNode;
-  description?: ReactNode;
-  actions?: ReactNode;
-}) {
+/* ---------------- Surfaces ---------------- */
+
+export function Card({ children, className = "", hover = false, style }: { children: ReactNode; className?: string; hover?: boolean; style?: CSSProperties }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
-      <div className="min-w-0">
-        {eyebrow && <p className="eyebrow mb-2.5">{eyebrow}</p>}
-        <h1 className="font-display text-3xl sm:text-[2.6rem] sm:leading-[1.08]">{title}</h1>
-        {description && <p className="mt-2 max-w-2xl text-sm text-ink-soft">{description}</p>}
-      </div>
-      {actions}
+    <div style={style} className={`rounded-3xl bg-surface p-6 shadow-[var(--shadow-md)] ring-1 ring-black/[0.03] ${hover ? "lift" : ""} ${className}`}>
+      {children}
     </div>
   );
 }
 
-/** Fades children in the first time they scroll into view. */
-export function Reveal({
+const SPOT = { iris: "91 91 245", coral: "255 107 92", lagoon: "22 194 194", sun: "255 197 61" };
+
+/** Card with a soft coloured spotlight that follows the pointer, and a gentle 3D tilt. */
+export function SpotlightCard({
   children,
   className = "",
-  delay = 0,
-  as: Tag = "div",
+  tint = "iris",
+  tilt = true,
 }: {
   children: ReactNode;
   className?: string;
-  delay?: number;
-  as?: "div" | "section" | "li";
+  tint?: keyof typeof SPOT;
+  tilt?: boolean;
 }) {
-  const ref = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "0px 0px -8% 0px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  const mx = useMotionValue(-600);
+  const my = useMotionValue(-600);
+  const rx = useSpring(0, { stiffness: 160, damping: 18 });
+  const ry = useSpring(0, { stiffness: 160, damping: 18 });
+  const background = useMotionTemplate`radial-gradient(420px circle at ${mx}px ${my}px, rgb(${SPOT[tint]} / 0.14), transparent 70%)`;
+
+  function onMove(e: MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    mx.set(x);
+    my.set(y);
+    if (tilt) {
+      ry.set((x / rect.width - 0.5) * 6);
+      rx.set(-(y / rect.height - 0.5) * 6);
+    }
+  }
+  function onLeave() {
+    mx.set(-600);
+    my.set(-600);
+    rx.set(0);
+    ry.set(0);
+  }
+
   return (
-    <Tag
-      ref={ref as never}
-      className={`reveal ${visible ? "is-visible" : ""} ${className}`}
-      style={{ "--i": delay } as CSSProperties}
+    <motion.div
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      style={{ rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
+      className={`group relative overflow-hidden rounded-3xl bg-surface shadow-[var(--shadow-md)] ring-1 ring-black/[0.03] transition-shadow duration-500 hover:shadow-[var(--shadow-lg)] ${className}`}
     >
+      <motion.div aria-hidden className="pointer-events-none absolute inset-0 z-10" style={{ background }} />
       {children}
-    </Tag>
+    </motion.div>
   );
 }
 
-export function Card({
-  children,
-  className = "",
-  hover = false,
-  style,
-}: {
-  children: ReactNode;
-  className?: string;
-  hover?: boolean;
-  style?: CSSProperties;
-}) {
+/** Wraps content in the animated Spark ring and halo while `active`. `level` (0–1) scales the halo, e.g. with speech. */
+export function SparkGlow({ active, level = 1, className = "", children }: { active: boolean; level?: number; className?: string; children: ReactNode }) {
   return (
-    <div
-      style={style}
-      className={`rounded-xl border border-line bg-surface p-5 shadow-[var(--shadow-sm)] ${hover ? "lift" : ""} ${className}`}
-    >
+    <div data-active={active} className={`spark-glow ${className}`} style={{ "--spark-level": level } as CSSProperties}>
       {children}
+    </div>
+  );
+}
+
+/** Drifting colour blobs for hero backgrounds. */
+export function Blobs({ className = "" }: { className?: string }) {
+  return (
+    <div aria-hidden className={`blobs ${className}`}>
+      <span className="blob" style={{ width: "42vmax", height: "42vmax", left: "-12%", top: "-18%", background: "#c3c2ff" }} />
+      <span className="blob" style={{ width: "36vmax", height: "36vmax", right: "-10%", top: "-6%", background: "#ffc9c0", animationDelay: "-6s" }} />
+      <span className="blob" style={{ width: "30vmax", height: "30vmax", left: "30%", top: "34%", background: "#b0eeee", animationDelay: "-11s", opacity: 0.4 }} />
+      <span className="blob" style={{ width: "24vmax", height: "24vmax", right: "16%", bottom: "-12%", background: "#ffe5a3", animationDelay: "-3s", opacity: 0.45 }} />
     </div>
   );
 }
 
 export function Label({ children }: { children: ReactNode }) {
-  return <p className="text-[13px] font-medium text-ink-soft">{children}</p>;
+  return <p className="text-[13px] font-semibold text-ink-soft">{children}</p>;
 }
 
-/** Pill-style tab group whose active indicator glides between options. */
+const TILE_TONES = {
+  neutral: "bg-surface-2 text-ink",
+  accent: "bg-iris-soft text-iris",
+  iris: "bg-iris-soft text-iris",
+  marker: "bg-sun-soft text-sun-600",
+  sun: "bg-sun-soft text-sun-600",
+  coral: "bg-coral-soft text-coral-600",
+  lagoon: "bg-lagoon-soft text-lagoon-600",
+  violet: "bg-[#f3ecfe] text-violet",
+  good: "bg-success-soft text-success",
+};
+
+/** Rounded square icon holder used on cards and stat tiles. */
+export function IconTile({ name, tone = "neutral", className = "" }: { name: string; tone?: keyof typeof TILE_TONES; className?: string }) {
+  return (
+    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${TILE_TONES[tone]} ${className}`}>
+      <Icon name={name} className="h-5 w-5" />
+    </span>
+  );
+}
+
+/** Pill tab group whose active indicator glides between options. */
 export function Segmented<T extends string | null>({
   options,
   value,
@@ -134,7 +160,7 @@ export function Segmented<T extends string | null>({
   label?: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className={`relative flex shrink-0 gap-0.5 rounded-lg border border-line bg-surface-2 p-1 ${className}`}>
+    <div role="radiogroup" aria-label={label} className={`relative flex shrink-0 gap-1 rounded-full bg-surface-2 p-1 ${className}`}>
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -144,13 +170,13 @@ export function Segmented<T extends string | null>({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(option.value)}
-            className={`relative flex-1 shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors duration-300 ${active ? "font-medium text-ink" : "text-ink-soft hover:text-ink"}`}
+            className={`relative flex-1 shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 ${active ? "text-ink" : "text-ink-soft hover:text-ink"}`}
           >
             {active && (
               <motion.span
                 layoutId={`seg-${id}`}
-                className="absolute inset-0 rounded-md border border-line bg-surface shadow-[var(--shadow-sm)]"
-                transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                className="absolute inset-0 rounded-full bg-surface shadow-[var(--shadow-sm)]"
+                transition={{ type: "spring", stiffness: 420, damping: 34 }}
               />
             )}
             <span className="relative whitespace-nowrap">{option.label}</span>
@@ -161,73 +187,93 @@ export function Segmented<T extends string | null>({
   );
 }
 
-/** Small square icon holder used on cards and stat tiles. */
-export function IconTile({ name, tone = "neutral", className = "" }: { name: string; tone?: "neutral" | "accent" | "marker" | "violet"; className?: string }) {
-  const tones = {
-    neutral: "border border-line bg-surface-2 text-navy dark:text-ink",
-    accent: "bg-accent-soft text-accent",
-    marker: "bg-marker-soft text-marker",
-    violet: "bg-violet/10 text-violet",
-  };
+/** Consistent page title: small coloured eyebrow, big bold title, optional description and actions. */
+export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?: ReactNode; title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
   return (
-    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${tones[tone]} ${className}`}>
-      <Icon name={name} className="h-[18px] w-[18px]" />
-    </span>
-  );
-}
-
-export function ProgressBar({ value, tone = "accent", thick = false }: { value: number; tone?: "accent" | "marker"; thick?: boolean }) {
-  const pct = Math.max(0, Math.min(100, value));
-  return (
-    <div
-      className={`overflow-hidden rounded-full bg-surface-2 ${thick ? "h-2.5" : "h-1.5"}`}
-      role="progressbar"
-      aria-valuenow={Math.round(pct)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-    >
-      <div className={`grow-x h-full rounded-full ${tone === "marker" ? "bg-marker-2" : "bg-accent"}`} style={{ width: `${pct}%` }} />
+    <div className="flex flex-wrap items-end justify-between gap-5">
+      <div className="min-w-0">
+        {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
+        <h1 className="font-display text-4xl leading-[1.05] sm:text-5xl">{title}</h1>
+        {description && <p className="mt-3 max-w-2xl text-[17px] text-ink-soft">{description}</p>}
+      </div>
+      {actions}
     </div>
   );
 }
 
-export function Ring({
-  value,
-  size = 88,
-  stroke = 9,
-  tone = "accent",
-  children,
-}: {
-  value: number;
-  size?: number;
-  stroke?: number;
-  tone?: "accent" | "marker" | "bad";
-  children?: ReactNode;
-}) {
+/** Fades children in the first time they scroll into view. */
+export function Reveal({ children, className = "", delay = 0, as: Tag = "div" }: { children: ReactNode; className?: string; delay?: number; as?: "div" | "section" | "li" }) {
+  const MotionTag = motion[Tag] as typeof motion.div;
+  return (
+    <MotionTag
+      className={className}
+      initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: delay * 0.08 }}
+    >
+      {children}
+    </MotionTag>
+  );
+}
+
+/* ---------------- Data display ---------------- */
+
+const TONE_FILL = {
+  accent: "var(--iris)",
+  iris: "var(--iris)",
+  marker: "var(--sun)",
+  sun: "var(--sun)",
+  coral: "var(--coral)",
+  lagoon: "var(--lagoon)",
+  bad: "var(--danger)",
+  good: "var(--success)",
+  spark: "var(--spark)",
+};
+export type Tone = keyof typeof TONE_FILL;
+
+export function ProgressBar({ value, tone = "iris", thick = false }: { value: number; tone?: Tone; thick?: boolean }) {
+  const pct = Math.max(0, Math.min(100, value));
+  return (
+    <div className={`overflow-hidden rounded-full bg-surface-2 ${thick ? "h-3" : "h-2"}`} role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+      <div className="grow-x h-full rounded-full" style={{ width: `${pct}%`, background: TONE_FILL[tone] }} />
+    </div>
+  );
+}
+
+export function Ring({ value, size = 88, stroke = 10, tone = "iris", children }: { value: number; size?: number; stroke?: number; tone?: Tone; children?: ReactNode }) {
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(100, value));
   const [drawn, setDrawn] = useState(0);
+  const gid = `ring-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   useEffect(() => {
     const id = requestAnimationFrame(() => setDrawn(pct));
     return () => cancelAnimationFrame(id);
   }, [pct]);
-  const color = tone === "marker" ? "var(--marker-2)" : tone === "bad" ? "var(--bad)" : "var(--accent)";
+  const trackTint = { iris: "#eeeefe", accent: "#eeeefe", coral: "#ffede9", lagoon: "#e1f7f7", sun: "#fff5d9", marker: "#fff5d9", bad: "#fdeced", good: "#e2f6ee", spark: "#f3effd" }[tone];
   return (
     <div className="relative inline-grid shrink-0 place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface-2)" strokeWidth={stroke} />
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#5b5bf5" />
+            <stop offset="50%" stopColor="#9b5cf6" />
+            <stop offset="100%" stopColor="#ff6b5c" />
+          </linearGradient>
+        </defs>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={trackTint} strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
-          stroke={color}
+          stroke={tone === "spark" ? `url(#${gid})` : TONE_FILL[tone]}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={circumference * (1 - drawn / 100)}
-          style={{ transition: "stroke-dashoffset 1.1s cubic-bezier(0.2, 0.8, 0.2, 1), stroke 0.3s" }}
+          style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.34, 1.2, 0.64, 1)" }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">{children}</div>
@@ -235,7 +281,25 @@ export function Ring({
   );
 }
 
-export function useCountUp(target: number, duration = 900) {
+/** Three nested rings, like a fitness activity widget. */
+export function ActivityRings({ rings, size = 156, children }: { rings: { value: number; tone: Tone; label: string }[]; size?: number; children?: ReactNode }) {
+  const stroke = Math.round(size * 0.095);
+  return (
+    <div className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }} role="img" aria-label={rings.map((r) => `${r.label} ${Math.round(r.value)}%`).join(", ")}>
+      {rings.map((ring, i) => {
+        const s = size - i * (stroke * 2 + 5);
+        return (
+          <div key={ring.label} className="absolute">
+            <Ring value={ring.value} size={s} stroke={stroke} tone={ring.tone} />
+          </div>
+        );
+      })}
+      <div className="relative">{children}</div>
+    </div>
+  );
+}
+
+export function useCountUp(target: number, duration = 1000) {
   const [value, setValue] = useState(0);
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -262,62 +326,65 @@ export function CountUp({ value, decimals = 0, suffix = "" }: { value: number; d
   );
 }
 
-const CONFETTI_COLORS = ["var(--accent)", "var(--accent-2)", "var(--marker)", "var(--marker-2)", "var(--violet)", "#f5c542"];
+const BURST_COLOURS = ["#5b5bf5", "#9b5cf6", "#ff6b5c", "#ffc53d", "#16c2c2"];
 
+/** A playful burst of colourful particles. Increment `burst` to fire again. */
 export function Confetti({ burst }: { burst: number }) {
   const pieces = useMemo(
     () =>
-      Array.from({ length: 46 }, (_, i) => ({
-        left: `${(i * 37 + burst * 13) % 100}%`,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-        dx: `${((i * 53) % 160) - 80}px`,
-        rot: `${360 + ((i * 97) % 540)}deg`,
-        delay: `${(i % 9) * 0.03}s`,
-        dur: `${1.2 + ((i * 7) % 8) / 10}s`,
-        round: i % 3 === 0,
-      })),
+      Array.from({ length: 44 }, (_, i) => {
+        const angle = (i / 44) * Math.PI * 2 + (burst % 7) * 0.3;
+        const distance = 140 + ((i * 53 + burst * 31) % 220);
+        return {
+          x: Math.cos(angle) * distance,
+          y: Math.sin(angle) * distance - 60,
+          colour: BURST_COLOURS[i % BURST_COLOURS.length],
+          size: 6 + ((i * 7) % 8),
+          round: i % 3 !== 0,
+          rotate: (i * 47) % 360,
+        };
+      }),
     [burst],
   );
   if (!burst) return null;
   return (
-    <div key={burst} aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-50 h-0 overflow-visible">
+    <div key={burst} aria-hidden className="pointer-events-none fixed left-1/2 top-[40%] z-50 h-0 w-0">
       {pieces.map((p, i) => (
-        <span
+        <motion.span
           key={i}
-          className="confetti"
-          style={
-            {
-              left: p.left,
-              background: p.color,
-              borderRadius: p.round ? "999px" : undefined,
-              "--dx": p.dx,
-              "--rot": p.rot,
-              "--delay": p.delay,
-              "--dur": p.dur,
-            } as CSSProperties
-          }
+          className="absolute block"
+          style={{ width: p.size, height: p.round ? p.size : p.size * 1.6, background: p.colour, borderRadius: p.round ? 999 : 2 }}
+          initial={{ x: 0, y: 0, scale: 0, opacity: 1, rotate: 0 }}
+          animate={{ x: p.x, y: [0, p.y, p.y + 160], scale: [0, 1.2, 0.9], opacity: [1, 1, 0], rotate: p.rotate + 360 }}
+          transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1], times: [0, 0.45, 1] }}
         />
       ))}
     </div>
   );
 }
 
-export function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "good" | "bad" | "marker" | "accent" | "violet" }) {
-  const tones = {
+type PillTone = "neutral" | "good" | "bad" | "marker" | "accent" | "violet" | "coral" | "lagoon" | "sun" | "iris";
+
+export function Pill({ children, tone = "neutral" }: { children: ReactNode; tone?: PillTone }) {
+  const tones: Record<PillTone, string> = {
     neutral: "bg-surface-2 text-ink-soft",
-    good: "bg-good-soft text-good",
-    bad: "bg-bad-soft text-bad",
-    marker: "bg-marker-soft text-marker",
-    accent: "bg-accent-soft text-accent",
-    violet: "bg-violet/15 text-violet",
+    good: "bg-success-soft text-success",
+    bad: "bg-danger-soft text-danger",
+    marker: "bg-sun-soft text-sun-600",
+    sun: "bg-sun-soft text-sun-600",
+    accent: "bg-iris-soft text-iris",
+    iris: "bg-iris-soft text-iris",
+    violet: "bg-[#f3ecfe] text-violet",
+    coral: "bg-coral-soft text-coral-600",
+    lagoon: "bg-lagoon-soft text-lagoon-600",
   };
-  return <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>;
 }
 
 export function ErrorNote({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <p role="alert" className="fade flex items-start gap-2 rounded-xl border border-bad/25 bg-bad-soft px-4 py-3 text-sm text-bad">
+    <p role="alert" className="shake flex items-start gap-2 rounded-2xl bg-danger-soft px-4 py-3 text-sm text-danger">
       <Icon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
       {message}
     </p>
@@ -327,7 +394,7 @@ export function ErrorNote({ message }: { message: string | null }) {
 export function Spinner({ label = "Loading" }: { label?: string }) {
   return (
     <div className="flex items-center gap-2 text-sm text-ink-soft" role="status">
-      <span className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-accent" />
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-surface-3 border-t-iris" />
       {label}
     </div>
   );
@@ -336,6 +403,8 @@ export function Spinner({ label = "Loading" }: { label?: string }) {
 export function Skeleton({ className = "" }: { className?: string }) {
   return <div aria-hidden className={`skeleton ${className}`} />;
 }
+
+/* ---------------- Icons ---------------- */
 
 const ICONS: Record<string, ReactNode> = {
   home: <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />,
@@ -390,7 +459,7 @@ const ICONS: Record<string, ReactNode> = {
   ),
   send: <path d="M4 12 20 4l-6 16-3-7z" />,
   speaker: <path d="M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" />,
-  sparkles: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />,
+  sparkles: <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" />,
   trophy: <path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4a3 3 0 0 0 4 4M16 6h4a3 3 0 0 1-4 4M12 13v4M8 21h8M9 17h6" />,
   chart: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
   history: (
@@ -426,11 +495,18 @@ const ICONS: Record<string, ReactNode> = {
   ),
   layers: <path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5" />,
   play: <path d="M7 4.5v15l12-7.5z" />,
+  eye: (
+    <>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  star: <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" />,
 };
 
 export function Icon({ name, className = "h-5 w-5" }: { name: keyof typeof ICONS | string; className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
       {ICONS[name]}
     </svg>
   );

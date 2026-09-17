@@ -1,9 +1,12 @@
+from typing import get_args
+
 from sqlalchemy import func, inspect, select, text
 from sqlalchemy.orm import Session
 
 from app.db.models import Badge, Question, Skill, Subtopic, Topic
 from app.db.session import Base, SessionLocal, engine
 from app.engine.gamification import BADGES
+from app.schemas import Locale
 from app.seed_data import CURRICULUM
 
 
@@ -68,9 +71,23 @@ def add_missing_columns() -> None:
                 conn.execute(text(ddl))
 
 
+def retire_unsupported_locales() -> None:
+    """Moves accounts on a language the app no longer offers back to English."""
+    supported = get_args(Locale)
+    if "users" not in inspect(engine).get_table_names():
+        return
+    placeholders = ", ".join(f":l{i}" for i in range(len(supported)))
+    with engine.begin() as conn:
+        conn.execute(
+            text(f"UPDATE users SET locale = 'en' WHERE locale IS NULL OR locale NOT IN ({placeholders})"),
+            {f"l{i}": code for i, code in enumerate(supported)},
+        )
+
+
 def init_db() -> None:
     Base.metadata.create_all(engine)
     add_missing_columns()
+    retire_unsupported_locales()
     with SessionLocal() as db:
         seed(db)
 
