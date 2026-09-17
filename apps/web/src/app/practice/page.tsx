@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
-import type { Mood } from "@/components/Avatar";
+import type { Mood } from "@/lib/tutorRig";
 import TutorAvatar from "@/components/TutorAvatar";
 import { Button, Card, Confetti, DIFFICULTY, ErrorNote, Icon, IconTile, Label, MISCONCEPTION_LABEL, PageHeader, Pill, ProgressBar, Segmented, Skeleton } from "@/components/ui";
 import { api, AttemptResult, Question, Topic, TutorSession } from "@/lib/api";
@@ -361,7 +361,7 @@ function Practice() {
             <TutorAvatar
               gender={tutor.gender}
               speaking={voice.speaking}
-              viseme={voice.viseme}
+              word={voice.word}
               wordTick={voice.wordTick}
               gestureTick={voice.gestureTick}
               mood={voice.speaking ? "neutral" : mood}

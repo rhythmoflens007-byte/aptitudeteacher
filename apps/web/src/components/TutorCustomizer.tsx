@@ -69,7 +69,7 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
         <TutorAvatar
           gender={gender}
           speaking={voice.speaking}
-          viseme={voice.viseme}
+          word={voice.word}
           wordTick={voice.wordTick}
           gestureTick={voice.gestureTick}
           mood="happy"

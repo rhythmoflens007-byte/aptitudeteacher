@@ -2,7 +2,7 @@
 
 import { CSSProperties, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
-import type { Mood } from "@/components/Avatar";
+import type { Mood } from "@/lib/tutorRig";
 import Modal from "@/components/Modal";
 import TutorAvatar from "@/components/TutorAvatar";
 import TutorCustomizer from "@/components/TutorCustomizer";
@@ -265,7 +265,7 @@ function Tutor() {
             <TutorAvatar
               gender={tutor.gender}
               speaking={voice.speaking}
-              viseme={voice.viseme}
+              word={voice.word}
               wordTick={voice.wordTick}
               gestureTick={voice.gestureTick}
               mood={mood}

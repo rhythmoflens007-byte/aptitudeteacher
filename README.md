@@ -96,16 +96,18 @@ Voice input works in Chrome and Edge.
 
 ## Tutor characters
 
-The tutor is a 3D character that lip-syncs to its speech and gestures while explaining. Out of the
-box it uses built-in cartoon tutors. To use your own characters, add VRM models (for example
-from [VRoid Hub](https://hub.vroid.com) or made in VRoid Studio):
+The tutors (Asha and Arjun) are animated 2D vector characters, rigged the way apps like Duolingo
+animate theirs: separate parts for the head, eyes, brows, mouth, torso, arms and hands, driven by
+a small state machine in `apps/web/src/lib/tutorRig.ts` and drawn by
+`apps/web/src/components/TutorFigure.tsx`. They need no downloads or WebGL and work on any phone.
 
-- `apps/web/public/tutors/female.vrm`
-- `apps/web/public/tutors/male.vrm`
-
-Only use models whose conditions of use allow them in apps (and commercial use, if you sell the
-app), and give credit if the model's license asks for it. The app picks the files up on the next
-page load; a missing or unreadable file falls back to the built-in tutor.
+- **Lip-sync:** each spoken word is broken into mouth shapes (visemes), including Indian scripts,
+  and the mouth morphs smoothly between them.
+- **Body language:** a different explaining gesture per sentence, beats and nods on words,
+  and reactions for thinking, listening, correct (thumbs-up) and incorrect (concerned) answers.
+- **Life:** breathing, blinking, eye movements that follow the pointer, and a wave hello.
+- Animation pauses when the tutor is off-screen, and calms down for people who turn on
+  "reduce motion" in their system settings.
 
 Speech uses the voices installed in the browser. Microsoft Edge has natural voices for most
 Indian languages; Chrome on Windows has fewer, and the app shows a note when a language has no

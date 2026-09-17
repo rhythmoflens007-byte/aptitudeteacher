@@ -1,21 +1,19 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { Component, ReactNode, useSyncExternalStore } from "react";
 import type { Viseme } from "@/lib/speech";
 import type { TutorGender } from "@/lib/tutor";
-import Avatar, { Mood } from "./Avatar";
-import type { Framing } from "./Tutor3D";
+import type { Mood } from "@/lib/tutorRig";
+import TutorFigure, { Framing } from "./TutorFigure";
 
-const Tutor3D = dynamic(() => import("./Tutor3D"), {
-  ssr: false,
-  loading: () => <div className="h-full w-full animate-pulse rounded-full bg-accent/10" />,
-});
+export type { Mood } from "@/lib/tutorRig";
+export type { Framing } from "./TutorFigure";
 
 export type TutorAvatarProps = {
   gender: TutorGender;
   speaking?: boolean;
+  /** Kept for callers that still pass a coarse viseme; lip-sync now uses the spoken word itself. */
   viseme?: Viseme;
+  word?: string;
   wordTick?: number;
   gestureTick?: number;
   mood?: Mood;
@@ -24,34 +22,11 @@ export type TutorAvatarProps = {
   stage?: boolean;
 };
 
-let webglSupport: boolean | null = null;
-function detectWebGL() {
-  if (webglSupport === null) {
-    try {
-      const canvas = document.createElement("canvas");
-      webglSupport = !!(canvas.getContext("webgl2") || canvas.getContext("webgl"));
-    } catch {
-      webglSupport = false;
-    }
-  }
-  return webglSupport;
-}
-const noopSubscribe = () => () => {};
-
-class RenderGuard extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? this.props.fallback : this.props.children;
-  }
-}
-
+/** The animated 2D tutor on an optional soft spotlight stage. */
 export default function TutorAvatar({
   gender,
   speaking = false,
-  viseme = "rest",
+  word = "",
   wordTick = 0,
   gestureTick = 0,
   mood = "happy",
@@ -59,13 +34,6 @@ export default function TutorAvatar({
   className = "",
   stage = true,
 }: TutorAvatarProps) {
-  const webgl = useSyncExternalStore(noopSubscribe, detectWebGL, () => true);
-  const flat = (
-    <div className="flex h-full w-full items-end justify-center">
-      <Avatar gender={gender} speaking={speaking} viseme={viseme} wordTick={wordTick} mood={mood} size={220} />
-    </div>
-  );
-
   return (
     <div className={`relative isolate ${className}`}>
       {stage && (
@@ -74,13 +42,7 @@ export default function TutorAvatar({
           {framing === "full" && <span className={`tutor-stage-ring ${speaking ? "tutor-stage-ring--live" : ""}`} />}
         </div>
       )}
-      {webgl ? (
-        <RenderGuard fallback={flat}>
-          <Tutor3D gender={gender} speaking={speaking} viseme={viseme} wordTick={wordTick} gestureTick={gestureTick} mood={mood} framing={framing} />
-        </RenderGuard>
-      ) : (
-        flat
-      )}
+      <TutorFigure key={gender} gender={gender} speaking={speaking} mood={mood} word={word} wordTick={wordTick} gestureTick={gestureTick} framing={framing} className="fade" />
     </div>
   );
 }
