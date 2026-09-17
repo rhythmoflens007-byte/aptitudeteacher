@@ -1,7 +1,7 @@
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import ai
@@ -10,6 +10,11 @@ from app.db.models import Attempt, DailyGoal, Question, QuestionSkill, Skill, Sk
 WRONG_PENALTY = {"careless_slip": 3.0, "no_attempt": 6.0, "partial_method": 7.0, "conceptual_gap": 12.0}
 NEEDS_RETEST = {"conceptual_gap", "partial_method"}
 DAILY_TARGET = 10
+REPEAT_AFTER_DAYS = 7
+
+
+def as_utc(value: datetime) -> datetime:
+    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
 
 
 def updated_score(score: float, correct: bool, difficulty: int, misconception: str | None) -> float:
@@ -73,10 +78,17 @@ def question_for_skill(db: Session, user_id: str, skill: Skill, exclude_id: str 
     solved = set(
         db.scalars(select(Attempt.question_id).where(Attempt.user_id == user_id, Attempt.is_correct.is_(True))).all()
     )
-    recent = list(
-        db.scalars(select(Attempt.question_id).where(Attempt.user_id == user_id).order_by(Attempt.created_at.desc()).limit(10)).all()
+    # When each question was last answered, so recently seen ones are skipped and repeats go oldest-first.
+    last_seen = dict(
+        db.execute(
+            select(Attempt.question_id, func.max(Attempt.created_at)).where(Attempt.user_id == user_id).group_by(Attempt.question_id)
+        ).all()
     )
-    fresh = [q for q in questions if q.id not in solved and q.id not in recent and q.id != exclude_id]
+    cutoff = utcnow() - timedelta(days=REPEAT_AFTER_DAYS)
+    fresh = [
+        q for q in questions
+        if q.id not in solved and q.id != exclude_id and (q.id not in last_seen or as_utc(last_seen[q.id]) < cutoff)
+    ]
     if fresh:
         return min(fresh, key=lambda q: (abs(q.difficulty - target), random.random()))
 
@@ -89,8 +101,8 @@ def question_for_skill(db: Session, user_id: str, skill: Skill, exclude_id: str 
         return question
 
     reusable = [q for q in questions if q.id != exclude_id] or list(questions)
-    order = {qid: i for i, qid in enumerate(recent)}
-    return max(reusable, key=lambda q: (order.get(q.id, 99), -abs(q.difficulty - target)))
+    never = datetime.min.replace(tzinfo=timezone.utc)
+    return min(reusable, key=lambda q: (as_utc(last_seen[q.id]) if q.id in last_seen else never, abs(q.difficulty - target)))
 
 
 def next_question(db: Session, user_id: str, topic_id: str | None) -> tuple[Question, str]:

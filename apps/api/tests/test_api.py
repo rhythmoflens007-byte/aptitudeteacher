@@ -227,3 +227,31 @@ def test_generate_and_ocr_need_the_ai(client, user):
     assert client.post("/questions/generate", headers=user, json={"skill_id": skill["id"]}).status_code == 503
     res = client.post("/tutor/ocr", headers=user, files={"image": ("q.png", b"fake", "image/png")})
     assert res.status_code == 503
+
+
+def test_recently_answered_questions_are_not_repeated_until_all_are_seen(client, user):
+    from sqlalchemy import select
+
+    from sqlalchemy import func
+
+    from app.db.models import QuestionSkill, Skill
+    from app.db.session import SessionLocal
+    from app.engine import mastery
+
+    user_id = client.get("/auth/me", headers=user).json()["id"]
+    with SessionLocal() as db:
+        skill_id, total = db.execute(
+            select(QuestionSkill.skill_id, func.count()).group_by(QuestionSkill.skill_id).having(func.count() >= 2).limit(1)
+        ).one()
+
+    seen = []
+    for _ in range(total):
+        with SessionLocal() as db:
+            q = mastery.question_for_skill(db, user_id, db.get(Skill, skill_id))
+        assert q.id not in seen, "a recently answered question came back while unseen ones remained"
+        seen.append(q.id)
+        answer_wrong(client, user, {"id": q.id, "options": q.options})
+
+    # Everything has been seen: the one seen longest ago comes back first.
+    with SessionLocal() as db:
+        assert mastery.question_for_skill(db, user_id, db.get(Skill, skill_id)).id == seen[0]
