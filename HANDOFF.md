@@ -1,248 +1,272 @@
-# HANDOFF — Aptitude Teacher (read this first)
+# MASTER HANDOFF — Aptitude Teacher (read this completely before doing anything)
 
-You are continuing a long Claude Code session that ran out of context. This document is the complete
-memory of that session: who the user is, what they asked for, every decision made and why, what is
-built, what is verified vs. untested, what is pending, and the traps we hit. Read it fully before
-touching anything, then verify the current state of the repo (it may have moved on since this was written).
+You are continuing a very long Claude Code project that ran out of context twice. This document is
+the complete memory of both sessions: who the user is, how to work with them, what was asked, every
+decision and why, what is built, what is verified or untested, and the traps we hit. After reading it,
+check the real state of the repo (`git status`, `git log`), because things may have changed.
 
-Written: 2026-09-17. Project folder: `C:\Users\fazil\aptitude-teacher` (Windows 11, Git Bash + PowerShell).
+Last updated: 2026-09-17. Project folder: `C:\Users\fazil\aptitude-teacher` (Windows 11; Git Bash and
+PowerShell both available). Latest commit when written: `3a7ada8`.
 
 ---
 
 ## 1. The user and how to work with them
 
-- Non-technical founder/student building an **AI aptitude tutoring app**, based in India (IST, +05:30).
-  Explain things in plain language; avoid jargon; short, clear summaries.
-- Strong preference: **"build it in one go"** — they want complete, working features, not
-  incremental check-ins. They get frustrated by stop-start work. Do the whole task, verify it, then report.
-  But they rejected one unprompted action (a folder-picker tool call) with "ask before start developing",
-  so **ask before big irreversible or setup decisions** (where to put things, accounts, design direction).
-- Everything must be **free** (no paid APIs/services). Runs on **localhost only** for now (no deployment).
-- They frequently say **"Commit the working tree changes with a sensible message."** Do exactly that:
-  review `git status`, make sure no `.env`/`.db`/secrets are staged, write a why-focused message, end
-  with the Co-Authored-By trailer your harness specifies. Never push (no remote exists). Never commit
-  unless asked.
-- They test in the browser themselves and sometimes stop servers or close windows mid-work — if a
-  background server "was stopped by the user", don't silently restart it; ask or check.
-- They do not know AI models — they delegated model/stack choices to Claude.
-- Demo login for testing: **demo@example.com / practice123** (test data; its tutor is currently set to
-  "Arjun", male — changed during testing). A real user account "vasi" also exists in the local DB — don't touch it.
+- **Who:** a non-technical founder/student in India (IST, +05:30) building an AI aptitude tutoring app.
+  They write short, informal messages with typos. They don't know AI models or frameworks and delegate
+  technical choices to Claude.
+- **Language:** explain in plain words, short and clear. No jargon. Say file names and commands simply.
+- **Style they want:** "build it in one go". Complete, working features, then a report. They get frustrated
+  by stop-start work. BUT ask before big irreversible or setup decisions (accounts, installing big
+  software, design direction). They once rejected an unprompted folder-picker with "ask before start
+  developing". When they say "say your plan, don't build", give only a plan in text and wait for "go".
+- **Constraints:** everything must be **free**; runs on **localhost only** (no deployment yet).
+- **Design taste:** they repeatedly push for "high-end, professional, not generic". History:
+  generic → SaaS → Oxford university → Apple-inspired light playful "Spark" (current). They want many
+  animations and effects and a lively character.
+- **Commits:** they often say "Commit the working tree changes with a sensible message." Then: review
+  `git status`, never stage `.env` / `.db` / secrets, write a why-focused message, end with the
+  `Co-Authored-By:` trailer your harness specifies. Never push (no remote exists). Never commit unless asked.
+  If the tree is broken mid-work when asked, finish to a building state first and say so.
+- **Servers:** they test themselves via `start.bat`. They sometimes stop servers mid-work; don't silently
+  restart servers they stopped. Preview servers started by Claude get stopped when the session idles.
+- **Secrets:** they have a Gemini API key. Claude must NEVER ask them to paste keys in chat or type keys
+  into files itself. Claude created `apps/api/.env` with an empty `GEMINI_API_KEY=` line and the user pasted
+  the key themselves. Verify the key only by length/format without printing it.
+- **Copyright line held repeatedly:** they asked for Family Guy / famous cartoon characters. Never recreate
+  copyrighted characters. Also: don't copy Apple's logo/pages/SF Pro font; "Apple-inspired" style only.
+  Headline "in Steve Jobs' style" is fine, but never quote him or imply endorsement.
+- **Test accounts:** demo login `demo@example.com` / `practice123` (test data; tutor currently Arjun, male;
+  many test chats/attempts exist). A real account **"vasi"** exists in the local DB — don't touch it.
 
-## 2. What the product is (original requirements, paraphrased)
+## 2. The product (original requirements)
 
-AI Aptitude Teacher: web app (mobile later) for Quantitative Aptitude, Logical Reasoning, Verbal.
-Student login/profile, question bank with difficulty levels, practice/quizzes/mock tests, instant answers
-with step-by-step explanations, AI doubt-solving tutor (text + voice), multilingual, OCR of question
-photos, adaptive difficulty, misconception detection, personalised learning path, AI virtual teacher
-avatar (lip-sync, natural voice, expressions/gestures, real-time, interruptible), progress & gamification
-(topic mastery, accuracy + speed, weak-topic detection, history, streaks/XP/levels/badges, daily goals,
-dashboard). Stated differentiator: **"AI shouldn't just answer questions. It should understand what the
-student doesn't know, teach it, test them again, and continuously adapt the learning path."**
+AI Aptitude Teacher web app (mobile later) for Quantitative Aptitude, Logical Reasoning and Verbal Ability.
+Login/profile; question bank with difficulty; practice, quizzes, mock tests; instant step-by-step
+explanations; AI doubt-solving tutor (text + voice + photo/OCR); multilingual; adaptive difficulty;
+misconception detection; personalised path; animated AI teacher avatar (lip-sync, voice, expressions,
+gestures, interruptible); progress and gamification (mastery, accuracy, speed, weak topics, history,
+streaks, XP, levels, badges, daily goals, dashboard). Differentiator in the user's words: "AI shouldn't
+just answer questions. It should understand what the student doesn't know, teach it, test them again,
+and continuously adapt the learning path."
 
-## 3. Timeline of the session (what was done, in order)
+## 3. Full timeline of what was done (both sessions)
 
-1. Explained the requirements back; discussed existing tools (Khanmigo, LearnLM, Squirrel AI, ALEKS;
-   HeyGen/Tavus/D-ID for avatars; Deepgram/ElevenLabs/Whisper/Piper; Mathpix).
-2. User wanted free options → recommended Gemini API free tier + browser Web Speech API + self-built avatar.
-3. Wrote a full build spec, published as an Artifact: **"Aptitude Teacher Blueprint"**
-   (https://claude.ai/artifact/EtLVxVS8iobdiWKvZQVU3Y), also saved as `aptitude-teacher-blueprint.html`
-   in the repo. It describes a 12-phase plan (the plan originally assumed Supabase/Upstash; see §4 for what changed).
-4. Asked setup questions → user chose folder `C:\Users\fazil\aptitude-teacher`, said Node + Python installed,
-   said they'd create Supabase/Gemini accounts (they never did).
-5. **Commit 9173b63** — Phase 00 scaffold: Next.js app, FastAPI app, SQL schema + seed.
-6. **Commit 9025017** — blueprint HTML added.
-7. User asked about Colab → advised against (sessions die, no localhost); stay local.
-8. "Run on localhost and start developing now", then "I want the project in one go" → built **every phase**
-   without accounts: switched to local SQLite + own JWT auth + AI fallbacks. Tested end to end in the
-   browser; fixed bugs found (mobile sticky header overlap, UTC timestamps shown 5.5h off, offline tutor
-   dumping raw text, options not shuffled). **Commit 9be5293**.
-9. "What's next, do it" → pytest suite (with a fake Gemini that exercises the real SDK call shapes),
-   question bank 53 → 140, incremental seeding, `start.bat` one-click launcher. **Commit 312d47d**.
-10. "Enhance the UI, animations, responsive, make the AI tutor 3D, customise tutor by gender and name" →
-    full UI redesign, three.js tutor (egg-shaped head, realistic-ish), tutor name/gender stored on user with
-    DB migration, gendered AI persona and voice selection. **Commit 1b2579e**.
-11. User sent **Family Guy images (Lois & Peter Griffin)** asking for those characters in 3D with speech,
-    gestures, multilingual, auto-explaining doubts. Claude **declined to recreate copyrighted characters**,
-    built original full-body **toon-shaded cartoon tutors** (ink outlines, jointed arms/fingers, gesture
-    system), sentence-by-sentence speech with highlighted sentence, auto-explain, 14 languages.
-    Verified in browser (speech + highlight + gestures per sentence rendered correctly).
-12. User: **"I don't like both avatars; I want characters from cartoon shows, rendered properly, lip sync
-    and body language."** Claude again explained copyright (no Family Guy/Doraemon/Chhota Bheem etc.) and
-    offered **VRM characters** (VRoid). User chose **"Use free models from VRoid Hub"**.
-    Built a VRM renderer (`TutorVRM.tsx`, `@pixiv/three-vrm`) that auto-activates when model files exist,
-    and refactored all body-language logic into `lib/tutorMotion.ts`. **Not yet tested with a real model.**
-13. User asked to commit → changes were **staged but the commit never completed** (interrupted). Then
-    "run the server" (done, via `start.bat`), then "close everything" (servers were already stopped).
-14. User asked for this handoff.
+### Session 1 (commits 9173b63 → 1b2579e, plus staged work)
+1. Explained requirements and existing tools; user chose free options: Gemini free tier + browser Web
+   Speech API + self-built avatar.
+2. Wrote a 12-phase build spec, published as artifact "Aptitude Teacher Blueprint" and saved as
+   `aptitude-teacher-blueprint.html`.
+3. `9173b63` scaffold (Next.js + FastAPI, SQL schema, seed). `9025017` blueprint added.
+4. Advised against Google Colab; stay local.
+5. `9be5293` built every phase without accounts: SQLite + own JWT auth + AI fallbacks. Browser-tested and
+   fixed bugs (mobile sticky header, UTC 5.5h offset, offline tutor dump, options not shuffled).
+6. `312d47d` pytest suite (fake Gemini exercising real SDK shapes), question bank 53 → 140, incremental
+   seeding, `start.bat`.
+7. `1b2579e` UI redesign, three.js 3D tutor, tutor name/gender on user (DB migration), gendered persona/voice.
+8. Original toon 3D tutors, sentence-by-sentence speech with highlight, auto-explain, 14 languages.
+   Declined Family Guy characters.
+9. VRM renderer via @pixiv/three-vrm (VRoid) — never tested with a real model; later removed.
 
-## 4. Key decisions (and why)
+### Session 2 (this one)
+10. `47ae988` committed the staged multilingual talking tutor + VRM support.
+11. User asked about existing open-source projects → explained (Khanmigo, Squirrel AI, OATutor, pyBKT,
+    Open TutorAI, DeepTutor, ChatVRM, TalkingHead, AptiQuest, GetVidyaAI…). Nothing combines the full idea.
+12. `2acbcfd` "clean premium SaaS" redesign (Geist font, emerald accent, sidebar shell, landing rebuilt).
+13. `56211b4` "Modern Oxford" design (navy/crimson/gold, serif, crest logo) + cinematic motion: added
+    `motion` (Framer Motion) and `lenis` (smooth scroll), React `<ViewTransition>` page transitions,
+    pinned scroll story, intro curtain, magnetic buttons, etc.
+14. `b59d529` committed the session-1 HANDOFF.md notes.
+15. User found 3D cartoons childish. Planned realistic 3D (Microsoft Rocketbox + TalkingHead + Mixamo);
+    showed Rocketbox candidates (picked F1 + M5). Before downloading Blender, user changed direction:
+    **2D Duolingo-style animated human**.
+16. `65f0feb` 2D rigged tutors: `lib/tutorRig.ts` (state machine) + `components/TutorFigure.tsx` (layered
+    SVG, transforms written per frame via refs). Removed Tutor3D/TutorVRM/Avatar/tutorMotion and three.js
+    deps. Text-driven visemes lip-sync.
+17. Connected Gemini for real (user added key). `e0f88d8`:
+    - `gemini-2.5-flash` is retired for new users → default **`gemini-3.6-flash`**, fallback
+      **`gemini-3.5-flash`** (`GEMINI_FALLBACK_MODEL`). Transient 429/5xx retried, then fallback model.
+    - Native-script instruction (no romanised Hindi), digits 0–9, no greeting in explanations.
+    - Diagnosis + micro-lesson merged into ONE JSON call (`ai.diagnose`), explanation translated in a
+      parallel thread → answer check ~20s → ~10s.
+    - OCR 503 message now says "busy" when a key exists.
+    - Live smoke test passed: tutor EN/HI/TA, diagnosis+lesson in Hindi, question generation, photo OCR.
+18. User asked for Apple-level redesign → plan approved with choices: **light mode, own colour-wheel
+    palette (not Apple's), playful tutor with emotions on by default, Steve-Jobs-style simple headline,
+    keep only EN/HI/TA/TE**. `3a7ada8` (current) implements all of it (details below).
+19. This master handoff was written at the user's request.
+
+## 4. Key decisions and why
 
 | Decision | Why |
-| --- | --- |
-| **SQLite + own JWT auth** instead of Supabase | User never created accounts; app must run now. Swap by setting `DATABASE_URL` to Postgres. |
-| **No Redis/Upstash** | Not needed at this scale; removed. |
-| **Gemini (`google-genai` SDK, model `gemini-3.6-flash`)** for all AI, optional | Only genuinely free tier; one key covers tutor, diagnosis, lessons, generation, OCR, translation. **No key has ever been added — every AI feature has only run against a fake in tests.** |
-| **Deterministic fallbacks** for every AI call | App fully usable offline; e.g. time-based misconception heuristic. |
-| **Browser Web Speech API** for STT/TTS | Free, no server. Voices depend on browser/OS; Edge has the best Indian-language natural voices. |
-| **No copyrighted characters** | Hard line held twice. Offer originals "in the style of", or licensed VRoid models. |
-| **VRM via VRoid Hub** (user's choice) | Real models give proper rendering, blendshape lip-sync, humanoid rig. User must download (needs pixiv account + license acceptance — Claude must not create accounts or accept terms). |
-| Keep procedural tutors as **fallback** | App works before/without VRM files and if WebGL fails (then 2D SVG `Avatar.tsx`). |
+|---|---|
+| SQLite + own JWT auth (no Supabase) | User never created accounts; must run locally now. Swap via `DATABASE_URL`. |
+| Gemini (`google-genai`) for all AI, optional | Genuinely free tier; one key covers tutor, diagnosis, lessons, generation, OCR, translation. |
+| Deterministic fallbacks for every AI call | App works offline (heuristic misconception by time, worked solution in chat). |
+| Browser Web Speech API for STT/TTS | Free, no server. Voices vary; Edge has best Indian voices. |
+| 2D rigged SVG tutor (not 3D/VRM) | User found 3D childish; realistic 3D needed accounts/Blender/large files. 2D loads instantly, works on all phones, fully animatable. |
+| No copyrighted characters; Apple-inspired only | Legal/brand risk. |
+| Only 4 languages (en, hi, ta, te) | User request; full-quality menus in all four. |
+| Light mode only | User request; dark-mode CSS removed. |
+| Emotion tags from the AI | One extra instruction in the same request (no extra cost) → tutor acts out intended tone. |
 
-## 5. How to run
+## 5. How to run and check
 
-- One click: double-click **`start.bat`** (creates venv / installs deps on first run, opens two server
-  windows titled "Aptitude Teacher - backend/frontend", opens http://localhost:3000).
-- Manual: `cd apps/api && .venv/Scripts/python -m uvicorn app.main:app --reload --port 8000`
-  and `cd apps/web && npm run dev`.
-- `.claude/launch.json` has `api` and `web` configs for the preview tool (preview servers get stopped by the
-  app when the session idles — use `start.bat` for anything the user tests themselves).
-- Backend tests: `cd apps/api && .venv/Scripts/python -m pip install -r requirements-dev.txt && .venv/Scripts/python -m pytest -q` → **59 passed** at last run.
-- Frontend checks: `cd apps/web && npx tsc --noEmit && npx eslint src && npx next build` → all clean at last run.
-- Reset data: delete `apps/api/aptitude.db` (auto-recreated and seeded on start).
-- Enable AI: copy `apps/api/.env.example` → `apps/api/.env`, set `GEMINI_API_KEY` (free at aistudio.google.com/apikey), restart backend.
+- **One click:** double-click `start.bat` (creates venv/installs deps first time, opens "Aptitude Teacher -
+  backend/frontend" windows, opens http://localhost:3000).
+- **Manual:** `apps/api`: `.venv/Scripts/python -m uvicorn app.main:app --port 8000`; `apps/web`: `npm run dev`.
+- **Claude preview:** `.claude/launch.json` has `api` and `web` configs (preview_start by name).
+- **Backend tests:** `cd apps/api && .venv/Scripts/python -m pytest -q` → **66 passed** at last run.
+- **Frontend checks:** `cd apps/web && npx tsc --noEmit && npx eslint src && npx next build` → all clean.
+  If tsc complains about a deleted route in `.next/dev/types`, delete `apps/web/.next/dev/types`.
+- **AI key:** `apps/api/.env` (git-ignored) has `GEMINI_API_KEY` (user-provided, 53 chars, works),
+  `GEMINI_MODEL=gemini-3.6-flash`, random `JWT_SECRET`. `.env.example` documents all incl. fallback model.
+- **Reset data:** delete `apps/api/aptitude.db` (recreated + seeded on start). Don't do this casually — the
+  user's "vasi" account lives there.
+- `/health` returns `ai_enabled`.
 
-## 6. Architecture & file map
+## 6. Architecture and file map
 
-Monorepo: `apps/api` (FastAPI, Python 3.12, SQLAlchemy 2), `apps/web` (Next.js **16.3.5**, React 19.2,
-Tailwind 4, TypeScript), root `README.md`, `start.bat`, `aptitude-teacher-blueprint.html`, `.claude/launch.json`.
+Monorepo: `apps/api` (FastAPI, Python 3.12, SQLAlchemy 2), `apps/web` (Next.js 16.3.5, React 19.2, Tailwind 4,
+TypeScript), root `README.md`, `start.bat`, `aptitude-teacher-blueprint.html`, `.claude/launch.json`, `HANDOFF.md`.
 
 ### Backend `apps/api/app`
-- `config.py` — pydantic-settings; `.env` path is absolute (`API_DIR/.env`); defaults: SQLite at
-  `apps/api/aptitude.db`, `jwt_secret`, `gemini_api_key=""`, `gemini_model="gemini-3.6-flash"`, CORS localhost:3000.
-- `db/session.py` — engine, `SessionLocal(expire_on_commit=False)`, `Base`, `get_db`.
-- `db/models.py` — `UTCDateTime` TypeDecorator (SQLite drops tzinfo; reattach UTC). Tables: `users`
-  (email, password_hash, display_name, locale, **tutor_name** default "Asha", **tutor_gender** default "female"),
-  `topics`, `subtopics`, `skills`, `questions` (options JSON, correct_option, explanation, difficulty 1–5,
-  source seed|ai_generated), `question_skills`, `attempts` (quiz_id nullable, misconception_type, time_taken_ms),
-  `skill_mastery` (0–100 score, attempts_count, streak), `quizzes` (kind quiz|mock, question_ids JSON, duration, score),
-  `tutor_sessions` (question_id or question_text), `tutor_messages`, `daily_goals`, `gamification` (xp, level, streaks),
-  `badges`, `user_badges`. String UUID ids.
-- `auth.py` — PBKDF2-SHA256 (390k iters) password hashing, PyJWT HS256 bearer tokens, `current_user` dependency.
-- `schemas.py` — Pydantic models. `Locale` = en, hi, bn, te, mr, ta, ur, gu, kn, ml, pa, es, fr, ar.
-  `ProfileIn.tutor_name` validator: 1–30 chars, letters/space/`.'-`/Unicode combining marks only (names go into
-  the AI prompt — blocks injection-ish text; whitespace collapsed). `QuestionOut` **shuffles options** per request.
-- `ai.py` — all Gemini calls with fallbacks: `persona(learner)` (name, woman/man, gendered self-reference in
-  gendered languages), `explain` (translate explanation for non-English), `heuristic_misconception`
-  (<5s or skip → no_attempt, <20s → careless_slip, else conceptual_gap), `classify_misconception` (JSON mode),
-  `micro_lesson`, `tutor_reply` (trims history to start with a student turn; "Reply in X; if the student writes in
-  another language other than X and English, reply in theirs"; offline reply = "I'm {name}, running in offline mode…"
-  + worked solution), `generate_question` (validates 4 distinct options, answer in options), `ocr_question`
-  (image Part; "NONE" → ValueError). `AIUnavailable` wraps SDK errors.
-- `engine/mastery.py` — `updated_score` (gain scales with difficulty & diminishing; penalty by misconception:
-  careless 3, no_attempt 6, partial 7, conceptual 12), `target_difficulty = min(5, 1 + score//20)`,
-  `next_question` (pending retest skill first → weakest/unattempted skill with jitter; avoids solved & recent;
-  AI-generates when seeds exhausted), `question_for_skill`, `daily_goal` (3 weakest + 1 recently mastered, target 10).
-- `engine/gamification.py` — XP (10×difficulty correct, 2 wrong), level = 1 + xp//250, day streaks, 8 badges
-  (first_attempt, streak_3, streak_7, mastery_50, mastery_80, hundred_attempts, goal_getter, mock_finisher).
-- `routes/` — `auth` (register/login/me/PATCH me incl. tutor fields & locale), `practice` (GET /topics,
-  /questions/next, /questions/{id}, POST /questions/generate, POST /attempts → correctness, misconception,
-  micro_lesson + retest_question_id for conceptual/partial, XP, mastery, badges, goal), `quizzes` (create quiz/mock
-  (mock = 5 per section = 15, 60s/question), list, submit (409 on resubmit), report with sections & weak skills),
-  `tutor` (status, sessions CRUD, messages, POST /tutor/ocr ≤5MB png/jpeg/webp/heic), `progress` (GET /progress/dashboard: stats,
-  gamification, daily goal, topics→skills mastery/accuracy/avg time, weak skills, badges, 7-day trend, recent 25).
-- `seed.py` — `init_db()` = `create_all` + `add_missing_columns()` (ALTER TABLE for columns added later, e.g. tutor
-  fields) + incremental `seed()` (adds missing topics/subtopics/skills/questions by body; idempotent).
-- `seed_data.py` — **140 hand-verified questions, 28 subtopics** (Quant 59, Logical 43, Verbal 38).
-- `main.py` — lifespan runs `init_db`; `/health` returns `ai_enabled`.
-- `tests/` — `conftest.py` (temp SQLite DB set via env before imports, `fake_ai` fixture patching `ai.enabled`/`ai._generate`),
-  `test_api.py`, `test_ai.py` (incl. `RecordingModels` fake SDK client verifying request shapes), `test_engine.py`, `test_seed_data.py`.
+- `config.py` — pydantic-settings, absolute `.env` path; `gemini_model="gemini-3.6-flash"`,
+  `gemini_fallback_model="gemini-3.5-flash"`, SQLite default, CORS localhost:3000.
+- `db/models.py` — UTCDateTime decorator; tables users (tutor_name default "Asha", tutor_gender "female",
+  locale), topics/subtopics/skills/questions/question_skills, attempts, skill_mastery, quizzes,
+  tutor_sessions, **tutor_messages (content + `emotions` JSON, nullable)**, daily_goals, gamification,
+  badges, user_badges. String UUID ids.
+- `auth.py` — PBKDF2-SHA256 hashing, PyJWT HS256 bearer tokens.
+- `schemas.py` — `Locale = Literal["en","hi","ta","te"]`; ProfileIn tutor_name validator (letters/space/.'-,
+  blocks prompt-injection-like text); QuestionOut shuffles options; **TutorMessageOut.emotions: list[str]**.
+- `ai.py` — `LANGUAGES` (4); `persona()` = playful, witty, kind-on-mistakes tutor, gendered forms in Hindi/Telugu;
+  `_generate()` with retries (`RETRY_PAUSES=(1.5,)`) and fallback model; `_write_in()` native script + digits;
+  `NO_GREETING`; `explain()` (translate for non-English); `heuristic_misconception()`; **`diagnose()`**
+  (one JSON call → type + micro-lesson for conceptual_gap/partial_method, fallbacks); **`EMOTIONS`**
+  (excited, proud, encouraging, curious, careful, empathetic, playful, thinking, neutral),
+  **`split_emotions()`** removes `[tag]` markers → (clean text, emotions list); **`tutor_reply()` returns
+  `(content, emotions)`** and instructs a tag at the start of every sentence; `generate_question()` (validated);
+  `ocr_question()`. `AIUnavailable` wraps SDK errors.
+- `engine/mastery.py` — mastery scores, target difficulty, next question (retest first → weakest skill),
+  `NEEDS_RETEST`, daily goal. `engine/gamification.py` — XP, levels (250 XP), streaks, 8 badges.
+- `routes/` — auth; practice (`POST /attempts` builds a `SimpleNamespace` learner/question snapshot, runs
+  `ai.explain` in a thread pool alongside `ai.diagnose`); quizzes; tutor (messages store emotions; OCR);
+  progress dashboard.
+- `seed.py` — `init_db()` = create_all + `add_missing_columns()` (ALTER TABLE for new columns, e.g. emotions)
+  + **`retire_unsupported_locales()`** (non-supported locales → en) + incremental seed.
+- `seed_data.py` — 140 questions, 28 subtopics (Quant 11, Logical 9, Verbal 8).
+- `tests/` — conftest (temp DB, `fake_ai` patches `_generate`), test_api, test_ai (SDK recording fake, retry,
+  fallback, diagnose, emotion split), test_engine, test_seed_data.
 
-### Frontend `apps/web/src`
-- `app/globals.css` — design tokens (green `--accent #178a63`, orange `--marker #e2761f`, violet), light/dark,
-  graph-paper grid + drifting blobs background, animation utilities (`rise`, `pop`, `shake`, `pulse-good`, `lift`,
-  `press`, `shine`, `grow-x/y`, `skeleton`, `flame`, `typing-dot`, `xp-float`, `confetti`, tutor stage glow/ring),
-  full `prefers-reduced-motion` override.
-- `app/layout.tsx` (IBM Plex Sans + Newsreader via next/font, AuthProvider), `manifest.ts` + `icon.svg` (PWA).
-- Pages: `page.tsx` (landing; logged-in → /dashboard; tutor preview Meet Asha/Arjun; floating chat bubbles),
-  `login`, `register` (AuthForm), `dashboard`, `practice`, `tests` (setup/runner/report), `tutor`, `profile`.
-- `components/`: `AppShell` (glass header nav desktop, **bottom tab bar on mobile**, auth guard, page transition),
-  `ui.tsx` (Button, Card, Label, ProgressBar, Ring, useCountUp/CountUp, Confetti, Pill, ErrorNote, Spinner, Skeleton,
-  Icon set, MISCONCEPTION_LABEL, DIFFICULTY), `Modal`, `AuthForm`, `Avatar.tsx` (2D SVG fallback, gender variants),
-  `TutorAvatar.tsx` (wrapper: WebGL detection via useSyncExternalStore, `next/dynamic` ssr:false, error boundary →
-  2D fallback; props gender/speaking/viseme/wordTick/gestureTick/mood/framing "full"|"portrait"),
-  `Tutor3D.tsx` (Canvas; **checks `HEAD /tutors/{gender}.vrm`** → `TutorVRM` if present else procedural toon `Figure`;
-  toon materials + inverted-hull ink outlines; female: bun, mustard tunic, maroon neckline, cream trousers, bindi,
-  earrings; male: side-parted hair, goatee + curved moustache, maroon vest over light-blue shirt, charcoal trousers),
-  `TutorVRM.tsx` (GLTFLoader + VRMLoaderPlugin; rotateVRM0; camera framed from bounding box/head bone; applies
-  `TutorMotion` to normalized humanoid bones — arms lowered from T-pose via `z = ∓(π/2 − 0.12 − sz)`, elbow
-  `y = side*ex, z = −side*ez`, finger curls on z; spine/neck/head; lookAt target follows pointer; blends vowel
-  expressions aa/ee/ih/ou/oh from mouth open/width; blink; happy/sad/relaxed/surprised by mood; `vrm.update(delta)`
-  for spring bones), `TutorCustomizer` (live full-body preview, Female/Male, name + suggestions, "Say hello" in all
-  14 languages using the previewed gender's voice).
-- `lib/`: `api.ts` (fetch wrapper, token in localStorage `aptitude.token`, types incl. `Locale`, `User.tutor_*`),
-  `auth.tsx` (AuthProvider), `i18n.ts` (`LANGUAGES` 14 entries {code,label,english,speech}; UI dictionaries only
-  **en/hi/ta**, others fall back to English; `useT()` returns `t`, `locale`, `speechLang`, `language`; keys incl.
-  `tutor.explainRequest`, `tutor.listeningFemale` (Hindi verb gender)), `speech.ts` (speech recognition hook;
-  `visemeFor` across Latin/Indic/Arabic vowels; `sentenceLines`; `detectSpeechLang` by script;
-  gender voice-name regexes incl. Edge natural voices; `pickVoice` with pitch fallback; **`speak()` queues one
-  utterance per sentence** (Chrome cuts long utterances ~15s) with onSentence/onWord; generation counter for cancel),
-  `useTutorVoice.ts` (speaking, viseme, wordTick, gestureTick, activeKey, sentence, missingVoice, say(text,key,gender?), stop),
-  `tutorMotion.ts` (**shared body language**: pose tables idle (female hand-on-hip / male hand-in-pocket), 5
-  explaining gestures cycled per sentence, thinking (hand to chin), listening, happy (thumbs up), concerned (shrug),
-  2.6s hello wave; word "beats"; blink; mouth open/width), `tutor.ts` (defaults Asha/Arjun, name ideas, `useTutor`),
-  `useMedia.ts`.
-- Tutor page behaviour: full-body stage on ≥1024px, portrait on mobile; language dropdown (updates profile);
-  speak-replies toggle; **auto-explain** when a session with a question (from practice "Ask the tutor" or a photo)
-  has no messages; "Explain this question" button; **current sentence highlighted** while spoken; Listen/Stop per
-  reply; missing-voice notice suggesting Edge; mic interrupts speech; `dir="auto"` for RTL.
-- Practice: tutor reacts (thinking/happy/concerned), Listen buttons on explanation and micro-lesson with gestures.
+### Frontend `apps/web/src` — "Spark" design system
+- `app/globals.css` — tokens: canvas `#fbfaf7`, surface white, surface-2 `#f5f3ef`, ink `#17171f`,
+  ink-soft `#62636f`; **Iris `#5b5bf5`**, **Coral `#ff6b5c`**, **Lagoon `#16c2c2`**, **Sunbeam `#ffc53d`**,
+  violet `#9b5cf6`, success `#12b886`, danger `#f0525a`; `--spark` gradient. Tailwind names: `iris`, `coral`,
+  `lagoon`, `sun`, `*-soft`, `*-600`, plus aliases (accent/primary/marker/good/bad). Radii enlarged.
+  Classes: `.glass`, `.text-spark`, `.bg-spark`, `.shine`, **`.spark-glow[data-active]`** (conic ring + halo),
+  `.blobs/.blob`, `.eyebrow`, `.font-display` (Inter 700, tight), motion utilities (rise, pop, fade, float,
+  shake, lift, press, link-draw, grow-x/y, skeleton, shimmer-text, flame, typing-dot, marquee, wiggle-hover),
+  tutor stage glow/ring, view-transition keyframes (page-forward/back/fade; app-sidebar/topbar/tabbar held
+  still), reduced-motion overrides. Light only. `.grain`/`.shine`/`.glass`/`.spark-glow` live in
+  `@layer components` so utilities like `fixed` override them.
+- `app/layout.tsx` — Inter + JetBrains Mono; MotionProvider → AuthProvider → ToastProvider.
+- `app/page.tsx` — landing: floating glass pill nav (hides on scroll down); hero "Learn what you **don't
+  know.**" (TextReveal, gradient words), orb + blobs, CTAs, SparkGlow stage with tutor (Asha/Arjun toggle)
+  + self-typing chat; pinned 4-step story ("It notices." / "It explains. Out loud." / "Then it checks." /
+  "Every day, a little smarter."); bento SpotlightCards; "One tutor. Four languages." (click a language →
+  tutor speaks hello); stat counters; FAQ accordion; gradient final CTA "Your first lesson starts now."; footer.
+- `app/dashboard` — greeting, gradient tutor tip card, ActivityRings (goal/accuracy/streak), stat tiles,
+  topic mastery accordion, 7-day chart, weak skills, badges, history.
+- `app/practice` — Segmented topic filter, focus question card wrapped in SparkGlow while checking, colourful
+  option pills, result sheet sliding up, playful lesson card, Confetti particle burst, XP/badge/goal toasts,
+  tutor aside with SparkGlow and mood.
+- `app/tests` — quiz card + gradient mock card, glass pill timer bar with ring, question grid, animated report.
+- `app/tutor` — tutor card with SparkGlow (speaking/thinking/listening), language select (4), speak toggle,
+  iMessage-style bubbles, highlighted spoken sentence, emotions passed to `voice.say`, glowing input bar,
+  typing makes tutor "listening".
+- `app/profile` — iOS-style grouped settings, tutor customiser, colourful 4-language picker, sign out row.
+- `components/`: `AppShell` (floating glass sidebar, glass top bar < lg, floating glass tab bar on phones,
+  layoutId sliding highlights, PageTransition as outermost element); `AuthForm` (glass card, tutor avatar
+  peeking, language chips); `Logo` (`LogoMark` gradient tile with 4-point spark; `public/icon.svg` +
+  `app/icon.svg` same); `Modal` (spring sheet); `Toast` (`ToastProvider`, `useToast`); `ui.tsx` (Button
+  variants primary/secondary/ghost/spark/marker, `buttonClass`, Card, **SpotlightCard**, **SparkGlow**,
+  **Blobs**, Label, IconTile, Segmented, PageHeader, Reveal, ProgressBar, Ring (supports `spark` tone),
+  **ActivityRings**, CountUp, Confetti (particle burst), Pill, ErrorNote, Spinner, Skeleton, Icon set);
+  `motion.tsx` (TextReveal, FadeIn, Parallax, Magnetic, CountOnView, ScrollFillText, SmoothScroll (Lenis),
+  **Orb**); `MotionProvider`; `PageTransition` (React `ViewTransition`, classes per transition type);
+  `TutorAvatar` (props: gender, `voice` = whole useTutorVoice result, mood, framing, stage);
+  `TutorCustomizer`; **`TutorFigure`**.
+- `lib/`: `i18n.ts` (LANGUAGES en/hi/ta/te, full dictionaries en/hi/ta/**te**); `api.ts` (Locale 4 codes,
+  TutorMessage.emotions); `speech.ts` (recognition hook, sentence splitting, script detection for 4
+  languages, gendered voice picking, per-sentence speak queue); **`useTutorVoice.ts`** (speaking, word,
+  wordTick, gestureTick, **sentenceText**, **emotion**, activeKey, sentence, missingVoice,
+  `say(text, key, gender, emotions)`, stop); `tutor.ts` (defaults Asha/Arjun, name ideas); `useMedia.ts`;
+  **`tutorRig.ts`**.
 
-## 7. Current state (at handoff)
+### The tutor rig (`lib/tutorRig.ts` + `components/TutorFigure.tsx`)
+- Canvas 360×440, framings `full` (waist-up) / `portrait` (head & shoulders).
+- Outfits: **Asha** Iris blazer over Coral top, gold earrings/bun band, bindi; **Arjun** Lagoon V-neck sweater
+  over white collared shirt, glasses, light beard. Warm brown skin tones.
+- Layers from highest priority: word cues (number words/digits 1–5 in 4 languages → finger count; negation
+  → head shake; praise words → brow pop + bounce) > sentence cues (`cueForSentence`: ordinals → count,
+  praise → clap/thumbs/fist pump, tip → temple tap + wink, careful → finger wag, empathy → hand on chest,
+  join → hands together, split → weighing hands, AI emotion tag mapping, "?" curious, "!" excited) > mood
+  reactions (happy: clap → jazz hands + laugh, then thumbs-up/proud; concerned: "oops" shrug, then
+  encouraging open palms; thinking: hand on chin; listening: hands together + nods) > idle (greeting wave on
+  mount, periodic happy/playful wink/curious glance/hair tuck (Asha) or chin stroke (Arjun)).
+- 15 expressions, 20 gestures, 8 hand shapes (open, fist, point, two, three, four, thumb, ok),
+  12 mouth shapes (incl. GRIN), blink/double blink, wink, eye widen, one-brow raise, pointer-following gaze,
+  breathing, sway, bounce spring. Pauses off-screen/hidden tab; calm under reduced motion.
 
-- Git: 5 commits (latest `1b2579e`). **All work from steps 11–12 (languages, speech rewrite, auto-explain,
-  toon tutors, VRM renderer, motion refactor) is STAGED BUT NOT COMMITTED** — 22 files:
-  README.md, api ai.py/schemas.py/tests, web package.json/lock, pages (landing, practice, profile, tutor), components
-  (AuthForm, Tutor3D, TutorAvatar, TutorCustomizer, **TutorVRM** new), lib (api, i18n, speech, **tutorMotion**,
-  **useMedia**, **useTutorVoice** new). The user's pending request was to commit them. Confirm with `git status` and
-  commit when they ask (or ask them).
-- `HANDOFF.md` (this file) is new/untracked.
-- `apps/web/public/tutors/` exists but is **empty** — no VRM files yet.
-- No `.env`; AI offline. Servers are not running.
-- Frontend deps: next 16.3.5, react 19.2.8, three ^0.186, @react-three/fiber ^9.7, @pixiv/three-vrm ^3.5.5
-  (drei was installed then removed). Backend deps in `requirements.txt` (+ pytest/httpx dev).
+## 7. Verified vs NOT verified
 
-## 8. What is verified vs. NOT verified
+**Verified (browser + tests):** backend 66 tests; tsc/eslint/build clean; landing (all sections), dashboard,
+practice (thinking glow, wrong-answer diagnosis with playful lesson), tests setup, profile, tutor chat with live
+Gemini returning playful text + 8 emotion tags; tutor acting out sentences (jazz hands, temple tap) with
+highlight; phone width 375 has no horizontal overflow; language retirement migration tested.
+**Earlier verified (session 2):** live AI in EN/HI/TA, Hindi native script, OCR, question generation, fallback/retry.
 
-Verified: backend tests (59), tsc/eslint/build, full practice→diagnosis→lesson→retest loop in browser, quizzes/mocks,
-dashboard, Hindi UI switch, migration on the real DB, procedural toon tutors rendering, sentence-by-sentence speech
-with highlight and per-sentence gesture change, VRM fallback path (404 → procedural).
+**Not verified / known gaps:**
+- Every gesture/expression individually by eye (clap, OK sign, count 2–4 fingers, jazz hands framing, laugh
+  mouth, wink) — expect small angle tuning.
+- Telugu end-to-end with live AI and Telugu TTS voice; Tamil/Telugu voices in Chrome.
+- Tests runner and report pages after the Spark redesign (setup page seen; runner/report not clicked through).
+- Register flow in new AuthForm (login page renders); customiser save.
+- Gemini latency was 15–20 s at times (free tier); Google occasionally 503s (retry + fallback exist).
+- Old procedural blueprint HTML still describes the original plan (not updated).
 
-**Not verified:** anything with a real Gemini key (tutor conversation, AI diagnosis/lessons/generation, OCR,
-translations); **`TutorVRM` with a real .vrm model** (bone angle signs, finger curl axes, framing, expressions
-are reasoned from three-vrm conventions, expect tuning); audible voice quality/lip-sync by ear; most pages at
-phone size after the latest changes; male toon tutor after the final goatee/moustache fix; non-English TTS voices.
+## 8. Gotchas learned the hard way
 
-## 9. Immediate next steps
+- **Next.js 16 is not the Next you know** — read `apps/web/node_modules/next/dist/docs/` before using APIs.
+  `next dev` recreates `apps/web/AGENTS.md` + `CLAUDE.md` (committed; leave them).
+- **ViewTransition must be the page's outermost element** or React won't animate; AppShell wraps everything
+  in `PageTransition`. Persistent chrome uses `viewTransitionName` to stay still.
+- **Unlayered custom CSS overrides Tailwind utilities** (a `position: relative` in `.grain` silently broke
+  `fixed`). Put component classes in `@layer components`.
+- **3D rotateX with tall elements flips** when the far edge crosses the camera — tilt top-away only.
+- ESLint `react-hooks/set-state-in-effect` and `react-hooks/refs` are strict: no sync setState in effects,
+  don't read refs during render (don't store refs inside objects passed as props).
+- `uvicorn --reload` doesn't reload reliably on this Windows setup — restart the backend after Python edits.
+- NEVER `taskkill /IM node.exe` or `python.exe` (kills everything). Kill by port-owning PID.
+- **Escaping:** Git Bash heredocs + `python -` sometimes turn `\n` in replacement strings into real newlines,
+  breaking Python/TS strings. Use the Edit/Write tools for code with escapes or template literals.
+- The Write tool refuses if a file changed since last Read — re-Read (even 2 lines) first.
+- Browser pane: first screenshots after navigation often show mid-compile or mid-transition blur — wait and
+  re-screenshot. Enter key in forms sometimes doesn't submit in the pane; click the button. Pane viewport
+  emulation resets at turn end; screenshots may be cropped when emulating 1280px.
+- Windows console can't print Hindi/Tamil (`charmap` errors) — write results to a UTF-8 file and Read it.
+- System Python (not the venv) has Pillow and httpx for scratch scripts.
+- SQLite `create_all` never alters tables → `add_missing_columns()`.
+- Chrome cuts long utterances (~15 s) → per-sentence speech queue (implemented).
+- Gemini free tier: `gemini-2.5-flash` unavailable to new keys; model list has 3.x flash models; 503 "high
+  demand" happens.
 
-1. Ask the user to commit the staged work (or commit if they ask).
-2. User downloads two VRoid Hub models whose conditions allow app use (and commercial use if selling), saving to
-   `apps/web/public/tutors/female.vrm` and `male.vrm`, and reports whether credit is required (add a credits
-   line if so). Claude must not download/accept licenses on their behalf without explicit permission.
-3. With the files present: run the app, visually verify and **tune `TutorVRM.tsx`** (arm/elbow/finger signs,
-   gesture amplitude, camera framing for "full" and "portrait", expression names, look-at), test lip-sync while
-   speaking, test both genders, test customiser preview.
-4. Encourage adding a Gemini key to validate real AI paths.
-5. Possible later work: Mixamo animation clips retargeted to VRM for richer body language; more questions;
-   Postgres/Supabase migration; deployment (user said not needed yet).
+## 9. Possible next steps (ask the user which)
 
-## 10. Gotchas learned the hard way
-
-- **Next.js 16 is not the Next you know**: read `apps/web/node_modules/next/dist/docs/` before using APIs.
-  `next dev` re-creates `apps/web/AGENTS.md` + `CLAUDE.md` (they're committed; leave them).
-- `create-next-app` made a **nested .git** in apps/web — was removed; watch for embedded repos when adding.
-- React lint rule `react-hooks/set-state-in-effect` is strict: set state in promise callbacks/rAF, use
-  `useSyncExternalStore`, or lazy `useState` initialisers instead of synchronous setState in effects.
-- **uvicorn `--reload` did not reload reliably on this Windows setup** — restart the backend after Python edits.
-- **Never `taskkill /IM node.exe` or `python.exe`** — once killed every Node/Python process on the machine.
-  Kill by port-owning PID after checking its command line.
-- **Git Bash mangles backticks/`${}` inside `node -e "..."` and heredocs** (twice produced broken TS). Use the
-  Edit/Write tools for code containing template literals.
-- Background/preview servers get **stopped by the app** when the session ends; the user may also stop them.
-- The browser pane's **screenshots don't capture WebGL**; `readPixels` needs a rendered frame (pane visible) — a
-  temporary debug hook `gl.render(scene,camera); gl.domElement.toDataURL()` was used and **removed**; don't commit debug hooks.
-- Automated clicks in the pane can miss under viewport emulation/sticky headers; dispatching a `keydown` Enter via JS works.
-- Chrome speech synthesis stops long utterances (~15s) → per-sentence queue (already implemented).
-- Web Speech voices differ per browser/OS; Edge has natural voices for most Indian languages.
-- SQLite `create_all` never alters existing tables → use `add_missing_columns()` when adding model columns.
-- Copyright: user repeatedly wants famous cartoon characters (Family Guy). Do not recreate or use them; offer
-  originals or properly licensed VRM models.
+1. Tune individual gestures/expressions by eye; click through tests runner/report and registration.
+2. Test Telugu fully with live AI and voices (Edge).
+3. Speed up AI responses (streaming replies, shorter prompts) — free tier latency is the main UX issue.
+4. Optional: natural neural TTS (e.g. HeadTTS/Kokoro for English), more questions, Postgres/Supabase,
+   deployment (user said not needed yet), mobile app.
+5. Update `aptitude-teacher-blueprint.html` or README screenshots if the user wants documentation.
