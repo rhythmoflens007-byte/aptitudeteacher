@@ -1,3 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
+from types import SimpleNamespace
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -78,7 +81,19 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
 
     goal = mastery.daily_goal(db, user.id)
     is_correct = body.chosen_answer == question.correct_option
-    misconception = None if is_correct else ai.classify_misconception(question, body.chosen_answer, body.time_taken_ms)
+    # A plain snapshot, so the AI calls below never touch the database session from another thread.
+    learner = SimpleNamespace(locale=user.locale, tutor_name=user.tutor_name, tutor_gender=user.tutor_gender)
+    snapshot = SimpleNamespace(
+        body=question.body, options=list(question.options), correct_option=question.correct_option, explanation=question.explanation
+    )
+    # The translated explanation doesn't depend on the diagnosis, so it runs alongside it.
+    pool = ThreadPoolExecutor(max_workers=1)
+    explanation = pool.submit(ai.explain, snapshot, learner)
+    pool.shutdown(wait=False)
+    misconception, lesson = (None, None)
+    if not is_correct:
+        skill_name = question.skills[0].name if question.skills else ""
+        misconception, lesson = ai.diagnose(question, body.chosen_answer, body.time_taken_ms, skill_name, learner)
 
     attempt = Attempt(
         user_id=user.id,
@@ -100,7 +115,7 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     micro_lesson = None
     retest_id = None
     if misconception in mastery.NEEDS_RETEST and question.skills:
-        micro_lesson = ai.micro_lesson(question, question.skills[0].name, misconception, user)
+        micro_lesson = lesson
         retest_id = mastery.question_for_skill(db, user.id, question.skills[0], exclude_id=question.id).id
 
     badges = gamification.check_badges(db, user.id, goal_just_completed)
@@ -109,7 +124,7 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     return AttemptOut(
         is_correct=is_correct,
         correct_option=question.correct_option,
-        explanation=ai.explain(question, user),
+        explanation=explanation.result(),
         misconception_type=misconception,
         micro_lesson=micro_lesson,
         retest_question_id=retest_id,

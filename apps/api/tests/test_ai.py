@@ -32,21 +32,35 @@ def sample_question():
 # --- Pure functions with the AI stubbed ---------------------------------------------------------
 
 
-def test_classifier_uses_ai_label(fake_ai):
-    fake_ai["responses"]["Classify"] = json.dumps({"type": "partial_method"})
-    assert ai.classify_misconception(sample_question(), "10", 40000) == "partial_method"
+def test_diagnosis_uses_ai_label_and_lesson_in_one_call(fake_ai):
+    fake_ai["responses"]["Classify"] = json.dumps({"type": "partial_method", "lesson": "Core idea first."})
+    assert ai.diagnose(sample_question(), "10", 40000, "Percentages", learner()) == ("partial_method", "Core idea first.")
+    assert len(fake_ai["calls"]) == 1
     assert fake_ai["calls"][-1]["as_json"] is True
 
 
+def test_diagnosis_drops_lesson_for_slips_and_asks_for_native_script(fake_ai):
+    fake_ai["responses"]["Classify"] = json.dumps({"type": "careless_slip", "lesson": "unneeded"})
+    assert ai.diagnose(sample_question(), "10", 40000, "Percentages", learner("hi")) == ("careless_slip", None)
+    prompt = fake_ai["calls"][-1]["contents"]
+    assert "Hindi script itself" in prompt and "Do not greet" in prompt
+
+
 @pytest.mark.parametrize("raw", ['{"type": "made_up"}', "not json", '["partial_method"]'])
-def test_classifier_falls_back_on_bad_output(fake_ai, raw):
+def test_diagnosis_falls_back_on_bad_output(fake_ai, raw):
     fake_ai["responses"]["Classify"] = raw
-    assert ai.classify_misconception(sample_question(), "10", 40000) == "conceptual_gap"
+    label, lesson = ai.diagnose(sample_question(), "10", 40000, "Percentages", learner())
+    assert label == "conceptual_gap" and lesson.startswith("Let's revisit")
 
 
-def test_classifier_falls_back_when_quota_exhausted(fake_ai):
+def test_diagnosis_falls_back_when_quota_exhausted(fake_ai):
     fake_ai["responses"]["Classify"] = ai.AIUnavailable("429 quota")
-    assert ai.classify_misconception(sample_question(), "10", 10000) == "careless_slip"
+    assert ai.diagnose(sample_question(), "10", 10000, "Percentages", learner()) == ("careless_slip", None)
+
+
+def test_skipped_question_needs_no_ai(fake_ai):
+    assert ai.diagnose(sample_question(), None, 2000, "Percentages", learner()) == ("no_attempt", None)
+    assert fake_ai["calls"] == []
 
 
 GOOD_QUESTION = {
@@ -82,7 +96,9 @@ def test_explanation_translated_for_hindi_but_not_english(fake_ai):
     q = sample_question()
     assert ai.explain(q, learner("en")) == q.explanation
     assert ai.explain(q, learner("hi")) == "हिन्दी व्याख्या"
-    assert "Hindi" in fake_ai["calls"][-1]["contents"]
+    prompt = fake_ai["calls"][-1]["contents"]
+    assert "Hindi script itself, never transliterated" in prompt
+    assert "Do not greet" in prompt
 
 
 def test_ocr_rejects_images_without_a_question(monkeypatch):
@@ -125,12 +141,12 @@ def test_tutor_builds_valid_gemini_conversation(sdk):
     assert "You are Kavin" in request.config.system_instruction
     assert "masculine grammatical forms" in request.config.system_instruction
     assert "Divide 1200 in 3:5" in request.config.system_instruction
-    assert request.model == "gemini-2.5-flash"
+    assert request.model == "gemini-3.6-flash"
 
 
 def test_json_mode_and_image_parts_reach_the_sdk(sdk):
-    sdk.text = json.dumps({"type": "careless_slip"})
-    assert ai.classify_misconception(sample_question(), "10", 30000) == "careless_slip"
+    sdk.text = json.dumps({"type": "careless_slip", "lesson": ""})
+    assert ai.diagnose(sample_question(), "10", 30000, "Percentages", learner()) == ("careless_slip", None)
     assert sdk.requests[-1].config.response_mime_type == "application/json"
 
     sdk.text = "What is 2 + 2?"
@@ -145,7 +161,60 @@ def test_sdk_errors_become_ai_unavailable(monkeypatch):
 
     monkeypatch.setattr(ai, "enabled", lambda: True)
     monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=boom)))
-    assert "quota" in ai.tutor_reply([("student", "hi")], None, learner("en"))
+    assert "busy" in ai.tutor_reply([("student", "hi")], None, learner("en"))
+
+
+def test_busy_service_is_retried_then_succeeds(monkeypatch):
+    class Busy(Exception):
+        code = 503
+
+    calls = []
+
+    def flaky(**_):
+        calls.append(1)
+        if len(calls) < 3:
+            raise Busy("503 UNAVAILABLE")
+        return SimpleNamespace(text="Recovered")
+
+    monkeypatch.setattr(ai, "enabled", lambda: True)
+    monkeypatch.setattr(ai, "RETRY_PAUSES", (0,))
+    monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=flaky)))
+    assert ai._generate("hello") == "Recovered"
+    assert len(calls) == 3
+
+
+def test_overloaded_main_model_hands_over_to_the_fallback(monkeypatch):
+    class Busy(Exception):
+        code = 503
+
+    used = []
+
+    def main_busy(model, **_):
+        used.append(model)
+        if model == "gemini-3.6-flash":
+            raise Busy("503 UNAVAILABLE")
+        return SimpleNamespace(text=f"answered by {model}")
+
+    monkeypatch.setattr(ai, "enabled", lambda: True)
+    monkeypatch.setattr(ai, "RETRY_PAUSES", (0,))
+    monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=main_busy)))
+    assert ai._generate("hello") == "answered by gemini-3.5-flash"
+    assert used == ["gemini-3.6-flash", "gemini-3.6-flash", "gemini-3.5-flash"]
+
+
+def test_non_transient_errors_are_not_retried(monkeypatch):
+    calls = []
+
+    def denied(**_):
+        calls.append(1)
+        raise RuntimeError("403 PERMISSION_DENIED")
+
+    monkeypatch.setattr(ai, "enabled", lambda: True)
+    monkeypatch.setattr(ai, "RETRY_PAUSES", (0,))
+    monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=denied)))
+    with pytest.raises(ai.AIUnavailable):
+        ai._generate("hello")
+    assert len(calls) == 1
 
 
 def test_empty_sdk_response_is_treated_as_unavailable(sdk):
@@ -158,8 +227,7 @@ def test_empty_sdk_response_is_treated_as_unavailable(sdk):
 
 
 def test_ai_diagnosis_and_lesson_flow_through_attempts(client, user, fake_ai):
-    fake_ai["responses"]["Classify"] = json.dumps({"type": "partial_method"})
-    fake_ai["responses"]["micro-lesson"] = "Core idea: add speeds when moving towards each other."
+    fake_ai["responses"]["Classify"] = json.dumps({"type": "partial_method", "lesson": "Core idea: add speeds when moving towards each other."})
     q = client.get("/questions/next", headers=user).json()["question"]
     res = answer_wrong(client, user, q, time_ms=3000).json()
     assert res["misconception_type"] == "partial_method"

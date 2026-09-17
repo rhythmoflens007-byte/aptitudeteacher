@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     jwt_expiry_hours: int = 24 * 7
 
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.6-flash"
+    # Used automatically when the main model is overloaded. Empty disables the fallback.
+    gemini_fallback_model: str = "gemini-3.5-flash"
 
 
 @lru_cache

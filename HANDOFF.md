@@ -81,7 +81,7 @@ student doesn't know, teach it, test them again, and continuously adapt the lear
 | --- | --- |
 | **SQLite + own JWT auth** instead of Supabase | User never created accounts; app must run now. Swap by setting `DATABASE_URL` to Postgres. |
 | **No Redis/Upstash** | Not needed at this scale; removed. |
-| **Gemini (`google-genai` SDK, model `gemini-2.5-flash`)** for all AI, optional | Only genuinely free tier; one key covers tutor, diagnosis, lessons, generation, OCR, translation. **No key has ever been added — every AI feature has only run against a fake in tests.** |
+| **Gemini (`google-genai` SDK, model `gemini-3.6-flash`)** for all AI, optional | Only genuinely free tier; one key covers tutor, diagnosis, lessons, generation, OCR, translation. **No key has ever been added — every AI feature has only run against a fake in tests.** |
 | **Deterministic fallbacks** for every AI call | App fully usable offline; e.g. time-based misconception heuristic. |
 | **Browser Web Speech API** for STT/TTS | Free, no server. Voices depend on browser/OS; Edge has the best Indian-language natural voices. |
 | **No copyrighted characters** | Hard line held twice. Offer originals "in the style of", or licensed VRoid models. |
@@ -108,7 +108,7 @@ Tailwind 4, TypeScript), root `README.md`, `start.bat`, `aptitude-teacher-bluepr
 
 ### Backend `apps/api/app`
 - `config.py` — pydantic-settings; `.env` path is absolute (`API_DIR/.env`); defaults: SQLite at
-  `apps/api/aptitude.db`, `jwt_secret`, `gemini_api_key=""`, `gemini_model="gemini-2.5-flash"`, CORS localhost:3000.
+  `apps/api/aptitude.db`, `jwt_secret`, `gemini_api_key=""`, `gemini_model="gemini-3.6-flash"`, CORS localhost:3000.
 - `db/session.py` — engine, `SessionLocal(expire_on_commit=False)`, `Base`, `get_db`.
 - `db/models.py` — `UTCDateTime` TypeDecorator (SQLite drops tzinfo; reattach UTC). Tables: `users`
   (email, password_hash, display_name, locale, **tutor_name** default "Asha", **tutor_gender** default "female"),

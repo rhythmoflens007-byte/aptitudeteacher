@@ -115,10 +115,12 @@ async def ocr(image: UploadFile = File(...), db: Session = Depends(get_db), user
     try:
         text = ai.ocr_question(data, image.content_type)
     except ai.AIUnavailable:
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE,
-            "Reading photos needs the AI. Add GEMINI_API_KEY to apps/api/.env, or type the question instead.",
+        message = (
+            "The AI service is busy right now. Please try the photo again in a minute, or type the question."
+            if ai.enabled()
+            else "Reading photos needs the AI. Add GEMINI_API_KEY to apps/api/.env, or type the question instead."
         )
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, message)
     except ValueError as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
     session = TutorSession(user_id=user.id, question_text=text)

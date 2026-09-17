@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from functools import lru_cache
 from typing import Protocol
 
@@ -28,6 +29,8 @@ LANGUAGES = {
     "ar": "Arabic",
 }
 MISCONCEPTIONS = ("careless_slip", "conceptual_gap", "partial_method", "no_attempt")
+RETRY_PAUSES = (1.5,)
+
 
 class Learner(Protocol):
     locale: str
@@ -71,13 +74,32 @@ def _generate(contents, system: str | None = None, as_json: bool = False) -> str
         temperature=0.4,
         response_mime_type="application/json" if as_json else None,
     )
-    try:
-        response = _client().models.generate_content(
-            model=get_settings().gemini_model, contents=contents, config=config
-        )
-    except Exception as exc:
-        log.warning("Gemini call failed: %s", exc)
-        raise AIUnavailable(str(exc)) from exc
+    # The free tier sometimes answers "busy" (503) or "slow down" (429): retry briefly, then
+    # hand over to the fallback model, which is usually less loaded at the same moment.
+    settings = get_settings()
+    models = [settings.gemini_model] + ([settings.gemini_fallback_model] if settings.gemini_fallback_model else [])
+    response = None
+    for index, model in enumerate(models):
+        last_model = index == len(models) - 1
+        for pause in RETRY_PAUSES + (None,):
+            try:
+                response = _client().models.generate_content(model=model, contents=contents, config=config)
+                break
+            except Exception as exc:
+                transient = getattr(exc, "code", None) in (429, 500, 503) or "UNAVAILABLE" in str(exc)
+                if not transient:
+                    log.warning("Gemini call failed: %s", exc)
+                    raise AIUnavailable(str(exc)) from exc
+                if pause is None:
+                    log.info("%s is busy, %s", model, "giving up" if last_model else "switching to the fallback model")
+                    if last_model:
+                        log.warning("Gemini call failed: %s", exc)
+                        raise AIUnavailable(str(exc)) from exc
+                    break
+                log.info("%s is busy, retrying in %.1fs", model, pause)
+                time.sleep(pause)
+        if response is not None:
+            break
     if not response.text:
         raise AIUnavailable("Empty response from Gemini")
     return response.text
@@ -85,6 +107,20 @@ def _generate(contents, system: str | None = None, as_json: bool = False) -> str
 
 def _language(locale: str) -> str:
     return LANGUAGES.get(locale, "English")
+
+
+def _write_in(locale: str) -> str:
+    """Instruction to write in a language using its own script, not romanised letters."""
+    language = _language(locale)
+    if language in ("English", "Spanish", "French"):
+        return f"Write in {language}."
+    return (
+        f"Write in {language} using the {language} script itself, never transliterated into Latin letters. "
+        "Keep all numbers as the digits 0-9 so they match the question."
+    )
+
+
+NO_GREETING = "Do not greet the student or introduce yourself; start directly with the explanation."
 
 
 def _question_block(q: Question) -> str:
@@ -99,8 +135,9 @@ def explain(q: Question, learner: Learner) -> str:
     try:
         return _generate(
             f"{_question_block(q)}\nReference explanation: {q.explanation}\n\n"
-            f"Rewrite the reference explanation as clear numbered steps in {_language(locale)}. "
-            "Keep numbers and option text unchanged.",
+            "Rewrite the reference explanation as clear numbered steps. "
+            f"{_write_in(locale)} Keep numbers and option text unchanged. {NO_GREETING} "
+            "Do not ask a follow-up question.",
             system=persona(learner),
         )
     except AIUnavailable:
@@ -115,44 +152,42 @@ def heuristic_misconception(chosen: str | None, time_taken_ms: int | None) -> st
     return "conceptual_gap"
 
 
-def classify_misconception(q: Question, chosen: str | None, time_taken_ms: int | None) -> str:
+RETEACH = ("conceptual_gap", "partial_method")
+
+
+def diagnose(q: Question, chosen: str | None, time_taken_ms: int | None, skill_name: str, learner: Learner) -> tuple[str, str | None]:
+    """Classifies why an answer was wrong and, for real gaps, writes the micro-lesson in the same AI call."""
     if not chosen:
-        return "no_attempt"
+        return "no_attempt", None
+    fallback_lesson = f"Let's revisit this step by step. {q.explanation} Try the next question on the same idea to lock it in."
     try:
         raw = _generate(
-            f"{_question_block(q)}\nStudent chose: {chosen}\n"
+            f"{_question_block(q)}\nSkill: {skill_name}\nStudent chose: {chosen}\n"
             f"Time taken: {round((time_taken_ms or 0) / 1000)} seconds\n\n"
-            "Classify the most likely reason for the wrong answer as exactly one of:\n"
+            "1. Classify the most likely reason for the wrong answer as exactly one of:\n"
             "careless_slip (right method, arithmetic/reading slip; wrong option is a near-miss),\n"
             "conceptual_gap (wrong method or misunderstood concept),\n"
             "partial_method (right approach but stopped early or misapplied one step),\n"
             "no_attempt (a guess: implausible option chosen very quickly).\n"
-            'Respond as JSON: {"type": "<one label>"}',
+            "2. Only if the type is conceptual_gap or partial_method, write a focused micro-lesson (max 120 words) "
+            "that fixes this exact gap: state the core idea, walk through this question with it, and give one "
+            f"memory tip. {_write_in(learner.locale)} {NO_GREETING} Do not ask a follow-up question. "
+            "Otherwise leave the lesson empty.\n"
+            'Respond as JSON: {"type": "<one label>", "lesson": "<micro-lesson or empty string>"}',
+            system=persona(learner),
             as_json=True,
         )
-        label = json.loads(raw).get("type")
+        data = json.loads(raw)
+        label = data.get("type")
         if label in MISCONCEPTIONS:
-            return label
+            lesson = str(data.get("lesson") or "").strip()
+            if label not in RETEACH:
+                return label, None
+            return label, lesson or fallback_lesson
     except (AIUnavailable, ValueError, AttributeError):
         pass
-    return heuristic_misconception(chosen, time_taken_ms)
-
-
-def micro_lesson(q: Question, skill_name: str, misconception: str, learner: Learner) -> str:
-    fallback = (
-        f"Let's revisit this step by step. {q.explanation} "
-        "Try the next question on the same idea to lock it in."
-    )
-    try:
-        return _generate(
-            f"{_question_block(q)}\nSkill: {skill_name}\nDiagnosed issue: {misconception}\n\n"
-            f"In {_language(learner.locale)}, give a focused micro-lesson (max 120 words) that fixes this exact "
-            "gap: state the core idea, walk through this question with it, and give one memory tip. "
-            "Do not ask a follow-up question.",
-            system=persona(learner),
-        )
-    except AIUnavailable:
-        return fallback
+    label = heuristic_misconception(chosen, time_taken_ms)
+    return label, fallback_lesson if label in RETEACH else None
 
 
 def tutor_reply(
@@ -180,7 +215,7 @@ def tutor_reply(
     try:
         return _generate(contents, system=system)
     except AIUnavailable:
-        return "I couldn't reach the AI service just now (the free quota may be used up). Please try again in a minute."
+        return "I couldn't reach the AI service just now (it may be busy, or the free daily limit may be used up). Please try again in a minute."
 
 
 def generate_question(subtopic: str, skill: str, difficulty: int, examples: list[Question]) -> dict | None:
