@@ -274,7 +274,7 @@ function Tutor() {
             />
             <div className="min-w-0 flex-1 xl:w-full xl:text-center">
               <div className="flex items-center gap-2 xl:justify-center">
-                <h1 className="truncate text-xl font-semibold tracking-tight">{tutor.name}</h1>
+                <h1 className="truncate font-display text-2xl">{tutor.name}</h1>
                 <span
                   className={`h-2.5 w-2.5 shrink-0 rounded-full ${aiEnabled ? "bg-good" : "bg-marker"} ${voice.speaking || waiting ? "animate-pulse" : ""}`}
                   title={aiEnabled ? "AI online" : "Offline mode"}
@@ -384,7 +384,7 @@ function Tutor() {
                   <Icon name="sparkles" className="h-7 w-7" />
                 </span>
                 <div>
-                  <p className="text-xl font-semibold tracking-tight">What shall we work on?</p>
+                  <p className="font-display text-2xl">What shall we work on?</p>
                   <p className="text-sm text-ink-soft">
                     {tutor.name} explains out loud in {language.english}. Try one of these, or ask your own doubt.
                   </p>

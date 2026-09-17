@@ -7,7 +7,7 @@ import { useT } from "@/lib/i18n";
 import { DEFAULT_TUTOR, NAME_IDEAS, TutorGender, useTutor } from "@/lib/tutor";
 import { useTutorVoice } from "@/lib/useTutorVoice";
 import TutorAvatar from "./TutorAvatar";
-import { Button, ErrorNote, Icon } from "./ui";
+import { Button, ErrorNote, Icon, Segmented } from "./ui";
 
 const GREETING: Record<Locale, (name: string) => string> = {
   en: (n) => `Hi! I'm ${n}. Let's practise together and close your gaps one by one.`,
@@ -76,7 +76,7 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
           framing="full"
           className="aspect-[4/5] w-full max-w-[260px]"
         />
-        <p className="text-xl font-semibold tracking-tight">{shownName}</p>
+        <p className="font-display text-2xl">{shownName}</p>
         <Button type="button" variant="secondary" onClick={() => (voice.speaking ? voice.stop() : voice.say(GREETING[locale](shownName), "hello", gender))}>
           <Icon name={voice.speaking ? "stop" : "speaker"} className="h-4 w-4" />
           {voice.speaking ? "Stop" : "Say hello"}
@@ -86,22 +86,13 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
       <div className="flex flex-col gap-5">
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 text-sm font-medium">{t("tutor.gender")}</legend>
-          <div className="grid grid-cols-2 gap-0.5 rounded-lg border border-line bg-surface-2 p-0.5" role="radiogroup">
-            {(["female", "male"] as const).map((g) => (
-              <button
-                key={g}
-                type="button"
-                role="radio"
-                aria-checked={gender === g}
-                onClick={() => chooseGender(g)}
-                className={`press rounded-md px-4 py-2 text-sm font-medium ${
-                  gender === g ? "bg-surface text-ink shadow-[var(--shadow-sm)]" : "text-ink-soft hover:text-ink"
-                }`}
-              >
-                {g === "female" ? t("tutor.female") : t("tutor.male")}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            id="tutor-gender"
+            label={t("tutor.gender")}
+            value={gender}
+            options={(["female", "male"] as const).map((g) => ({ value: g, label: g === "female" ? t("tutor.female") : t("tutor.male") }))}
+            onChange={chooseGender}
+          />
         </fieldset>
 
         <label className="flex flex-col gap-2 text-sm font-medium">

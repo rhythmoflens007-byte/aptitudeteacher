@@ -5,7 +5,7 @@ import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
 import type { Mood } from "@/components/Avatar";
 import TutorAvatar from "@/components/TutorAvatar";
-import { Button, Card, Confetti, DIFFICULTY, ErrorNote, Icon, IconTile, Label, MISCONCEPTION_LABEL, PageHeader, Pill, ProgressBar, Skeleton } from "@/components/ui";
+import { Button, Card, Confetti, DIFFICULTY, ErrorNote, Icon, IconTile, Label, MISCONCEPTION_LABEL, PageHeader, Pill, ProgressBar, Segmented, Skeleton } from "@/components/ui";
 import { api, AttemptResult, Question, Topic, TutorSession } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { useMedia } from "@/lib/useMedia";
@@ -167,24 +167,17 @@ function Practice() {
         eyebrow={`${tutor.name} picks each question for you`}
         title={t("practice.title")}
         actions={
-          <div className="no-scrollbar -mx-4 flex max-w-[calc(100%+2rem)] overflow-x-auto px-4 sm:mx-0 sm:px-0" role="group" aria-label="Filter by topic">
-            <div className="flex shrink-0 gap-0.5 rounded-lg border border-line bg-surface-2 p-0.5">
-              {[{ id: null, name: t("practice.all") }, ...topics].map((tp) => (
-                <button
-                  key={tp.id ?? "all"}
-                  onClick={() => {
-                    setTopicId(tp.id);
-                    loadNext(tp.id);
-                  }}
-                  aria-pressed={topicId === tp.id}
-                  className={`press shrink-0 rounded-md px-3 py-1.5 text-sm ${
-                    topicId === tp.id ? "bg-surface font-medium text-ink shadow-[var(--shadow-sm)]" : "text-ink-soft hover:text-ink"
-                  }`}
-                >
-                  {tp.name}
-                </button>
-              ))}
-            </div>
+          <div className="no-scrollbar -mx-4 flex max-w-[calc(100%+2rem)] overflow-x-auto px-4 sm:mx-0 sm:px-0">
+            <Segmented
+              id="practice-topic"
+              label="Filter by topic"
+              value={topicId}
+              options={[{ value: null, label: t("practice.all") }, ...topics.map((tp) => ({ value: tp.id as string | null, label: tp.name }))]}
+              onChange={(id) => {
+                setTopicId(id);
+                loadNext(id);
+              }}
+            />
           </div>
         }
       />
@@ -226,7 +219,7 @@ function Practice() {
                 </span>
               </div>
               <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ink-soft">{question.topic}</p>
-              <p className="mt-3 whitespace-pre-line text-lg leading-relaxed sm:text-xl">{question.body}</p>
+              <p className="mt-3 whitespace-pre-line font-display text-xl leading-snug sm:text-2xl">{question.body}</p>
 
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                 {question.options.map((option, i) => {
@@ -376,7 +369,7 @@ function Practice() {
               className="aspect-square w-28 shrink-0 sm:w-36 xl:aspect-[4/5] xl:w-full"
             />
             <div className="min-w-0 xl:text-center">
-              <p className="flex items-center gap-2 font-semibold tracking-tight xl:justify-center">
+              <p className="flex items-center gap-2 font-display text-xl xl:justify-center">
                 <span className="h-2 w-2 rounded-full bg-good" />
                 {tutor.name}
               </p>

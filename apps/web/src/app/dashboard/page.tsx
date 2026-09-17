@@ -98,37 +98,36 @@ function DashboardView() {
     <div className="flex flex-col gap-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-ink-soft">{t("dash.greeting")}</p>
-          <h1 className="font-display text-3xl font-semibold sm:text-4xl">{data.user.display_name}</h1>
+          <p className="eyebrow mb-2.5">{t("dash.greeting")}</p>
+          <h1 className="font-display text-4xl sm:text-5xl">{data.user.display_name}</h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/tests" className={buttonClass("secondary")}>
+          <Link href="/tests" transitionTypes={["nav-forward"]} className={buttonClass("secondary")}>
             <Icon name="clipboard" className="h-4 w-4" /> Take a mock test
           </Link>
-          <Link href="/practice" className={buttonClass("primary")}>
+          <Link href="/practice" transitionTypes={["nav-forward"]} className={buttonClass("primary")}>
             {t("dash.goalStart")} <Icon name="arrow" className="h-4 w-4" />
           </Link>
         </div>
       </header>
 
       <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
-        <Card className="rise relative flex items-center gap-5 overflow-hidden p-0">
-          <div aria-hidden className="bg-glow absolute inset-0" />
-          <TutorAvatar gender={tutor.gender} mood="happy" stage={false} className="relative hidden h-40 w-36 shrink-0 self-end sm:block" />
-          <div className="relative flex min-w-0 flex-1 flex-col gap-3 p-5 sm:pl-0">
-            <p className="flex items-center gap-2 text-sm font-medium">
-              <span className="h-2 w-2 rounded-full bg-good" /> {tutor.name} says
+        <div className="rise grain relative flex items-center gap-5 overflow-hidden rounded-xl bg-navy text-navy-ink shadow-[var(--shadow-md)]">
+          <TutorAvatar gender={tutor.gender} mood="happy" stage={false} className="relative hidden h-44 w-36 shrink-0 self-end sm:block" />
+          <div className="relative flex min-w-0 flex-1 flex-col gap-3 p-6 sm:pl-0">
+            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> {tutor.name} says
             </p>
-            <p className="text-lg font-medium leading-snug tracking-tight text-balance">{tip}</p>
-            <Link href="/tutor" className="flex w-fit items-center gap-1 text-sm font-medium text-accent hover:underline">
+            <p className="font-display text-2xl leading-snug text-white text-balance">{tip}</p>
+            <Link href="/tutor" transitionTypes={["nav-forward"]} className="link-draw flex w-fit items-center gap-1 text-sm font-medium text-white">
               Talk it through <Icon name="arrow" className="h-3.5 w-3.5" />
             </Link>
           </div>
-        </Card>
+        </div>
 
         <Card className="rise flex items-center gap-5" style={{ "--i": 1 } as CSSProperties}>
           <Ring value={goalPct} size={104} stroke={9} tone={goal.completed >= goal.target ? "accent" : "marker"}>
-            <p className="font-display text-2xl font-semibold tabular">
+            <p className="font-display text-3xl tabular">
               {goal.completed}
               <span className="text-sm text-ink-soft">/{goal.target}</span>
             </p>
@@ -165,7 +164,7 @@ function DashboardView() {
               <Label>{tile.label}</Label>
               <Icon name={tile.icon} className="h-4 w-4 text-ink-soft" />
             </div>
-            <div className="mt-3 font-display text-3xl font-semibold">{tile.value}</div>
+            <div className="mt-3 font-display text-4xl">{tile.value}</div>
             <p className="mt-1 text-xs text-ink-soft tabular">{tile.sub}</p>
             {i === 0 && (
               <div className="mt-3">
@@ -182,7 +181,7 @@ function DashboardView() {
       <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
         <Card className="rise p-0" style={{ "--i": 4 } as CSSProperties}>
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <h2 className="font-semibold tracking-tight">{t("dash.mastery")}</h2>
+            <h2 className="font-display text-xl">{t("dash.mastery")}</h2>
             <span className="text-xs text-ink-soft">Tap a section for skills</span>
           </div>
           <ul className="divide-y divide-line">
@@ -251,7 +250,7 @@ function DashboardView() {
         <div className="grid gap-4 md:grid-cols-2 xl:flex xl:flex-col">
           <Card className="rise" style={{ "--i": 5 } as CSSProperties}>
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold tracking-tight">{t("dash.trend")}</h2>
+              <h2 className="font-display text-xl">{t("dash.trend")}</h2>
               <span className="flex items-center gap-3 text-[11px] text-ink-soft">
                 <span className="flex items-center gap-1">
                   <span className="h-2 w-2 rounded-sm bg-accent" />
@@ -284,7 +283,7 @@ function DashboardView() {
           </Card>
 
           <Card className="rise flex flex-1 flex-col" style={{ "--i": 6 } as CSSProperties}>
-            <h2 className="font-semibold tracking-tight">{t("dash.weak")}</h2>
+            <h2 className="font-display text-xl">{t("dash.weak")}</h2>
             {data.weak_skills.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center text-sm text-ink-soft">
                 <IconTile name="target" tone="accent" />
@@ -307,7 +306,7 @@ function DashboardView() {
                 ))}
               </ul>
             )}
-            <Link href="/tutor" className={buttonClass("secondary", "mt-4 w-full")}>
+            <Link href="/tutor" transitionTypes={["nav-forward"]} className={buttonClass("secondary", "mt-4 w-full")}>
               <Icon name="chat" className="h-4 w-4" /> Talk it through with {tutor.name}
             </Link>
           </Card>
@@ -316,7 +315,7 @@ function DashboardView() {
 
       <Card className="rise" style={{ "--i": 7 } as CSSProperties}>
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold tracking-tight">{t("dash.badges")}</h2>
+          <h2 className="font-display text-xl">{t("dash.badges")}</h2>
           <span className="text-xs text-ink-soft tabular">
             {data.badges.filter((b) => b.earned_at).length} / {data.badges.length} earned
           </span>
@@ -339,7 +338,7 @@ function DashboardView() {
       <Card className="rise p-0" style={{ "--i": 8 } as CSSProperties}>
         <div className="flex items-center gap-2 border-b border-line px-5 py-4">
           <Icon name="history" className="h-4 w-4 text-ink-soft" />
-          <h2 className="font-semibold tracking-tight">{t("dash.history")}</h2>
+          <h2 className="font-display text-xl">{t("dash.history")}</h2>
         </div>
         {data.recent.length === 0 ? (
           <p className="px-5 py-4 text-sm text-ink-soft">No answers yet.</p>

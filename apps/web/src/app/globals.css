@@ -1,72 +1,83 @@
 @import "tailwindcss";
 
 /*
- * Design tokens. A quiet neutral base with one emerald accent and an amber
- * secondary used sparingly (XP, streaks, warnings). Components use these via
- * the Tailwind colour names mapped in @theme below.
+ * "Modern Oxford" design system.
+ * Oxford blue carries structure and primary actions, crimson is the single
+ * accent, and serif headlines give the academic voice. Motion is slow-in,
+ * slow-out ("--ease-out-expo") so transitions feel cinematic rather than bouncy.
  */
 :root {
-  --paper: #fafafa;
+  --paper: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f4f4f5;
-  --glass: rgb(255 255 255 / 0.86);
-  --ink: #0a0a0b;
-  --ink-soft: #62626b;
-  --line: #e6e6e9;
-  --line-strong: #d4d4d8;
-  --accent: #047857;
-  --accent-2: #059669;
+  --surface-2: #f4f6f9;
+  --glass: rgb(255 255 255 / 0.88);
+  --ink: #0b1a30;
+  --ink-soft: #5a6478;
+  --line: #e2e6ed;
+  --line-strong: #cbd2dd;
+  --navy: #002147;
+  --navy-2: #0a2d5c;
+  --navy-ink: #f5f1e8;
+  --accent: #a51c30;
+  --accent-2: #c8354b;
   --accent-ink: #ffffff;
-  --accent-soft: #ecfdf5;
-  --marker: #b45309;
-  --marker-2: #d97706;
-  --marker-soft: #fef6e7;
-  --violet: #6d28d9;
-  --good: #047857;
-  --good-soft: #ecfdf5;
-  --bad: #dc2626;
-  --bad-soft: #fef2f2;
-  --primary: #0a0a0b;
+  --accent-soft: #fbeef0;
+  --gold: #b08d57;
+  --marker: #9a6a12;
+  --marker-2: #c58a1d;
+  --marker-soft: #fbf4e6;
+  --violet: #4b3fa8;
+  --good: #16734a;
+  --good-soft: #eaf6ef;
+  --bad: #b42318;
+  --bad-soft: #fdeeec;
+  --primary: #002147;
   --primary-ink: #ffffff;
-  --grid: rgb(10 10 11 / 0.05);
-  --glow: rgb(5 150 105 / 0.14);
-  --shadow-sm: 0 1px 2px rgb(10 10 11 / 0.04);
-  --shadow-md: 0 1px 2px rgb(10 10 11 / 0.04), 0 4px 16px -4px rgb(10 10 11 / 0.08);
-  --shadow-lg: 0 2px 4px rgb(10 10 11 / 0.04), 0 24px 48px -16px rgb(10 10 11 / 0.18);
-  --shadow-glow: 0 0 0 1px rgb(4 120 87 / 0.12), 0 6px 20px -6px rgb(4 120 87 / 0.35);
+  --grid: rgb(0 33 71 / 0.055);
+  --glow: rgb(0 33 71 / 0.08);
+  --shadow-sm: 0 1px 2px rgb(0 33 71 / 0.05);
+  --shadow-md: 0 1px 2px rgb(0 33 71 / 0.05), 0 8px 24px -8px rgb(0 33 71 / 0.12);
+  --shadow-lg: 0 2px 6px rgb(0 33 71 / 0.06), 0 32px 64px -24px rgb(0 33 71 / 0.28);
+  --shadow-glow: 0 8px 24px -8px rgb(165 28 48 / 0.45);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #09090b;
-    --surface: #111113;
-    --surface-2: #1a1a1d;
-    --glass: rgb(9 9 11 / 0.86);
-    --ink: #fafafa;
-    --ink-soft: #a1a1aa;
-    --line: #26262a;
-    --line-strong: #34343a;
-    --accent: #34d399;
-    --accent-2: #6ee7b7;
-    --accent-ink: #04130d;
-    --accent-soft: rgb(52 211 153 / 0.12);
-    --marker: #fbbf24;
-    --marker-2: #fcd34d;
-    --marker-soft: rgb(251 191 36 / 0.12);
-    --violet: #a78bfa;
-    --good: #34d399;
-    --good-soft: rgb(52 211 153 / 0.12);
-    --bad: #f87171;
-    --bad-soft: rgb(248 113 113 / 0.12);
-    --primary: #fafafa;
-    --primary-ink: #09090b;
-    --grid: rgb(255 255 255 / 0.05);
-    --glow: rgb(52 211 153 / 0.12);
+    --paper: #050d1a;
+    --surface: #0a1628;
+    --surface-2: #101f36;
+    --glass: rgb(5 13 26 / 0.86);
+    --ink: #eef2f8;
+    --ink-soft: #97a3b8;
+    --line: #1a2a44;
+    --line-strong: #263a5a;
+    --navy: #0a1f3d;
+    --navy-2: #12305a;
+    --navy-ink: #f5f1e8;
+    --accent: #e25a6e;
+    --accent-2: #f07f90;
+    --accent-ink: #1a0508;
+    --accent-soft: rgb(226 90 110 / 0.13);
+    --gold: #cfae78;
+    --marker: #e3b25a;
+    --marker-2: #eec27a;
+    --marker-soft: rgb(227 178 90 / 0.13);
+    --violet: #a59cf0;
+    --good: #4cc38a;
+    --good-soft: rgb(76 195 138 / 0.13);
+    --bad: #f07a6e;
+    --bad-soft: rgb(240 122 110 / 0.13);
+    --primary: #f5f1e8;
+    --primary-ink: #04101f;
+    --grid: rgb(255 255 255 / 0.045);
+    --glow: rgb(120 160 230 / 0.1);
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
-    --shadow-md: 0 1px 2px rgb(0 0 0 / 0.5), 0 8px 24px -8px rgb(0 0 0 / 0.6);
-    --shadow-lg: 0 2px 4px rgb(0 0 0 / 0.5), 0 24px 56px -16px rgb(0 0 0 / 0.8);
-    --shadow-glow: 0 0 0 1px rgb(52 211 153 / 0.2), 0 6px 24px -6px rgb(52 211 153 / 0.3);
+    --shadow-md: 0 1px 2px rgb(0 0 0 / 0.5), 0 10px 28px -10px rgb(0 0 0 / 0.7);
+    --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.5), 0 32px 64px -24px rgb(0 0 0 / 0.85);
+    --shadow-glow: 0 8px 24px -8px rgb(226 90 110 / 0.4);
     color-scheme: dark;
   }
 }
@@ -80,10 +91,14 @@
   --color-ink-soft: var(--ink-soft);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-navy: var(--navy);
+  --color-navy-2: var(--navy-2);
+  --color-navy-ink: var(--navy-ink);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
+  --color-gold: var(--gold);
   --color-marker: var(--marker);
   --color-marker-2: var(--marker-2);
   --color-marker-soft: var(--marker-soft);
@@ -94,58 +109,69 @@
   --color-bad-soft: var(--bad-soft);
   --color-primary: var(--primary);
   --color-primary-ink: var(--primary-ink);
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-serif), "Iowan Old Style", Georgia, serif;
+  --font-serif: var(--font-serif), "Iowan Old Style", Georgia, serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
   --shadow-soft: var(--shadow-md);
   --shadow-lifted: var(--shadow-lg);
   --shadow-glow: var(--shadow-glow);
-}
-
-html {
-  scroll-behavior: smooth;
+  /* Tighter, more institutional corners everywhere. */
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 1rem;
 }
 
 body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-feature-settings: "cv11", "ss01";
+  font-feature-settings: "cv11", "ss01", "ss03";
   -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
 }
 
-/* Headings: tight tracking reads crisper at large sizes. */
+/* Serif display type: optical sizing on, slightly tight. */
 .font-display {
-  letter-spacing: -0.025em;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* Small-caps style section label used across the site. */
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 ::selection {
-  background: var(--accent-soft);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 .tabular {
   font-variant-numeric: tabular-nums;
 }
 
-/* Soft ink-to-grey fade for hero headlines. */
 .text-gradient {
-  background: linear-gradient(180deg, var(--ink) 30%, color-mix(in oklab, var(--ink) 55%, transparent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--ink);
 }
 
 .text-accent-gradient {
-  background: linear-gradient(100deg, var(--accent) 0%, var(--accent-2) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--accent);
+  font-style: italic;
 }
 
 .bg-brand {
@@ -158,21 +184,57 @@ body {
 
 .glass {
   background: var(--glass);
-  backdrop-filter: blur(16px) saturate(1.6);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
 }
 
-/* Faint square grid that fades out, used behind hero areas. */
 .bg-grid {
   background-image:
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 30%, transparent 100%);
 }
 
 .bg-glow {
-  background: radial-gradient(ellipse 50% 60% at 50% 0%, var(--glow), transparent 70%);
+  background: radial-gradient(ellipse 55% 60% at 50% 0%, var(--glow), transparent 70%);
+}
+
+/* Layered so Tailwind utilities (e.g. `fixed`, `absolute`) can override their positioning. */
+@layer components {
+  /* Paper-grain noise for navy panels, drawn with an inline SVG. */
+  .grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.08;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* Button sheen: a slow light sweep on hover. */
+  .shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / 0.18) 50%, transparent 65%);
+    transform: translateX(-120%);
+    transition: transform 0.9s var(--ease-out-expo);
+  }
+  .shine:hover::after {
+    transform: translateX(120%);
+  }
 }
 
 .no-scrollbar {
@@ -186,39 +248,56 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* ---------- Motion (subtle by design) ---------- */
+/* Lenis smooth scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* ---------- Motion ---------- */
 
 .rise {
-  animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  animation-delay: calc(var(--i, 0) * 50ms);
+  animation: rise 0.8s var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
 }
 
 .pop {
-  animation: pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
-  animation-delay: calc(var(--i, 0) * 40ms);
+  animation: pop 0.5s var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
 }
 
 .fade {
-  animation: fade 0.3s ease both;
+  animation: fade 0.4s ease both;
 }
 
 .float {
-  animation: float 7s ease-in-out infinite;
-  animation-delay: calc(var(--i, 0) * -2s);
+  animation: float 8s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -2.5s);
 }
 
-/* Scroll reveal: elements start hidden and animate in when .is-visible is added. */
 .reveal {
   opacity: 0;
-  transform: translateY(14px);
+  transform: translateY(24px);
+  filter: blur(6px);
   transition:
-    opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
-    transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
-  transition-delay: calc(var(--i, 0) * 70ms);
+    opacity 1s var(--ease-out-expo),
+    transform 1s var(--ease-out-expo),
+    filter 1s var(--ease-out-expo);
+  transition-delay: calc(var(--i, 0) * 90ms);
 }
 .reveal.is-visible {
   opacity: 1;
   transform: none;
+  filter: none;
 }
 
 .shake {
@@ -230,43 +309,56 @@ body {
 }
 
 .lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.5s var(--ease-out-expo), box-shadow 0.5s var(--ease-out-expo), border-color 0.3s ease;
 }
 .lift:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--line-strong);
   box-shadow: var(--shadow-md);
 }
 
 .press {
-  transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.2s var(--ease-out-expo),
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease,
+    opacity 0.25s ease;
 }
 .press:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
-/* Kept as a hook for existing markup; intentionally no sheen in the clean theme. */
-.shine {
-  position: relative;
+/* Underline that draws in from the left on hover. */
+.link-draw {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.5s var(--ease-out-expo);
+}
+.link-draw:hover {
+  background-size: 100% 1px;
 }
 
 .grow-x {
   transform-origin: left center;
-  animation: grow-x 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  animation-delay: calc(var(--i, 0) * 60ms + 100ms);
+  animation: grow-x 1.2s var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 120ms);
 }
 
 .grow-y {
   transform-origin: bottom center;
-  animation: grow-y 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  animation-delay: calc(var(--i, 0) * 60ms + 150ms);
+  animation: grow-y 1s var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 180ms);
 }
 
 .skeleton {
   background: linear-gradient(90deg, var(--surface-2) 0%, var(--line) 50%, var(--surface-2) 100%);
   background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
-  border-radius: 12px;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 8px;
 }
 
 .flame {
@@ -281,7 +373,7 @@ body {
 }
 
 .xp-float {
-  animation: xp-float 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: xp-float 1.6s var(--ease-out-expo) both;
 }
 
 .confetti {
@@ -289,42 +381,25 @@ body {
   top: -10px;
   width: 7px;
   height: 12px;
-  border-radius: 2px;
+  border-radius: 1px;
   animation: confetti var(--dur, 1.6s) cubic-bezier(0.25, 0.6, 0.4, 1) forwards;
   animation-delay: var(--delay, 0s);
 }
 
-/* Animated gradient border for the hero product frame. */
 .frame-glow {
   position: relative;
 }
-.frame-glow::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 45%, transparent), var(--line) 40%);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
 
-/* Horizontally scrolling strip (language marquee). */
 .marquee {
-  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 }
 .marquee-track {
-  animation: marquee 40s linear infinite;
+  animation: marquee 50s linear infinite;
 }
 .marquee:hover .marquee-track {
   animation-play-state: paused;
 }
 
-/* The tutor's stage: a soft spotlight and a floor shadow that breathes while the tutor talks. */
 .tutor-stage-glow {
   position: absolute;
   inset: 14% 12% 0;
@@ -339,7 +414,7 @@ body {
   aspect-ratio: 5 / 1;
   translate: -50% 0;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(10 10 11 / 0.16), transparent);
+  background: radial-gradient(closest-side, rgb(0 33 71 / 0.18), transparent);
   transition: transform 0.4s ease;
 }
 .tutor-stage-ring--live {
@@ -347,8 +422,8 @@ body {
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 @keyframes pop {
   from { opacity: 0; transform: scale(0.94); }
@@ -360,7 +435,7 @@ body {
 }
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-8px); }
 }
 @keyframes shake {
   10%, 90% { transform: translateX(-1px); }
@@ -410,6 +485,74 @@ body {
   to { transform: translateX(-50%); }
 }
 
+/* ---------- Page transitions (React <ViewTransition>) ---------- */
+
+::view-transition {
+  pointer-events: none;
+}
+
+/* The page itself is animated by the named content group, not the root snapshot. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+/* Persistent chrome stays perfectly still while content moves. */
+::view-transition-group(app-sidebar),
+::view-transition-group(app-topbar),
+::view-transition-group(app-tabbar) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(app-sidebar),
+::view-transition-old(app-topbar),
+::view-transition-old(app-tabbar) {
+  display: none;
+}
+::view-transition-new(app-sidebar),
+::view-transition-new(app-topbar),
+::view-transition-new(app-tabbar) {
+  animation: none;
+}
+
+::view-transition-old(.page-forward) {
+  animation: 260ms var(--ease-in-out) both vt-out-left;
+}
+::view-transition-new(.page-forward) {
+  animation: 700ms var(--ease-out-expo) 120ms both vt-in-right;
+}
+::view-transition-old(.page-back) {
+  animation: 260ms var(--ease-in-out) both vt-out-right;
+}
+::view-transition-new(.page-back) {
+  animation: 700ms var(--ease-out-expo) 120ms both vt-in-left;
+}
+::view-transition-old(.page-fade) {
+  animation: 320ms var(--ease-in-out) both vt-out-fade;
+}
+::view-transition-new(.page-fade) {
+  animation: 900ms var(--ease-out-expo) 160ms both vt-in-fade;
+}
+
+@keyframes vt-out-left {
+  to { opacity: 0; transform: translateX(-40px); filter: blur(6px); }
+}
+@keyframes vt-in-right {
+  from { opacity: 0; transform: translateX(56px); filter: blur(8px); }
+}
+@keyframes vt-out-right {
+  to { opacity: 0; transform: translateX(40px); filter: blur(6px); }
+}
+@keyframes vt-in-left {
+  from { opacity: 0; transform: translateX(-56px); filter: blur(8px); }
+}
+@keyframes vt-out-fade {
+  to { opacity: 0; transform: scale(0.985); filter: blur(8px); }
+}
+@keyframes vt-in-fade {
+  from { opacity: 0; transform: translateY(28px) scale(0.99); filter: blur(10px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -418,6 +561,12 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .reveal { opacity: 1; transform: none; }
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+  .reveal { opacity: 1; transform: none; filter: none; }
   .confetti { display: none; }
 }

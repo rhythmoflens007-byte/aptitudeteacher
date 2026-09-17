@@ -2,7 +2,7 @@
 
 import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
-import { Button, Card, Confetti, ErrorNote, Icon, IconTile, Label, PageHeader, Pill, ProgressBar, Ring } from "@/components/ui";
+import { Button, Card, Confetti, ErrorNote, Icon, IconTile, Label, PageHeader, Pill, ProgressBar, Ring, Segmented } from "@/components/ui";
 import { api, Quiz, QuizReport, Topic } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 
@@ -73,7 +73,7 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
         <Card className="rise flex flex-col gap-5 p-0">
           <div className="px-6 pt-6">
             <IconTile name="bolt" tone="accent" />
-            <h2 className="mt-4 text-xl font-semibold tracking-tight">{t("tests.quiz")}</h2>
+            <h2 className="mt-4 font-display text-2xl">{t("tests.quiz")}</h2>
             <p className="mt-1 text-sm text-ink-soft">Timed, one minute per question. Pick a section or mix all three.</p>
           </div>
           <div className="flex flex-col gap-4 px-6 pb-6">
@@ -94,18 +94,13 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
             </div>
             <div>
               <p className="mb-2 text-sm font-medium">Length</p>
-              <div className="grid grid-cols-3 gap-0.5 rounded-lg border border-line bg-surface-2 p-0.5">
-                {[5, 10, 15].map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setCount(n)}
-                    aria-pressed={count === n}
-                    className={`press rounded-md py-2 text-sm ${count === n ? "bg-surface font-medium text-ink shadow-[var(--shadow-sm)]" : "text-ink-soft hover:text-ink"}`}
-                  >
-                    {n} Qs · {n}m
-                  </button>
-                ))}
-              </div>
+              <Segmented
+                id="quiz-length"
+                label="Quiz length"
+                value={String(count)}
+                options={[5, 10, 15].map((n) => ({ value: String(n), label: `${n} Qs · ${n}m` }))}
+                onChange={(v) => setCount(Number(v))}
+              />
             </div>
             <Button variant="secondary" onClick={() => start("quiz")} disabled={busy} className="self-start px-6 py-3">
               {t("tests.start")} <Icon name="arrow" className="h-4 w-4" />
@@ -119,7 +114,7 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
           </span>
           <div className="px-6 pt-6">
             <IconTile name="trophy" tone="marker" />
-            <h2 className="mt-4 text-xl font-semibold tracking-tight">{t("tests.mock")}</h2>
+            <h2 className="mt-4 font-display text-2xl">{t("tests.mock")}</h2>
             <p className="mt-1 text-sm text-ink-soft">15 questions in 15 minutes across all sections, like a real placement test.</p>
           </div>
           <div className="flex flex-1 flex-col gap-4 px-6 pb-6">
@@ -285,7 +280,7 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
             <Pill>{q.topic}</Pill>
             <Pill>{q.subtopic}</Pill>
           </div>
-          <p className="mt-4 whitespace-pre-line text-lg leading-relaxed sm:text-xl">{q.body}</p>
+          <p className="mt-4 whitespace-pre-line font-display text-xl leading-snug sm:text-2xl">{q.body}</p>
           <ul className="mt-6 flex flex-col gap-2.5">
             {q.options.map((option, i) => {
               const chosen = answers[q.id] === option;

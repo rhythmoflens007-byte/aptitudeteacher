@@ -37,15 +37,15 @@ function Profile() {
   }
 
   const field =
-    "rounded-lg border border-line bg-surface px-3.5 py-2.5 text-base font-normal shadow-[var(--shadow-sm)] outline-none transition focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)]";
+    "rounded-md border border-line-strong bg-surface px-3.5 py-2.5 text-base font-normal outline-none transition duration-300 hover:border-ink/30 focus:border-navy focus:shadow-[0_0_0_4px_rgb(0_33_71/0.08)] dark:focus:border-ink";
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Settings"
+        eyebrow="Student record"
         title={
           <span className="flex items-center gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-lg font-semibold text-primary-ink">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-navy font-display text-xl text-navy-ink">
               {(user?.display_name.trim().charAt(0) || "?").toUpperCase()}
             </span>
             <span className="min-w-0 truncate">{user?.display_name}</span>
@@ -58,7 +58,7 @@ function Profile() {
         <div className="flex items-center gap-3 border-b border-line px-5 py-4 sm:px-6">
           <IconTile name="sparkles" tone="accent" />
           <div>
-            <h2 className="font-semibold tracking-tight">{t("tutor.yourTutor")}</h2>
+            <h2 className="font-display text-xl">{t("tutor.yourTutor")}</h2>
             <p className="text-sm text-ink-soft">Choose who teaches you. The name and voice carry through practice, lessons and chat.</p>
           </div>
         </div>
@@ -68,7 +68,7 @@ function Profile() {
       </Card>
 
       <Card className="rise p-5 sm:p-6" style={{ "--i": 2 } as CSSProperties}>
-        <h2 className="mb-4 font-semibold tracking-tight">{t("profile.title")}</h2>
+        <h2 className="mb-4 font-display text-xl">{t("profile.title")}</h2>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             {t("profile.name")}
@@ -83,7 +83,7 @@ function Profile() {
                   type="button"
                   aria-pressed={locale === l.code}
                   onClick={() => setLocale(l.code)}
-                  className={`press rounded-lg border px-3 py-2.5 text-left text-sm ${locale === l.code ? "border-accent bg-accent-soft font-medium text-ink shadow-[0_0_0_1px_var(--accent)]" : "border-line bg-surface text-ink-soft hover:border-line-strong hover:text-ink"}`}
+                  className={`press rounded-lg border px-3 py-2.5 text-left text-sm ${locale === l.code ? "border-navy bg-navy font-medium text-navy-ink dark:border-ink" : "border-line bg-surface text-ink-soft hover:border-line-strong hover:text-ink"}`}
                 >
                   <span className="block" dir="auto">
                     {l.label}
@@ -111,7 +111,7 @@ function Profile() {
 
       <Card className="rise flex flex-wrap items-center justify-between gap-3 p-5 sm:p-6" style={{ "--i": 3 } as CSSProperties}>
         <div>
-          <h2 className="font-semibold tracking-tight">Account</h2>
+          <h2 className="font-display text-xl">Account</h2>
           <p className="text-sm text-ink-soft">Signed in as {user?.email}</p>
         </div>
         <Button variant="secondary" onClick={logout}>

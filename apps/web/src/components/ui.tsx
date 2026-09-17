@@ -1,18 +1,19 @@
 "use client";
 
+import { motion } from "motion/react";
 import { ButtonHTMLAttributes, CSSProperties, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "marker";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-primary text-primary-ink shadow-[var(--shadow-sm)] hover:opacity-90",
-  secondary: "border border-line bg-surface text-ink shadow-[var(--shadow-sm)] hover:border-line-strong hover:bg-surface-2",
+  primary: "shine bg-primary text-primary-ink shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
+  secondary: "border border-line-strong bg-surface text-ink hover:border-ink/40 hover:bg-surface-2",
   ghost: "text-ink-soft hover:bg-surface-2 hover:text-ink",
-  marker: "bg-accent text-accent-ink shadow-[var(--shadow-glow)] hover:opacity-90",
+  marker: "shine bg-accent text-accent-ink shadow-[var(--shadow-glow)] hover:brightness-110",
 };
 
 export const BUTTON_BASE =
-  "press inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50";
+  "press inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2.5 text-sm font-medium tracking-[0.01em] disabled:cursor-not-allowed disabled:opacity-50";
 
 /** Class string for links styled as buttons. */
 export function buttonClass(variant: Variant = "primary", className = "") {
@@ -40,11 +41,11 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
+    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
       <div className="min-w-0">
-        {eyebrow && <p className="mb-1 text-sm font-medium text-accent">{eyebrow}</p>}
-        <h1 className="font-display text-2xl font-semibold sm:text-3xl">{title}</h1>
-        {description && <p className="mt-1 max-w-2xl text-sm text-ink-soft">{description}</p>}
+        {eyebrow && <p className="eyebrow mb-2.5">{eyebrow}</p>}
+        <h1 className="font-display text-3xl sm:text-[2.6rem] sm:leading-[1.08]">{title}</h1>
+        {description && <p className="mt-2 max-w-2xl text-sm text-ink-soft">{description}</p>}
       </div>
       {actions}
     </div>
@@ -105,7 +106,7 @@ export function Card({
   return (
     <div
       style={style}
-      className={`rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-sm)] ${hover ? "lift" : ""} ${className}`}
+      className={`rounded-xl border border-line bg-surface p-5 shadow-[var(--shadow-sm)] ${hover ? "lift" : ""} ${className}`}
     >
       {children}
     </div>
@@ -116,10 +117,54 @@ export function Label({ children }: { children: ReactNode }) {
   return <p className="text-[13px] font-medium text-ink-soft">{children}</p>;
 }
 
+/** Pill-style tab group whose active indicator glides between options. */
+export function Segmented<T extends string | null>({
+  options,
+  value,
+  onChange,
+  id,
+  className = "",
+  label,
+}: {
+  options: { value: T; label: ReactNode }[];
+  value: T;
+  onChange: (value: T) => void;
+  id: string;
+  className?: string;
+  label?: string;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className={`relative flex shrink-0 gap-0.5 rounded-lg border border-line bg-surface-2 p-1 ${className}`}>
+      {options.map((option) => {
+        const active = option.value === value;
+        return (
+          <button
+            key={String(option.value)}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(option.value)}
+            className={`relative flex-1 shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors duration-300 ${active ? "font-medium text-ink" : "text-ink-soft hover:text-ink"}`}
+          >
+            {active && (
+              <motion.span
+                layoutId={`seg-${id}`}
+                className="absolute inset-0 rounded-md border border-line bg-surface shadow-[var(--shadow-sm)]"
+                transition={{ type: "spring", stiffness: 380, damping: 34 }}
+              />
+            )}
+            <span className="relative whitespace-nowrap">{option.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Small square icon holder used on cards and stat tiles. */
 export function IconTile({ name, tone = "neutral", className = "" }: { name: string; tone?: "neutral" | "accent" | "marker" | "violet"; className?: string }) {
   const tones = {
-    neutral: "border border-line bg-surface-2 text-ink",
+    neutral: "border border-line bg-surface-2 text-navy dark:text-ink",
     accent: "bg-accent-soft text-accent",
     marker: "bg-marker-soft text-marker",
     violet: "bg-violet/10 text-violet",
@@ -266,7 +311,7 @@ export function Pill({ children, tone = "neutral" }: { children: ReactNode; tone
     accent: "bg-accent-soft text-accent",
     violet: "bg-violet/15 text-violet",
   };
-  return <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
 }
 
 export function ErrorNote({ message }: { message: string | null }) {
