@@ -2,7 +2,7 @@
 
 import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
-import { Button, Card, Confetti, ErrorNote, Icon, Label, Pill, ProgressBar, Ring } from "@/components/ui";
+import { Button, Card, Confetti, ErrorNote, Icon, IconTile, Label, PageHeader, Pill, ProgressBar, Ring } from "@/components/ui";
 import { api, Quiz, QuizReport, Topic } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 
@@ -67,20 +67,14 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <Label>Timed practice under exam conditions</Label>
-        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("tests.title")}</h1>
-      </div>
+      <PageHeader eyebrow="Timed practice under exam conditions" title={t("tests.title")} />
       <ErrorNote message={error} />
       <div className="grid gap-4 md:grid-cols-2">
-        <Card hover className="rise flex flex-col gap-5 overflow-hidden p-0">
-          <div className="relative bg-brand px-6 pb-6 pt-7 text-accent-ink">
-            <span aria-hidden className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/20">
-              <Icon name="bolt" className="h-6 w-6" />
-            </span>
-            <h2 className="mt-4 font-display text-2xl font-semibold">{t("tests.quiz")}</h2>
-            <p className="mt-1 text-sm opacity-90">Timed, one minute per question. Pick a section or mix all three.</p>
+        <Card className="rise flex flex-col gap-5 p-0">
+          <div className="px-6 pt-6">
+            <IconTile name="bolt" tone="accent" />
+            <h2 className="mt-4 text-xl font-semibold tracking-tight">{t("tests.quiz")}</h2>
+            <p className="mt-1 text-sm text-ink-soft">Timed, one minute per question. Pick a section or mix all three.</p>
           </div>
           <div className="flex flex-col gap-4 px-6 pb-6">
             <div>
@@ -91,7 +85,7 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
                     key={tp.id || "all"}
                     onClick={() => setTopicId(tp.id)}
                     aria-pressed={topicId === tp.id}
-                    className={`press rounded-full border px-3 py-1.5 text-sm transition ${topicId === tp.id ? "border-accent bg-accent-soft font-medium text-accent" : "border-line text-ink-soft hover:text-ink"}`}
+                    className={`press rounded-md border px-3 py-1.5 text-sm ${topicId === tp.id ? "border-ink bg-primary font-medium text-primary-ink" : "border-line text-ink-soft hover:border-line-strong hover:text-ink"}`}
                   >
                     {tp.name}
                   </button>
@@ -100,49 +94,49 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
             </div>
             <div>
               <p className="mb-2 text-sm font-medium">Length</p>
-              <div className="grid grid-cols-3 gap-2 rounded-2xl bg-surface-2 p-1.5">
+              <div className="grid grid-cols-3 gap-0.5 rounded-lg border border-line bg-surface-2 p-0.5">
                 {[5, 10, 15].map((n) => (
                   <button
                     key={n}
                     onClick={() => setCount(n)}
                     aria-pressed={count === n}
-                    className={`press rounded-xl py-2 text-sm transition ${count === n ? "bg-surface font-medium text-accent shadow-[var(--shadow-md)]" : "text-ink-soft"}`}
+                    className={`press rounded-md py-2 text-sm ${count === n ? "bg-surface font-medium text-ink shadow-[var(--shadow-sm)]" : "text-ink-soft hover:text-ink"}`}
                   >
                     {n} Qs · {n}m
                   </button>
                 ))}
               </div>
             </div>
-            <Button onClick={() => start("quiz")} disabled={busy} className="self-start px-6 py-3">
+            <Button variant="secondary" onClick={() => start("quiz")} disabled={busy} className="self-start px-6 py-3">
               {t("tests.start")} <Icon name="arrow" className="h-4 w-4" />
             </Button>
           </div>
         </Card>
 
-        <Card hover className="rise flex flex-col gap-5 overflow-hidden p-0" style={{ "--i": 1 } as CSSProperties}>
-          <div className="relative bg-sunrise px-6 pb-6 pt-7 text-white">
-            <span aria-hidden className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/20">
-              <Icon name="trophy" className="h-6 w-6" />
-            </span>
-            <h2 className="mt-4 font-display text-2xl font-semibold">{t("tests.mock")}</h2>
-            <p className="mt-1 text-sm opacity-90">15 questions in 15 minutes across all sections, like a real placement test.</p>
+        <Card className="rise relative flex flex-col gap-5 p-0" style={{ "--i": 1 } as CSSProperties}>
+          <span className="absolute right-5 top-5">
+            <Pill tone="accent">Recommended</Pill>
+          </span>
+          <div className="px-6 pt-6">
+            <IconTile name="trophy" tone="marker" />
+            <h2 className="mt-4 text-xl font-semibold tracking-tight">{t("tests.mock")}</h2>
+            <p className="mt-1 text-sm text-ink-soft">15 questions in 15 minutes across all sections, like a real placement test.</p>
           </div>
           <div className="flex flex-1 flex-col gap-4 px-6 pb-6">
-            <ul className="flex flex-col gap-2">
+            <ul className="divide-y divide-line rounded-lg border border-line">
               {[
                 ["brain", "Quantitative Aptitude", "5 questions"],
                 ["chart", "Logical Reasoning", "5 questions"],
                 ["book", "Verbal Ability", "5 questions"],
               ].map(([icon, name, n]) => (
-                <li key={name} className="flex items-center gap-3 rounded-xl bg-surface-2/60 px-3 py-2 text-sm">
-                  <Icon name={icon} className="h-4 w-4 text-marker" />
+                <li key={name} className="flex items-center gap-3 px-3 py-2.5 text-sm">
+                  <Icon name={icon} className="h-4 w-4 text-ink-soft" />
                   <span className="flex-1">{name}</span>
-                  <span className="text-ink-soft">{n}</span>
+                  <span className="text-ink-soft tabular">{n}</span>
                 </li>
               ))}
             </ul>
-            <Button variant="marker" onClick={() => start("mock")} disabled={busy} className="mt-auto self-start px-6 py-3">
+            <Button onClick={() => start("mock")} disabled={busy} className="mt-auto self-start px-6 py-3">
               {t("tests.start")} mock <Icon name="arrow" className="h-4 w-4" />
             </Button>
           </div>
@@ -164,7 +158,7 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
                 <li key={h.id}>
                   <button
                     onClick={() => api<QuizReport>(`/quizzes/${h.id}/report`).then(onOpenReport).catch((e) => setError(e.message))}
-                    className="press flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-3 py-2.5 text-left text-sm transition hover:border-accent/50 hover:shadow-[var(--shadow-md)]"
+                    className="press flex w-full items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5 text-left text-sm hover:border-line-strong hover:bg-surface-2/60"
                   >
                     <Ring value={Math.max(pct, 2)} size={44} stroke={5} tone={pct >= 60 ? "accent" : pct >= 35 ? "marker" : "bad"}>
                       <span className="text-[10px] font-semibold tabular">{Math.round(pct)}%</span>
@@ -175,8 +169,8 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
                       </p>
                       <p className="text-xs text-ink-soft">{new Date(h.submitted_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</p>
                     </div>
-                    <span className="flex items-center gap-1 text-accent">
-                      Report <Icon name="arrow" className="h-4 w-4" />
+                    <span className="flex items-center gap-1 text-ink-soft">
+                      Report <Icon name="chevron" className="h-4 w-4" />
                     </span>
                   </button>
                 </li>
@@ -256,7 +250,7 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="glass sticky top-14 z-20 -mx-4 flex items-center gap-3 border-b border-line/70 px-4 py-2.5">
+      <div className="glass sticky top-14 z-20 -mx-4 flex items-center gap-3 border-b border-line px-4 py-2.5 sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-10 lg:px-10">
         <Ring value={(100 * remaining) / quiz.duration_seconds} size={46} stroke={5} tone={low ? "bad" : "accent"}>
           <Icon name="clock" className={`h-4 w-4 ${low ? "text-bad" : "text-accent"}`} />
         </Ring>
@@ -287,7 +281,7 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
       <div className="grid gap-4 md:grid-cols-[1fr_240px]">
         <Card key={q.id} className="fade p-5 sm:p-7">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand text-sm font-semibold text-accent-ink tabular">{index + 1}</span>
+            <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-xs font-semibold text-primary-ink tabular">{index + 1}</span>
             <Pill>{q.topic}</Pill>
             <Pill>{q.subtopic}</Pill>
           </div>
@@ -300,11 +294,11 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
                   <button
                     onClick={() => setAnswers((a) => ({ ...a, [q.id]: option }))}
                     aria-pressed={chosen}
-                    className={`press flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition ${
-                      chosen ? "border-accent bg-accent-soft shadow-[var(--shadow-glow)]" : "border-line bg-surface hover:border-accent/50 hover:shadow-[var(--shadow-md)]"
+                    className={`press flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left ${
+                      chosen ? "border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]" : "border-line bg-surface hover:border-line-strong hover:bg-surface-2/60"
                     }`}
                   >
-                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl text-sm font-semibold ${chosen ? "bg-brand text-accent-ink" : "bg-surface-2 text-ink-soft"}`}>
+                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md border text-xs font-medium ${chosen ? "border-transparent bg-accent text-accent-ink" : "border-line bg-surface-2 text-ink-soft"}`}>
                       {String.fromCharCode(65 + i)}
                     </span>
                     {option}
@@ -336,7 +330,7 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
             </Button>
           </div>
         </Card>
-        <Card className="self-start md:sticky md:top-32">
+        <Card className="self-start md:sticky md:top-32 lg:top-24">
           <Label>Questions</Label>
           <div className="mt-3 grid grid-cols-5 gap-2">
             {quiz.questions.map((item, i) => (
@@ -344,12 +338,12 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
                 key={item.id}
                 onClick={() => go(i)}
                 aria-label={`Question ${i + 1}${answers[item.id] ? ", answered" : ""}`}
-                className={`press h-10 rounded-xl border text-sm font-medium tabular transition ${
+                className={`press h-9 rounded-md border text-sm font-medium tabular ${
                   i === index
-                    ? "border-accent text-accent ring-2 ring-accent/30"
+                    ? "border-ink text-ink ring-2 ring-ink/15"
                     : answers[item.id]
-                      ? "border-transparent bg-brand text-accent-ink"
-                      : "border-line bg-surface text-ink-soft hover:border-accent/50"
+                      ? "border-transparent bg-accent text-accent-ink"
+                      : "border-line bg-surface text-ink-soft hover:border-line-strong"
                 }`}
               >
                 {i + 1}
@@ -358,7 +352,7 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
           </div>
           <div className="mt-4 flex flex-col gap-1.5 text-xs text-ink-soft">
             <span className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded bg-brand" /> Answered
+              <span className="h-3 w-3 rounded bg-accent" /> Answered
             </span>
             <span className="flex items-center gap-2">
               <span className="h-3 w-3 rounded border border-line" /> Not answered
@@ -400,12 +394,12 @@ function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) 
           </div>
         </Ring>
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-surface-2/60 p-4">
+          <div className="rounded-xl border border-line bg-paper p-4">
             <Label>Time used</Label>
             <p className="mt-1 font-display text-2xl font-semibold tabular">{clock(report.time_used_ms / 1000)}</p>
             <p className="text-xs text-ink-soft tabular">of {clock(report.duration_seconds)}</p>
           </div>
-          <div className="rounded-2xl bg-surface-2/60 p-4">
+          <div className="rounded-xl border border-line bg-paper p-4">
             <Label>Per question</Label>
             <p className="mt-1 font-display text-2xl font-semibold tabular">{report.total ? Math.round(report.time_used_ms / report.total / 1000) : 0}s</p>
             <p className="text-xs text-ink-soft">average</p>
@@ -440,7 +434,7 @@ function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) 
           ) : (
             <ul className="mt-3 flex flex-col gap-2 text-sm">
               {report.weak_skills.map((w, i) => (
-                <li key={w.skill} className="pop flex items-center justify-between gap-2 rounded-xl bg-surface-2/60 px-3 py-2" style={{ "--i": i } as CSSProperties}>
+                <li key={w.skill} className="pop flex items-center justify-between gap-2 rounded-lg border border-line px-3 py-2" style={{ "--i": i } as CSSProperties}>
                   <span className="truncate">{w.skill}</span>
                   <Pill tone="bad">missed {w.missed}</Pill>
                 </li>
@@ -456,10 +450,10 @@ function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) 
         <ol className="mt-3 flex flex-col gap-2">
           {report.questions.map((item, i) => (
             <li key={item.question.id}>
-              <details className="group rounded-2xl border border-line bg-surface transition open:shadow-[var(--shadow-md)]">
+              <details className="group rounded-xl border border-line bg-surface transition open:border-line-strong">
                 <summary className="flex cursor-pointer list-none items-center gap-3 p-3">
                   <span
-                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl text-xs font-semibold ${
+                    className={`grid h-7 w-7 shrink-0 place-items-center rounded-md text-xs font-semibold ${
                       item.is_correct ? "bg-good-soft text-good" : item.chosen_answer ? "bg-bad-soft text-bad" : "bg-surface-2 text-ink-soft"
                     }`}
                   >
@@ -477,7 +471,7 @@ function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) 
                   <p>
                     Correct answer: <span className="font-medium text-good">{item.correct_option}</span>
                   </p>
-                  <p className="whitespace-pre-line rounded-xl bg-surface-2/70 p-3 leading-relaxed">{item.explanation}</p>
+                  <p className="whitespace-pre-line rounded-lg border border-line bg-paper p-3 leading-relaxed">{item.explanation}</p>
                 </div>
               </details>
             </li>

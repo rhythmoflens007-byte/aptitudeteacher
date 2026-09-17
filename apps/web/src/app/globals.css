@@ -1,62 +1,73 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens. A quiet neutral base with one emerald accent and an amber
+ * secondary used sparingly (XP, streaks, warnings). Components use these via
+ * the Tailwind colour names mapped in @theme below.
+ */
 :root {
-  --paper: #f2f6f3;
+  --paper: #fafafa;
   --surface: #ffffff;
-  --surface-2: #e9f0ec;
-  --glass: rgb(255 255 255 / 0.72);
-  --ink: #122019;
-  --ink-soft: #52645c;
-  --line: #d6e1db;
-  --accent: #178a63;
-  --accent-2: #2cb584;
+  --surface-2: #f4f4f5;
+  --glass: rgb(255 255 255 / 0.86);
+  --ink: #0a0a0b;
+  --ink-soft: #62626b;
+  --line: #e6e6e9;
+  --line-strong: #d4d4d8;
+  --accent: #047857;
+  --accent-2: #059669;
   --accent-ink: #ffffff;
-  --accent-soft: #dff2e9;
-  --marker: #e2761f;
-  --marker-2: #f6a14b;
-  --marker-soft: #fcebd8;
-  --violet: #6e5bd6;
-  --good: #178a63;
-  --good-soft: #dff2e9;
-  --bad: #c2393b;
-  --bad-soft: #fbe5e4;
-  --grid: rgb(23 138 99 / 0.06);
-  --blob-a: rgb(44 181 132 / 0.22);
-  --blob-b: rgb(246 161 75 / 0.18);
-  --shadow-sm: 0 1px 2px rgb(18 32 25 / 0.06), 0 1px 1px rgb(18 32 25 / 0.04);
-  --shadow-md: 0 8px 24px -8px rgb(18 60 44 / 0.18), 0 2px 6px rgb(18 32 25 / 0.05);
-  --shadow-lg: 0 22px 48px -16px rgb(18 60 44 / 0.28), 0 4px 12px rgb(18 32 25 / 0.06);
-  --shadow-glow: 0 10px 30px -8px rgb(23 138 99 / 0.55);
+  --accent-soft: #ecfdf5;
+  --marker: #b45309;
+  --marker-2: #d97706;
+  --marker-soft: #fef6e7;
+  --violet: #6d28d9;
+  --good: #047857;
+  --good-soft: #ecfdf5;
+  --bad: #dc2626;
+  --bad-soft: #fef2f2;
+  --primary: #0a0a0b;
+  --primary-ink: #ffffff;
+  --grid: rgb(10 10 11 / 0.05);
+  --glow: rgb(5 150 105 / 0.14);
+  --shadow-sm: 0 1px 2px rgb(10 10 11 / 0.04);
+  --shadow-md: 0 1px 2px rgb(10 10 11 / 0.04), 0 4px 16px -4px rgb(10 10 11 / 0.08);
+  --shadow-lg: 0 2px 4px rgb(10 10 11 / 0.04), 0 24px 48px -16px rgb(10 10 11 / 0.18);
+  --shadow-glow: 0 0 0 1px rgb(4 120 87 / 0.12), 0 6px 20px -6px rgb(4 120 87 / 0.35);
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #0b110e;
-    --surface: #131c18;
-    --surface-2: #1b2622;
-    --glass: rgb(19 28 24 / 0.72);
-    --ink: #e8f1ec;
-    --ink-soft: #9db0a7;
-    --line: #26332d;
-    --accent: #36c790;
-    --accent-2: #6ee0b3;
-    --accent-ink: #06130d;
-    --accent-soft: #143127;
-    --marker: #f59a4e;
-    --marker-2: #ffc07f;
-    --marker-soft: #3a2616;
-    --violet: #9b8cf2;
-    --good: #36c790;
-    --good-soft: #143127;
-    --bad: #f07b79;
-    --bad-soft: #3b1c1c;
-    --grid: rgb(110 224 179 / 0.045);
-    --blob-a: rgb(54 199 144 / 0.16);
-    --blob-b: rgb(245 154 78 / 0.1);
-    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow-md: 0 10px 28px -10px rgb(0 0 0 / 0.6);
-    --shadow-lg: 0 24px 56px -18px rgb(0 0 0 / 0.75);
-    --shadow-glow: 0 10px 34px -8px rgb(54 199 144 / 0.45);
+    --paper: #09090b;
+    --surface: #111113;
+    --surface-2: #1a1a1d;
+    --glass: rgb(9 9 11 / 0.86);
+    --ink: #fafafa;
+    --ink-soft: #a1a1aa;
+    --line: #26262a;
+    --line-strong: #34343a;
+    --accent: #34d399;
+    --accent-2: #6ee7b7;
+    --accent-ink: #04130d;
+    --accent-soft: rgb(52 211 153 / 0.12);
+    --marker: #fbbf24;
+    --marker-2: #fcd34d;
+    --marker-soft: rgb(251 191 36 / 0.12);
+    --violet: #a78bfa;
+    --good: #34d399;
+    --good-soft: rgb(52 211 153 / 0.12);
+    --bad: #f87171;
+    --bad-soft: rgb(248 113 113 / 0.12);
+    --primary: #fafafa;
+    --primary-ink: #09090b;
+    --grid: rgb(255 255 255 / 0.05);
+    --glow: rgb(52 211 153 / 0.12);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 1px 2px rgb(0 0 0 / 0.5), 0 8px 24px -8px rgb(0 0 0 / 0.6);
+    --shadow-lg: 0 2px 4px rgb(0 0 0 / 0.5), 0 24px 56px -16px rgb(0 0 0 / 0.8);
+    --shadow-glow: 0 0 0 1px rgb(52 211 153 / 0.2), 0 6px 24px -6px rgb(52 211 153 / 0.3);
+    color-scheme: dark;
   }
 }
 
@@ -68,6 +79,7 @@
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
   --color-accent-ink: var(--accent-ink);
@@ -80,8 +92,11 @@
   --color-good-soft: var(--good-soft);
   --color-bad: var(--bad);
   --color-bad-soft: var(--bad-soft);
-  --font-sans: var(--font-plex), system-ui, sans-serif;
-  --font-display: var(--font-newsreader), Georgia, serif;
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --shadow-soft: var(--shadow-md);
   --shadow-lifted: var(--shadow-lg);
   --shadow-glow: var(--shadow-glow);
@@ -95,32 +110,13 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Graph-paper grid and two slow colour blobs behind everything. */
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-
-body::before {
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 75%);
-}
-
-body::after {
-  background:
-    radial-gradient(40vmax 40vmax at 12% 8%, var(--blob-a), transparent 70%),
-    radial-gradient(36vmax 36vmax at 92% 30%, var(--blob-b), transparent 70%);
-  animation: drift 22s ease-in-out infinite alternate;
+/* Headings: tight tracking reads crisper at large sizes. */
+.font-display {
+  letter-spacing: -0.025em;
 }
 
 :focus-visible {
@@ -137,25 +133,46 @@ body::after {
   font-variant-numeric: tabular-nums;
 }
 
+/* Soft ink-to-grey fade for hero headlines. */
 .text-gradient {
-  background: linear-gradient(120deg, var(--accent) 10%, var(--accent-2) 45%, var(--marker) 95%);
+  background: linear-gradient(180deg, var(--ink) 30%, color-mix(in oklab, var(--ink) 55%, transparent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-accent-gradient {
+  background: linear-gradient(100deg, var(--accent) 0%, var(--accent-2) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .bg-brand {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: var(--accent);
 }
 
 .bg-sunrise {
-  background: linear-gradient(135deg, var(--marker), var(--marker-2));
+  background: var(--marker-2);
 }
 
 .glass {
   background: var(--glass);
-  backdrop-filter: blur(14px) saturate(1.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+}
+
+/* Faint square grid that fades out, used behind hero areas. */
+.bg-grid {
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+.bg-glow {
+  background: radial-gradient(ellipse 50% 60% at 50% 0%, var(--glow), transparent 70%);
 }
 
 .no-scrollbar {
@@ -169,29 +186,43 @@ body::after {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* ---------- Motion ---------- */
+/* ---------- Motion (subtle by design) ---------- */
 
 .rise {
-  animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  animation-delay: calc(var(--i, 0) * 70ms);
-}
-
-.pop {
-  animation: pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   animation-delay: calc(var(--i, 0) * 50ms);
 }
 
+.pop {
+  animation: pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
 .fade {
-  animation: fade 0.4s ease both;
+  animation: fade 0.3s ease both;
 }
 
 .float {
-  animation: float 6s ease-in-out infinite;
-  animation-delay: calc(var(--i, 0) * -1.5s);
+  animation: float 7s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -2s);
+}
+
+/* Scroll reveal: elements start hidden and animate in when .is-visible is added. */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
 }
 
 .shake {
-  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 .pulse-good {
@@ -199,46 +230,36 @@ body::after {
 }
 
 .lift {
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .lift:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-md);
 }
 
 .press {
-  transition: transform 0.15s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 .press:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
+/* Kept as a hook for existing markup; intentionally no sheen in the clean theme. */
 .shine {
   position: relative;
-  overflow: hidden;
-}
-.shine::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
-  transform: translateX(-120%);
-  transition: transform 0.7s ease;
-}
-.shine:hover::after {
-  transform: translateX(120%);
 }
 
 .grow-x {
   transform-origin: left center;
-  animation: grow-x 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  animation-delay: calc(var(--i, 0) * 80ms + 150ms);
+  animation: grow-x 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms + 100ms);
 }
 
 .grow-y {
   transform-origin: bottom center;
   animation: grow-y 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  animation-delay: calc(var(--i, 0) * 70ms + 200ms);
+  animation-delay: calc(var(--i, 0) * 60ms + 150ms);
 }
 
 .skeleton {
@@ -266,30 +287,59 @@ body::after {
 .confetti {
   position: absolute;
   top: -10px;
-  width: 8px;
-  height: 14px;
+  width: 7px;
+  height: 12px;
   border-radius: 2px;
   animation: confetti var(--dur, 1.6s) cubic-bezier(0.25, 0.6, 0.4, 1) forwards;
   animation-delay: var(--delay, 0s);
 }
 
-/* The tutor's stage: a soft spotlight and a ring that breathes while the tutor talks. */
+/* Animated gradient border for the hero product frame. */
+.frame-glow {
+  position: relative;
+}
+.frame-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 45%, transparent), var(--line) 40%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Horizontally scrolling strip (language marquee). */
+.marquee {
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.marquee-track {
+  animation: marquee 40s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* The tutor's stage: a soft spotlight and a floor shadow that breathes while the tutor talks. */
 .tutor-stage-glow {
   position: absolute;
-  inset: 12% 10% 0;
+  inset: 14% 12% 0;
   border-radius: 50%;
-  background: radial-gradient(closest-side, var(--blob-a), transparent 75%);
-  filter: blur(6px);
+  background: radial-gradient(closest-side, var(--glow), transparent 75%);
 }
 .tutor-stage-ring {
   position: absolute;
   left: 50%;
   bottom: 4%;
-  width: 70%;
-  aspect-ratio: 4 / 1;
+  width: 62%;
+  aspect-ratio: 5 / 1;
   translate: -50% 0;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(18 60 44 / 0.28), transparent);
+  background: radial-gradient(closest-side, rgb(10 10 11 / 0.16), transparent);
   transition: transform 0.4s ease;
 }
 .tutor-stage-ring--live {
@@ -297,11 +347,11 @@ body::after {
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes pop {
-  from { opacity: 0; transform: scale(0.6); }
+  from { opacity: 0; transform: scale(0.94); }
   to { opacity: 1; transform: scale(1); }
 }
 @keyframes fade {
@@ -310,21 +360,17 @@ body::after {
 }
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-@keyframes drift {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(-3vmax, 2vmax, 0) scale(1.08); }
+  50% { transform: translateY(-6px); }
 }
 @keyframes shake {
-  10%, 90% { transform: translateX(-2px); }
-  20%, 80% { transform: translateX(4px); }
-  30%, 50%, 70% { transform: translateX(-7px); }
-  40%, 60% { transform: translateX(7px); }
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(3px); }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60% { transform: translateX(5px); }
 }
 @keyframes pulse-good {
-  0% { box-shadow: 0 0 0 0 rgb(23 138 99 / 0.55); }
-  100% { box-shadow: 0 0 0 16px rgb(23 138 99 / 0); }
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--good) 45%, transparent); }
+  100% { box-shadow: 0 0 0 12px transparent; }
 }
 @keyframes grow-x {
   from { transform: scaleX(0); }
@@ -340,16 +386,16 @@ body::after {
 }
 @keyframes flame {
   0%, 100% { transform: scale(1) rotate(-3deg); }
-  50% { transform: scale(1.14) rotate(4deg); }
+  50% { transform: scale(1.12) rotate(4deg); }
 }
 @keyframes typing {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-5px); opacity: 1; }
+  30% { transform: translateY(-4px); opacity: 1; }
 }
 @keyframes xp-float {
-  0% { opacity: 0; transform: translateY(10px) scale(0.8); }
-  20% { opacity: 1; transform: translateY(0) scale(1.1); }
-  100% { opacity: 0; transform: translateY(-40px) scale(1); }
+  0% { opacity: 0; transform: translateY(8px) scale(0.9); }
+  20% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-32px); }
 }
 @keyframes confetti {
   0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0); }
@@ -357,10 +403,11 @@ body::after {
 }
 @keyframes ring {
   0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.12); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 1; }
 }
-@keyframes spin-slow {
-  to { transform: rotate(360deg); }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -371,5 +418,6 @@ body::after {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .reveal { opacity: 1; transform: none; }
   .confetti { display: none; }
 }

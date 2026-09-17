@@ -1,26 +1,93 @@
 "use client";
 
-import { ButtonHTMLAttributes, CSSProperties, ReactNode, useEffect, useMemo, useState } from "react";
+import { ButtonHTMLAttributes, CSSProperties, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "marker";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand text-accent-ink shadow-[var(--shadow-glow)] hover:brightness-110 shine",
-  secondary: "border border-line bg-surface text-ink shadow-[var(--shadow-sm)] hover:border-accent/50 hover:bg-surface-2",
+  primary: "bg-primary text-primary-ink shadow-[var(--shadow-sm)] hover:opacity-90",
+  secondary: "border border-line bg-surface text-ink shadow-[var(--shadow-sm)] hover:border-line-strong hover:bg-surface-2",
   ghost: "text-ink-soft hover:bg-surface-2 hover:text-ink",
-  marker: "bg-sunrise text-white shadow-[0_10px_28px_-10px_rgb(226_118_31_/_0.7)] hover:brightness-110 shine",
+  marker: "bg-accent text-accent-ink shadow-[var(--shadow-glow)] hover:opacity-90",
 };
+
+export const BUTTON_BASE =
+  "press inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50";
+
+/** Class string for links styled as buttons. */
+export function buttonClass(variant: Variant = "primary", className = "") {
+  return `${BUTTON_BASE} ${VARIANTS[variant]} ${className}`;
+}
 
 export function Button({
   variant = "primary",
   className = "",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+  return <button {...props} className={buttonClass(variant, className)} />;
+}
+
+/** Consistent page title block: small eyebrow, title, optional description and actions. */
+export function PageHeader({
+  eyebrow,
+  title,
+  description,
+  actions,
+}: {
+  eyebrow?: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  actions?: ReactNode;
+}) {
   return (
-    <button
-      {...props}
-      className={`press inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
-    />
+    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
+      <div className="min-w-0">
+        {eyebrow && <p className="mb-1 text-sm font-medium text-accent">{eyebrow}</p>}
+        <h1 className="font-display text-2xl font-semibold sm:text-3xl">{title}</h1>
+        {description && <p className="mt-1 max-w-2xl text-sm text-ink-soft">{description}</p>}
+      </div>
+      {actions}
+    </div>
+  );
+}
+
+/** Fades children in the first time they scroll into view. */
+export function Reveal({
+  children,
+  className = "",
+  delay = 0,
+  as: Tag = "div",
+}: {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+  as?: "div" | "section" | "li";
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -8% 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <Tag
+      ref={ref as never}
+      className={`reveal ${visible ? "is-visible" : ""} ${className}`}
+      style={{ "--i": delay } as CSSProperties}
+    >
+      {children}
+    </Tag>
   );
 }
 
@@ -38,7 +105,7 @@ export function Card({
   return (
     <div
       style={style}
-      className={`rounded-3xl border border-line/80 bg-surface/90 p-5 shadow-[var(--shadow-md)] backdrop-blur-sm ${hover ? "lift" : ""} ${className}`}
+      className={`rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-sm)] ${hover ? "lift" : ""} ${className}`}
     >
       {children}
     </div>
@@ -46,20 +113,35 @@ export function Card({
 }
 
 export function Label({ children }: { children: ReactNode }) {
-  return <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-soft">{children}</p>;
+  return <p className="text-[13px] font-medium text-ink-soft">{children}</p>;
+}
+
+/** Small square icon holder used on cards and stat tiles. */
+export function IconTile({ name, tone = "neutral", className = "" }: { name: string; tone?: "neutral" | "accent" | "marker" | "violet"; className?: string }) {
+  const tones = {
+    neutral: "border border-line bg-surface-2 text-ink",
+    accent: "bg-accent-soft text-accent",
+    marker: "bg-marker-soft text-marker",
+    violet: "bg-violet/10 text-violet",
+  };
+  return (
+    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${tones[tone]} ${className}`}>
+      <Icon name={name} className="h-[18px] w-[18px]" />
+    </span>
+  );
 }
 
 export function ProgressBar({ value, tone = "accent", thick = false }: { value: number; tone?: "accent" | "marker"; thick?: boolean }) {
   const pct = Math.max(0, Math.min(100, value));
   return (
     <div
-      className={`overflow-hidden rounded-full bg-surface-2 ${thick ? "h-3" : "h-2"}`}
+      className={`overflow-hidden rounded-full bg-surface-2 ${thick ? "h-2.5" : "h-1.5"}`}
       role="progressbar"
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div className={`grow-x h-full rounded-full ${tone === "marker" ? "bg-sunrise" : "bg-brand"}`} style={{ width: `${pct}%` }} />
+      <div className={`grow-x h-full rounded-full ${tone === "marker" ? "bg-marker-2" : "bg-accent"}`} style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -85,7 +167,7 @@ export function Ring({
     const id = requestAnimationFrame(() => setDrawn(pct));
     return () => cancelAnimationFrame(id);
   }, [pct]);
-  const color = tone === "marker" ? "var(--marker)" : tone === "bad" ? "var(--bad)" : "var(--accent)";
+  const color = tone === "marker" ? "var(--marker-2)" : tone === "bad" ? "var(--bad)" : "var(--accent)";
   return (
     <div className="relative inline-grid shrink-0 place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
@@ -184,13 +266,13 @@ export function Pill({ children, tone = "neutral" }: { children: ReactNode; tone
     accent: "bg-accent-soft text-accent",
     violet: "bg-violet/15 text-violet",
   };
-  return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
 }
 
 export function ErrorNote({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <p role="alert" className="fade flex items-start gap-2 rounded-2xl border border-bad/25 bg-bad-soft px-4 py-3 text-sm text-bad">
+    <p role="alert" className="fade flex items-start gap-2 rounded-xl border border-bad/25 bg-bad-soft px-4 py-3 text-sm text-bad">
       <Icon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
       {message}
     </p>
@@ -284,6 +366,21 @@ const ICONS: Record<string, ReactNode> = {
   brain: <path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3V4zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3V4z" />,
   book: <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5" />,
   refresh: <path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 13a8 8 0 0 0 14.5 4.5L20 16M4 3v5h5M20 21v-5h-5" />,
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z" />
+    </>
+  ),
+  chevron: <path d="m9 6 6 6-6 6" />,
+  lock: (
+    <>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </>
+  ),
+  layers: <path d="m12 3 9 5-9 5-9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5" />,
+  play: <path d="M7 4.5v15l12-7.5z" />,
 };
 
 export function Icon({ name, className = "h-5 w-5" }: { name: keyof typeof ICONS | string; className?: string }) {

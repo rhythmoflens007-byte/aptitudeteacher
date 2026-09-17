@@ -76,7 +76,7 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
           framing="full"
           className="aspect-[4/5] w-full max-w-[260px]"
         />
-        <p className="font-display text-2xl font-semibold">{shownName}</p>
+        <p className="text-xl font-semibold tracking-tight">{shownName}</p>
         <Button type="button" variant="secondary" onClick={() => (voice.speaking ? voice.stop() : voice.say(GREETING[locale](shownName), "hello", gender))}>
           <Icon name={voice.speaking ? "stop" : "speaker"} className="h-4 w-4" />
           {voice.speaking ? "Stop" : "Say hello"}
@@ -86,7 +86,7 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
       <div className="flex flex-col gap-5">
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 text-sm font-medium">{t("tutor.gender")}</legend>
-          <div className="grid grid-cols-2 gap-2 rounded-2xl bg-surface-2 p-1.5" role="radiogroup">
+          <div className="grid grid-cols-2 gap-0.5 rounded-lg border border-line bg-surface-2 p-0.5" role="radiogroup">
             {(["female", "male"] as const).map((g) => (
               <button
                 key={g}
@@ -94,8 +94,8 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
                 role="radio"
                 aria-checked={gender === g}
                 onClick={() => chooseGender(g)}
-                className={`press rounded-xl px-4 py-2.5 text-sm font-medium transition ${
-                  gender === g ? "bg-surface text-accent shadow-[var(--shadow-md)]" : "text-ink-soft hover:text-ink"
+                className={`press rounded-md px-4 py-2 text-sm font-medium ${
+                  gender === g ? "bg-surface text-ink shadow-[var(--shadow-sm)]" : "text-ink-soft hover:text-ink"
                 }`}
               >
                 {g === "female" ? t("tutor.female") : t("tutor.male")}
@@ -115,7 +115,7 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
             }}
             maxLength={30}
             required
-            className="rounded-xl border border-line bg-surface px-3.5 py-3 text-base font-normal outline-none transition focus:border-accent focus:shadow-[0_0_0_4px_var(--accent-soft)]"
+            className="rounded-lg border border-line bg-surface px-3.5 py-2.5 text-base font-normal shadow-[var(--shadow-sm)] outline-none transition focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)]"
           />
         </label>
 
@@ -129,8 +129,8 @@ export default function TutorCustomizer({ onSaved }: { onSaved?: () => void }) {
                 setName(idea);
                 setSaved(false);
               }}
-              className={`pop press rounded-full border px-3 py-1 text-sm transition ${
-                name === idea ? "border-accent bg-accent-soft text-accent" : "border-line bg-surface text-ink-soft hover:border-accent/50 hover:text-ink"
+              className={`pop press rounded-md border px-3 py-1 text-sm ${
+                name === idea ? "border-ink bg-primary text-primary-ink" : "border-line bg-surface text-ink-soft hover:border-line-strong hover:text-ink"
               }`}
             >
               {idea}

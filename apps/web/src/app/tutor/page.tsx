@@ -57,7 +57,7 @@ function Tutor() {
   const tutor = useTutor();
   const voice = useTutorVoice();
   const mic = useSpeechRecognition(speechLang);
-  const wide = useMedia("(min-width: 1024px)");
+  const wide = useMedia("(min-width: 1280px)");
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [session, setSession] = useState<TutorSession | null>(null);
   const [draft, setDraft] = useState("");
@@ -241,8 +241,8 @@ function Tutor() {
         <li key={s.id} className="rise" style={{ "--i": Math.min(i, 8) } as CSSProperties}>
           <button
             onClick={() => openSession(s.id)}
-            className={`press w-full rounded-xl px-3 py-2.5 text-left text-sm transition ${
-              session?.id === s.id ? "bg-accent-soft text-accent" : "text-ink-soft hover:bg-surface-2 hover:text-ink"
+            className={`press w-full rounded-lg px-3 py-2.5 text-left text-sm ${
+              session?.id === s.id ? "bg-surface-2 text-ink shadow-[inset_0_0_0_1px_var(--line)]" : "text-ink-soft hover:bg-surface-2 hover:text-ink"
             }`}
           >
             <span className="line-clamp-2" dir="auto">
@@ -257,11 +257,11 @@ function Tutor() {
   );
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
-      <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">
-        <Card className="relative overflow-hidden p-4 lg:p-5">
-          <span aria-hidden className="absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b from-accent-soft/80 to-transparent" />
-          <div className="relative flex items-center gap-4 lg:flex-col lg:gap-1">
+    <div className="grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
+      <aside className="flex flex-col gap-4 xl:sticky xl:top-8 xl:self-start">
+        <Card className="relative overflow-hidden p-4 xl:p-5">
+          <span aria-hidden className="bg-glow absolute inset-0" />
+          <div className="relative flex items-center gap-4 xl:flex-col xl:gap-1">
             <TutorAvatar
               gender={tutor.gender}
               speaking={voice.speaking}
@@ -270,30 +270,30 @@ function Tutor() {
               gestureTick={voice.gestureTick}
               mood={mood}
               framing={wide ? "full" : "portrait"}
-              className="aspect-square w-32 shrink-0 sm:w-40 lg:aspect-[4/5] lg:w-full"
+              className="aspect-square w-32 shrink-0 sm:w-40 xl:aspect-[4/5] xl:w-full"
             />
-            <div className="min-w-0 flex-1 lg:w-full lg:text-center">
-              <div className="flex items-center gap-2 lg:justify-center">
-                <h1 className="truncate font-display text-2xl font-semibold">{tutor.name}</h1>
+            <div className="min-w-0 flex-1 xl:w-full xl:text-center">
+              <div className="flex items-center gap-2 xl:justify-center">
+                <h1 className="truncate text-xl font-semibold tracking-tight">{tutor.name}</h1>
                 <span
                   className={`h-2.5 w-2.5 shrink-0 rounded-full ${aiEnabled ? "bg-good" : "bg-marker"} ${voice.speaking || waiting ? "animate-pulse" : ""}`}
                   title={aiEnabled ? "AI online" : "Offline mode"}
                 />
               </div>
-              <p className="min-h-10 text-sm text-ink-soft lg:min-h-0" aria-live="polite">
+              <p className="min-h-10 text-sm text-ink-soft xl:min-h-0" aria-live="polite">
                 {status}
               </p>
             </div>
           </div>
-          <div className="relative mt-3 flex flex-wrap items-center gap-2 lg:justify-center">
-            <label className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-3 pr-1 text-sm">
+          <div className="relative mt-3 flex flex-wrap items-center gap-2 xl:justify-center">
+            <label className="flex items-center gap-2 rounded-lg border border-line bg-surface py-1 pl-3 pr-1 text-sm">
               <Icon name="chat" className="h-4 w-4 text-ink-soft" />
               <span className="sr-only">{t("tutor.language")}</span>
               <select
                 id="tutor-language"
                 value={language.code}
                 onChange={(e) => changeLanguage(e.target.value as Locale)}
-                className="rounded-full bg-transparent py-0.5 pr-1 outline-none"
+                className="rounded-md bg-transparent py-0.5 pr-1 outline-none"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l.code} value={l.code}>
@@ -303,8 +303,8 @@ function Tutor() {
                 ))}
               </select>
             </label>
-            <button onClick={toggleSpeak} role="switch" aria-checked={speakReplies} className="press flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-sm">
-              <span className={`relative h-5 w-9 rounded-full transition ${speakReplies ? "bg-brand" : "bg-line"}`}>
+            <button onClick={toggleSpeak} role="switch" aria-checked={speakReplies} className="press flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm">
+              <span className={`relative h-5 w-9 rounded-full transition ${speakReplies ? "bg-accent" : "bg-line-strong"}`}>
                 <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${speakReplies ? "left-4.5" : "left-0.5"}`} />
               </span>
               {t("tutor.speak")}
@@ -317,7 +317,7 @@ function Tutor() {
             <Button variant="secondary" className="px-3 py-1.5" onClick={() => setCustomising(true)}>
               <Icon name="settings" className="h-4 w-4" /> {t("tutor.customise")}
             </Button>
-            <Button variant="secondary" className="px-3 py-1.5 lg:hidden" onClick={() => setHistoryOpen(true)}>
+            <Button variant="secondary" className="px-3 py-1.5 xl:hidden" onClick={() => setHistoryOpen(true)}>
               <Icon name="history" className="h-4 w-4" /> {t("tutor.history")}
             </Button>
           </div>
@@ -329,7 +329,7 @@ function Tutor() {
           )}
         </Card>
 
-        <Card className="hidden p-3 lg:block">
+        <Card className="hidden p-3 xl:block">
           <div className="mb-2 flex items-center justify-between px-2">
             <Label>{t("tutor.history")}</Label>
             <button onClick={newChat} className="press flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-accent hover:bg-accent-soft">
@@ -342,7 +342,7 @@ function Tutor() {
 
       <section className="flex min-w-0 flex-col gap-3">
         {!aiEnabled && (
-          <p className="fade flex items-start gap-3 rounded-2xl border border-marker/40 bg-marker-soft px-4 py-3 text-sm">
+          <p className="fade flex items-start gap-3 rounded-xl border border-marker-2/30 bg-marker-soft px-4 py-3 text-sm">
             <Icon name="alert" className="mt-0.5 h-4 w-4 shrink-0 text-marker" />
             <span>
               <strong>Offline mode.</strong> {tutor.name} reads out the worked solution but can&apos;t hold a conversation, reply in other languages or
@@ -351,7 +351,7 @@ function Tutor() {
           </p>
         )}
 
-        <Card className="flex flex-col overflow-hidden p-0 lg:h-[calc(100dvh-7.5rem)]">
+        <Card className="flex flex-col overflow-hidden p-0 xl:h-[calc(100dvh-5rem)]">
           <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
             <p className="truncate text-sm font-medium" dir="auto">
               {session ? session.title : t("tutor.newChat")}
@@ -380,11 +380,11 @@ function Tutor() {
           <div ref={scroller} className="flex min-h-[320px] flex-1 flex-col gap-3 overflow-y-auto px-4 py-5">
             {(!session || session.messages.length === 0) && !waiting && (
               <div className="fade m-auto flex flex-col items-center gap-4 py-6 text-center">
-                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand text-accent-ink shadow-[var(--shadow-glow)]">
+                <span className="grid h-12 w-12 place-items-center rounded-xl border border-line bg-surface-2 text-accent">
                   <Icon name="sparkles" className="h-7 w-7" />
                 </span>
                 <div>
-                  <p className="font-display text-xl font-semibold">What shall we work on?</p>
+                  <p className="text-xl font-semibold tracking-tight">What shall we work on?</p>
                   <p className="text-sm text-ink-soft">
                     {tutor.name} explains out loud in {language.english}. Try one of these, or ask your own doubt.
                   </p>
@@ -395,7 +395,7 @@ function Tutor() {
                       key={s}
                       onClick={() => send(s)}
                       style={{ "--i": i } as CSSProperties}
-                      className="pop press rounded-full border border-line bg-surface px-3.5 py-2 text-sm shadow-[var(--shadow-sm)] hover:border-accent hover:text-accent"
+                      className="pop press rounded-lg border border-line bg-surface px-3.5 py-2 text-sm hover:border-line-strong hover:bg-surface-2"
                     >
                       {s}
                     </button>
@@ -409,16 +409,16 @@ function Tutor() {
                 <div key={m.id} className={`rise flex items-end gap-2 ${m.role === "student" ? "justify-end" : "justify-start"}`}>
                   {m.role === "tutor" && (
                     <span
-                      className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-white ${tutor.gender === "female" ? "bg-brand" : "bg-sunrise"} ${live ? "ring-4 ring-marker/40" : ""}`}
+                      className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold ${tutor.gender === "female" ? "bg-accent-soft text-accent" : "bg-marker-soft text-marker"} ${live ? "ring-4 ring-accent/25" : ""}`}
                     >
                       {tutor.name.charAt(0).toUpperCase()}
                     </span>
                   )}
                   <div
                     dir="auto"
-                    className={`max-w-[85%] rounded-3xl px-4 py-3 leading-relaxed shadow-[var(--shadow-sm)] ${
-                      m.role === "student" ? "whitespace-pre-line rounded-br-md bg-brand text-accent-ink" : "rounded-bl-md border border-line bg-surface"
-                    } ${live ? "border-marker/50" : ""}`}
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed ${
+                      m.role === "student" ? "whitespace-pre-line rounded-br-sm bg-primary text-primary-ink" : "rounded-bl-sm border border-line bg-surface"
+                    } ${live ? "border-accent/40" : ""}`}
                   >
                     {m.role === "tutor" ? <SpokenText text={m.content} active={live ? voice.sentence : -1} /> : m.content}
                     {m.role === "tutor" && (
@@ -436,10 +436,10 @@ function Tutor() {
             })}
             {waiting && (
               <div className="fade flex items-end gap-2">
-                <span className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold text-white ${tutor.gender === "female" ? "bg-brand" : "bg-sunrise"}`}>
+                <span className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${tutor.gender === "female" ? "bg-accent-soft text-accent" : "bg-marker-soft text-marker"}`}>
                   {tutor.name.charAt(0).toUpperCase()}
                 </span>
-                <div className="flex items-center gap-1 rounded-3xl rounded-bl-md border border-line bg-surface px-4 py-4" aria-label={`${tutor.name} is typing`}>
+                <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-4" aria-label={`${tutor.name} is typing`}>
                   {[0, 1, 2].map((i) => (
                     <span key={i} className="typing-dot h-2 w-2 rounded-full bg-accent" style={{ "--i": i } as CSSProperties} />
                   ))}
@@ -466,7 +466,7 @@ function Tutor() {
                 disabled={waiting}
                 aria-label={t("tutor.photo")}
                 title={t("tutor.photo")}
-                className="press grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-line text-ink-soft transition hover:border-accent/50 hover:text-accent disabled:opacity-50"
+                className="press grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-line text-ink-soft hover:border-line-strong hover:text-ink disabled:opacity-50"
               >
                 <Icon name="camera" />
               </button>
@@ -483,7 +483,7 @@ function Tutor() {
                 }}
                 rows={1}
                 placeholder={mic.listening ? listeningText : t("tutor.placeholder")}
-                className="max-h-32 min-h-11 flex-1 resize-none rounded-xl border border-line bg-surface px-3.5 py-2.5 text-base outline-none transition focus:border-accent focus:shadow-[0_0_0_4px_var(--accent-soft)]"
+                className="max-h-32 min-h-11 flex-1 resize-none rounded-lg border border-line bg-surface px-3.5 py-2.5 text-base outline-none transition focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)]"
               />
               {mic.supported && (
                 <button
@@ -491,11 +491,11 @@ function Tutor() {
                   onClick={toggleMic}
                   aria-label={mic.listening ? "Stop listening" : "Speak your question"}
                   title={mic.listening ? "Stop listening" : "Speak your question"}
-                  className={`press relative grid h-11 w-11 shrink-0 place-items-center rounded-xl transition ${
-                    mic.listening ? "bg-sunrise text-white" : "border border-line text-ink-soft hover:border-accent/50 hover:text-accent"
+                  className={`press relative grid h-11 w-11 shrink-0 place-items-center rounded-lg ${
+                    mic.listening ? "bg-accent text-accent-ink" : "border border-line text-ink-soft hover:border-line-strong hover:text-ink"
                   }`}
                 >
-                  {mic.listening && <span className="absolute inset-0 animate-ping rounded-xl bg-marker/40" />}
+                  {mic.listening && <span className="absolute inset-0 animate-ping rounded-lg bg-accent/30" />}
                   <Icon name={mic.listening ? "stop" : "mic"} className="relative h-5 w-5" />
                 </button>
               )}

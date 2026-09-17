@@ -5,7 +5,7 @@ import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
 import type { Mood } from "@/components/Avatar";
 import TutorAvatar from "@/components/TutorAvatar";
-import { Button, Card, Confetti, DIFFICULTY, ErrorNote, Icon, Label, MISCONCEPTION_LABEL, Pill, ProgressBar, Skeleton } from "@/components/ui";
+import { Button, Card, Confetti, DIFFICULTY, ErrorNote, Icon, IconTile, Label, MISCONCEPTION_LABEL, PageHeader, Pill, ProgressBar, Skeleton } from "@/components/ui";
 import { api, AttemptResult, Question, Topic, TutorSession } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { useMedia } from "@/lib/useMedia";
@@ -47,7 +47,7 @@ function Practice() {
 
   const voice = useTutorVoice();
   const { stop: stopVoice } = voice;
-  const wide = useMedia("(min-width: 1024px)");
+  const wide = useMedia("(min-width: 1280px)");
 
   const show = useCallback((q: Question, r: Reason) => {
     stopVoice();
@@ -163,33 +163,35 @@ function Practice() {
     <div className="flex flex-col gap-5">
       <Confetti burst={confetti} />
 
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <Label>{tutor.name} picks each question for you</Label>
-          <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t("practice.title")}</h1>
-        </div>
-        <div className="no-scrollbar -mx-4 flex max-w-[calc(100%+2rem)] gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0" role="group" aria-label="Filter by topic">
-          {[{ id: null, name: t("practice.all") }, ...topics].map((tp) => (
-            <button
-              key={tp.id ?? "all"}
-              onClick={() => {
-                setTopicId(tp.id);
-                loadNext(tp.id);
-              }}
-              aria-pressed={topicId === tp.id}
-              className={`press shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${
-                topicId === tp.id ? "border-transparent bg-brand text-accent-ink shadow-[var(--shadow-glow)]" : "border-line bg-surface text-ink-soft hover:border-accent/50 hover:text-ink"
-              }`}
-            >
-              {tp.name}
-            </button>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={`${tutor.name} picks each question for you`}
+        title={t("practice.title")}
+        actions={
+          <div className="no-scrollbar -mx-4 flex max-w-[calc(100%+2rem)] overflow-x-auto px-4 sm:mx-0 sm:px-0" role="group" aria-label="Filter by topic">
+            <div className="flex shrink-0 gap-0.5 rounded-lg border border-line bg-surface-2 p-0.5">
+              {[{ id: null, name: t("practice.all") }, ...topics].map((tp) => (
+                <button
+                  key={tp.id ?? "all"}
+                  onClick={() => {
+                    setTopicId(tp.id);
+                    loadNext(tp.id);
+                  }}
+                  aria-pressed={topicId === tp.id}
+                  className={`press shrink-0 rounded-md px-3 py-1.5 text-sm ${
+                    topicId === tp.id ? "bg-surface font-medium text-ink shadow-[var(--shadow-sm)]" : "text-ink-soft hover:text-ink"
+                  }`}
+                >
+                  {tp.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        }
+      />
 
       <ErrorNote message={error} />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-5">
           {!question ? (
             <Card className="flex flex-col gap-4 p-6">
@@ -238,19 +240,25 @@ function Practice() {
                         disabled={!!result || busy}
                         onClick={() => setSelected(option)}
                         aria-pressed={picked}
-                        className={`press group flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition disabled:cursor-default ${
+                        className={`press group flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left disabled:cursor-default ${
                           isCorrect
                             ? "pulse-good border-good bg-good-soft"
                             : isWrongPick
                               ? "shake border-bad bg-bad-soft"
                               : picked
-                                ? "-translate-y-0.5 border-accent bg-accent-soft shadow-[var(--shadow-glow)]"
-                                : "border-line bg-surface hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-[var(--shadow-md)]"
+                                ? "border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]"
+                                : "border-line bg-surface hover:border-line-strong hover:bg-surface-2/60"
                         } ${dim ? "opacity-55" : ""}`}
                       >
                         <span
-                          className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl text-sm font-semibold tabular transition ${
-                            isCorrect ? "bg-good text-white" : isWrongPick ? "bg-bad text-white" : picked ? "bg-brand text-accent-ink" : "bg-surface-2 text-ink-soft group-hover:text-ink"
+                          className={`grid h-7 w-7 shrink-0 place-items-center rounded-md border text-xs font-medium tabular transition ${
+                            isCorrect
+                              ? "border-transparent bg-good text-accent-ink"
+                              : isWrongPick
+                                ? "border-transparent bg-bad text-white"
+                                : picked
+                                  ? "border-transparent bg-accent text-accent-ink"
+                                  : "border-line bg-surface-2 text-ink-soft group-hover:text-ink"
                           }`}
                         >
                           {isCorrect ? <Icon name="check" className="pop h-4 w-4" /> : isWrongPick ? <Icon name="x" className="pop h-4 w-4" /> : i + 1}
@@ -282,13 +290,13 @@ function Practice() {
 
           {result && question && (
             <>
-              <Card className={`rise relative overflow-hidden border-2 ${result.is_correct ? "border-good/40" : "border-bad/30"}`}>
-                <span aria-hidden className={`absolute -right-12 -top-12 h-40 w-40 rounded-full ${result.is_correct ? "bg-good/10" : "bg-bad/10"}`} />
+              <Card className={`rise relative overflow-hidden ${result.is_correct ? "border-good/40" : "border-bad/30"}`}>
+                <span aria-hidden className={`absolute inset-x-0 top-0 h-0.5 ${result.is_correct ? "bg-good" : "bg-bad"}`} />
                 <div className="relative flex flex-wrap items-center gap-3">
-                  <span className={`pop grid h-12 w-12 place-items-center rounded-2xl text-white ${result.is_correct ? "bg-brand" : "bg-[linear-gradient(135deg,var(--bad),#e46a6a)]"}`}>
-                    <Icon name={result.is_correct ? "check" : "x"} className="h-6 w-6" />
+                  <span className={`pop grid h-9 w-9 place-items-center rounded-lg ${result.is_correct ? "bg-good-soft text-good" : "bg-bad-soft text-bad"}`}>
+                    <Icon name={result.is_correct ? "check" : "x"} className="h-5 w-5" />
                   </span>
-                  <p className={`font-display text-3xl font-semibold ${result.is_correct ? "text-good" : "text-bad"}`}>
+                  <p className={`font-display text-2xl font-semibold ${result.is_correct ? "text-good" : "text-bad"}`}>
                     {result.is_correct ? t("practice.correct") : t("practice.incorrect")}
                   </p>
                   <span className="relative">
@@ -302,7 +310,7 @@ function Practice() {
                   {result.misconception_type && <Pill tone="bad">{MISCONCEPTION_LABEL[result.misconception_type].title}</Pill>}
                 </div>
                 {result.misconception_type && <p className="relative mt-2 text-sm text-ink-soft">{MISCONCEPTION_LABEL[result.misconception_type].hint}</p>}
-                <div className="relative mt-5 rounded-2xl bg-surface-2/60 p-4">
+                <div className="relative mt-5 rounded-xl border border-line bg-paper p-4">
                   <div className="flex items-center justify-between gap-2">
                     <Label>{t("practice.explanation")}</Label>
                     <ListenButton active={voice.activeKey === "explanation"} onToggle={() => toggleListen(result.explanation, "explanation")} />
@@ -314,12 +322,10 @@ function Practice() {
               </Card>
 
               {result.micro_lesson && (
-                <Card className="rise border-marker/40 bg-marker-soft/70" style={{ "--i": 1 } as CSSProperties}>
+                <Card className="rise border-l-2 border-l-marker-2" style={{ "--i": 1 } as CSSProperties}>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="grid h-8 w-8 place-items-center rounded-xl bg-sunrise text-white">
-                        <Icon name="book" className="h-4 w-4" />
-                      </span>
+                      <IconTile name="book" tone="marker" />
                       <Label>
                         {t("practice.lesson")} · {tutor.name}
                       </Label>
@@ -357,8 +363,8 @@ function Practice() {
           )}
         </div>
 
-        <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">
-          <Card className="flex items-center gap-4 p-4 lg:flex-col lg:p-5">
+        <aside className="flex flex-col gap-4 xl:sticky xl:top-8 xl:self-start">
+          <Card className="flex items-center gap-4 p-4 xl:flex-col xl:p-5">
             <TutorAvatar
               gender={tutor.gender}
               speaking={voice.speaking}
@@ -367,10 +373,13 @@ function Practice() {
               gestureTick={voice.gestureTick}
               mood={voice.speaking ? "neutral" : mood}
               framing={wide ? "full" : "portrait"}
-              className="aspect-square w-28 shrink-0 sm:w-36 lg:aspect-[4/5] lg:w-full"
+              className="aspect-square w-28 shrink-0 sm:w-36 xl:aspect-[4/5] xl:w-full"
             />
-            <div className="min-w-0 lg:text-center">
-              <p className="font-display text-xl font-semibold">{tutor.name}</p>
+            <div className="min-w-0 xl:text-center">
+              <p className="flex items-center gap-2 font-semibold tracking-tight xl:justify-center">
+                <span className="h-2 w-2 rounded-full bg-good" />
+                {tutor.name}
+              </p>
               <p className="text-sm text-ink-soft" aria-live="polite">
                 {!result
                   ? busy
@@ -416,13 +425,11 @@ function Practice() {
           )}
 
           {result && result.new_badges.length > 0 && (
-            <Card className="pop shine border-marker/40 bg-marker-soft">
+            <Card className="pop border-marker-2/40">
               <Label>New badge unlocked</Label>
               {result.new_badges.map((b) => (
                 <div key={b.code} className="mt-3 flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-2xl bg-sunrise text-white shadow-[var(--shadow-md)]">
-                    <Icon name="trophy" />
-                  </span>
+                  <IconTile name="trophy" tone="marker" />
                   <div>
                     <p className="font-semibold">{b.name}</p>
                     <p className="text-xs text-ink-soft">{b.description}</p>
