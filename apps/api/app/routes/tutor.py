@@ -1,11 +1,16 @@
+import json
+import re
+from types import SimpleNamespace
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import ai
 from app.auth import current_user
 from app.db.models import Question, TutorMessage, TutorSession, User, utcnow
-from app.db.session import get_db
+from app.db.session import SessionLocal, get_db
 from app.schemas import TutorMessageIn, TutorMessageOut, TutorSessionIn
 
 router = APIRouter(prefix="/tutor", tags=["tutor"])
@@ -105,6 +110,48 @@ def send_message(
     db.add(reply)
     db.commit()
     return _message_out(reply)
+
+
+@router.post("/sessions/{session_id}/messages/stream")
+def stream_message(
+    session_id: str, body: TutorMessageIn, db: Session = Depends(get_db), user: User = Depends(current_user)
+):
+    """Same as send_message, but streams the reply as newline-delimited JSON events:
+    {"type": "sentence", "text", "emotion"} for each sentence, then {"type": "done", "message"}."""
+    session = _load(db, session_id, user)
+    text = body.content.strip()
+    asked_at = utcnow()
+    history = db.scalars(
+        select(TutorMessage)
+        .where(TutorMessage.session_id == session.id)
+        .order_by(TutorMessage.created_at.desc())
+        .limit(HISTORY_TURNS - 1)
+    ).all()
+    turns = [(m.role, m.content) for m in reversed(history)] + [("student", text)]
+    question = db.get(Question, session.question_id) if session.question_id else None
+    context = _context(db, session)
+    worked = question.explanation if question else None
+    # Plain snapshots: the stream outlives this request's database session.
+    learner = SimpleNamespace(locale=user.locale, tutor_name=user.tutor_name, tutor_gender=user.tutor_gender)
+    sid = session.id
+
+    def events():
+        parts: list[str] = []
+        emotions: list[str] = []
+        for sentence, emotion in ai.tutor_reply_stream(turns, context, learner, worked):
+            parts.append(sentence)
+            emotions.append(emotion or "neutral")
+            yield json.dumps({"type": "sentence", "text": sentence, "emotion": emotion}, ensure_ascii=False) + "\n"
+        content = re.sub(r"[ \t]+\n", "\n", "".join(parts)).strip()
+        with SessionLocal() as write:
+            write.add(TutorMessage(session_id=sid, role="student", content=text, created_at=asked_at))
+            reply = TutorMessage(session_id=sid, role="tutor", content=content, emotions=emotions or None)
+            write.add(reply)
+            write.commit()
+            done = _message_out(reply).model_dump(mode="json")
+        yield json.dumps({"type": "done", "message": done}, ensure_ascii=False) + "\n"
+
+    return StreamingResponse(events(), media_type="application/x-ndjson", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @router.post("/ocr", status_code=status.HTTP_201_CREATED)

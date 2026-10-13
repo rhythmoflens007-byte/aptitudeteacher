@@ -8,3 +8,4 @@ google-genai==1.52.0
 pyjwt==2.10.1
 python-multipart==0.0.20
 email-validator==2.2.0
+edge-tts==7.3.0

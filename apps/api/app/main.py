@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import ai
 from app.config import get_settings
-from app.routes import auth, practice, progress, quizzes, tutor
+from app.routes import auth, practice, progress, quizzes, speech, tutor
 from app.seed import init_db
 
 settings = get_settings()
@@ -27,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (auth, practice, quizzes, tutor, progress):
+for module in (auth, practice, quizzes, tutor, progress, speech):
     app.include_router(module.router)
 
 

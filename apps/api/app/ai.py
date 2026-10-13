@@ -3,7 +3,7 @@ import logging
 import re
 import time
 from functools import lru_cache
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from typing import Protocol
 
 from google import genai
@@ -109,6 +109,90 @@ def _generate(contents, system: str | None = None, as_json: bool = False) -> str
     if not response.text:
         raise AIUnavailable("Empty response from Gemini")
     return response.text
+
+
+def _transient(exc: Exception) -> bool:
+    code = getattr(exc, "code", None)
+    return code in (500, 503) or "UNAVAILABLE" in str(exc)
+
+
+def _rest_if_out_of_quota(model: str, exc: Exception) -> bool:
+    if getattr(exc, "code", None) == 429 or "RESOURCE_EXHAUSTED" in str(exc):
+        rest = QUOTA_REST_SECONDS if "PerDay" in str(exc) else MINUTE_REST_SECONDS
+        _resting_until[model] = time.monotonic() + rest
+        log.info("%s is out of quota, resting it for %ds", model, rest)
+        return True
+    return False
+
+
+def _generate_stream(contents, system: str | None = None) -> Iterator[str]:
+    """Yields the reply as it is written. Falls back to the next model only before any text has
+    arrived; a failure mid-reply raises AIUnavailable so the caller can keep what it already has."""
+    if not enabled():
+        raise AIUnavailable("GEMINI_API_KEY is not set")
+    config = types.GenerateContentConfig(system_instruction=system, temperature=0.4)
+    now = time.monotonic()
+    models = [m for m in get_settings().gemini_models() if _resting_until.get(m, 0) <= now]
+    if not models:
+        raise AIUnavailable("Every Gemini model is out of free quota for now")
+    last_error: Exception | None = None
+    for model in models:
+        started = False
+        try:
+            for chunk in _client().models.generate_content_stream(model=model, contents=contents, config=config):
+                text = chunk.text or ""
+                if text:
+                    started = True
+                    yield text
+            if started:
+                return
+            last_error = AIUnavailable("Empty response from Gemini")
+        except Exception as exc:
+            if started:
+                log.warning("Gemini stream broke off: %s", exc)
+                raise AIUnavailable(str(exc)) from exc
+            last_error = exc
+            if _rest_if_out_of_quota(model, exc) or _transient(exc):
+                log.info("%s unavailable for streaming, trying the next model", model)
+                continue
+            log.warning("Gemini stream failed: %s", exc)
+            raise AIUnavailable(str(exc)) from exc
+    raise AIUnavailable(str(last_error))
+
+
+_SENTENCE_END = re.compile(r"[.!?।॥]+[\"')\]]*(?:[ \t]+|\n+)|\n+")
+
+
+class SentenceSplitter:
+    """Cuts streamed text into whole sentences, keeping step numbers like '1.' with their step."""
+
+    def __init__(self) -> None:
+        self.buffer = ""
+
+    def feed(self, text: str) -> list[str]:
+        self.buffer += text
+        sentences: list[str] = []
+        start = 0
+        for match in _SENTENCE_END.finditer(self.buffer):
+            piece = self.buffer[start : match.end()]
+            core = _EMOTION_TAG.sub("", piece).strip()
+            if re.fullmatch(r"\d+[.)]?", core):
+                continue
+            sentences.append(piece)
+            start = match.end()
+        self.buffer = self.buffer[start:]
+        return sentences
+
+    def flush(self) -> list[str]:
+        rest, self.buffer = self.buffer, ""
+        return [rest] if rest.strip() else []
+
+
+def _tagged(piece: str) -> tuple[str, str | None]:
+    """'[excited] Great!\n' -> ('Great!\n', 'excited'), keeping the trailing spacing."""
+    tags = [m.lower() for m in _EMOTION_TAG.findall(piece)]
+    text = _EMOTION_TAG.sub("", piece)
+    return text.lstrip(" \t") if tags else text, tags[0] if tags else None
 
 
 def _language(locale: str) -> str:
@@ -237,16 +321,15 @@ def split_emotions(text: str) -> tuple[str, list[str]]:
     return clean, emotions
 
 
-def tutor_reply(
-    history: list[tuple[str, str]], context: str | None, learner: Learner, worked_solution: str | None = None
-) -> tuple[str, list[str]]:
-    """Returns the tutor's reply and one emotion per sentence, which drives the avatar's body language."""
-    if not enabled():
-        base = (
-            f"I'm {learner.tutor_name or 'Asha'}, running in offline mode right now, so I can't hold a full "
-            "conversation yet. Add a free Gemini API key to apps/api/.env to switch me on."
-        )
-        return (f"{base}\n\nHere's the worked solution meanwhile:\n{worked_solution}" if worked_solution else base), []
+def _offline_reply(learner: Learner, worked_solution: str | None) -> str:
+    base = (
+        f"I'm {learner.tutor_name or 'Asha'}, running in offline mode right now, so I can't hold a full "
+        "conversation yet. Add a free Gemini API key to apps/api/.env to switch me on."
+    )
+    return f"{base}\n\nHere's the worked solution meanwhile:\n{worked_solution}" if worked_solution else base
+
+
+def _tutor_prompt(history: list[tuple[str, str]], context: str | None, learner: Learner):
     while history and history[0][0] != "student":
         history = history[1:]
     contents = [
@@ -264,10 +347,45 @@ def tutor_reply(
     )
     if context:
         system += f"\n\nThe student is asking about this problem:\n{context}"
+    return contents, system
+
+
+def tutor_reply(
+    history: list[tuple[str, str]], context: str | None, learner: Learner, worked_solution: str | None = None
+) -> tuple[str, list[str]]:
+    """Returns the tutor's reply and one emotion per sentence, which drives the avatar's body language."""
+    if not enabled():
+        return _offline_reply(learner, worked_solution), []
+    contents, system = _tutor_prompt(history, context, learner)
     try:
         return split_emotions(_generate(contents, system=system))
     except AIUnavailable:
         return BUSY_REPLY.get(learner.locale, BUSY_REPLY["en"]), ["empathetic"]
+
+
+def tutor_reply_stream(
+    history: list[tuple[str, str]], context: str | None, learner: Learner, worked_solution: str | None = None
+) -> Iterator[tuple[str, str | None]]:
+    """Yields (sentence, emotion) as soon as each sentence is written, so the tutor can start
+    talking within a second or two instead of after the whole reply."""
+    splitter = SentenceSplitter()
+    if not enabled():
+        for piece in splitter.feed(_offline_reply(learner, worked_solution)) + splitter.flush():
+            yield piece, None
+        return
+    contents, system = _tutor_prompt(history, context, learner)
+    sent_any = False
+    try:
+        for chunk in _generate_stream(contents, system=system):
+            for piece in splitter.feed(chunk):
+                sent_any = True
+                yield _tagged(piece)
+    except AIUnavailable:
+        if not sent_any and not splitter.buffer.strip():
+            yield BUSY_REPLY.get(learner.locale, BUSY_REPLY["en"]), "empathetic"
+            return
+    for piece in splitter.flush():
+        yield _tagged(piece)
 
 
 def generate_question(subtopic: str, skill: str, difficulty: int, examples: list[Question]) -> dict | None:
