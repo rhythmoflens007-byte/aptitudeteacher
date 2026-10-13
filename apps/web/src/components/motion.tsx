@@ -141,7 +141,7 @@ export function CountOnView({ value, suffix = "", className = "" }: { value: num
   }, [seen, value]);
   return (
     <span ref={ref} className={`tabular ${className}`}>
-      {shown}
+      {shown.toLocaleString("en-IN")}
       {suffix}
     </span>
   );

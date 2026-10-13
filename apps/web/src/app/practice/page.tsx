@@ -247,6 +247,7 @@ function Practice() {
                     <span className="ml-1">{DIFFICULTY[question.difficulty]}</span>
                   </Pill>
                   {question.source === "ai_generated" && <Pill tone="iris">✨ Fresh from AI</Pill>}
+                  {question.source === "generated" && <Pill tone="violet">✨ Brand-new question</Pill>}
                   <span
                     className={`ml-auto flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular ${result ? "text-ink-soft" : elapsed > 90 ? "bg-coral-soft text-coral-600" : "bg-surface-2 text-ink-soft"}`}
                     aria-label="Time on this question"

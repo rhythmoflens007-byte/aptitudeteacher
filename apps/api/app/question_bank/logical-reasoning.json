@@ -1,0 +1,828 @@
+{
+  "topic": "Logical Reasoning",
+  "slug": "logical-reasoning",
+  "subtopics": {
+    "Syllogisms": {
+      "Two-premise syllogisms": [
+        {
+          "difficulty": 1,
+          "question": "Statements: All roses are flowers. Some flowers fade quickly. Which conclusion follows?",
+          "options": [
+            "All roses fade quickly",
+            "Some roses fade quickly",
+            "No valid conclusion follows",
+            "No roses fade quickly"
+          ],
+          "answer": "No valid conclusion follows",
+          "explanation": "1. Draw roses as a circle inside flowers.\n2. 'Some flowers fade quickly' can be drawn touching only the flowers that are NOT roses.\n3. Since a valid diagram exists where no rose fades quickly, and another where some do, nothing definite follows about roses."
+        },
+        {
+          "difficulty": 2,
+          "question": "Statements: All pens are books. All books are chairs. Which conclusion definitely follows?",
+          "options": [
+            "All pens are chairs",
+            "All chairs are pens",
+            "Some chairs are not books",
+            "No pen is a chair"
+          ],
+          "answer": "All pens are chairs",
+          "explanation": "1. Pens sit inside books, and books sit inside chairs.\n2. So pens are inside chairs: All pens are chairs.\n3. The reverse ('All chairs are pens') does not follow."
+        },
+        {
+          "difficulty": 2,
+          "question": "Statements: No fish are mammals. All whales are mammals. Which conclusion follows?",
+          "options": [
+            "No whales are fish",
+            "Some whales are fish",
+            "All fish are whales",
+            "Some fish are mammals"
+          ],
+          "answer": "No whales are fish",
+          "explanation": "1. Whales sit entirely inside mammals.\n2. Fish and mammals do not overlap at all.\n3. So whales and fish cannot overlap: No whales are fish."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statements: Some cats are dogs. No dog is a rat. Which conclusion definitely follows?",
+          "options": [
+            "No cat is a rat",
+            "Some cats are not rats",
+            "Some rats are cats",
+            "All cats are rats"
+          ],
+          "answer": "Some cats are not rats",
+          "explanation": "1. The cats that are dogs cannot be rats, because no dog is a rat.\n2. So at least some cats are not rats.\n3. Other cats might still be rats, so 'No cat is a rat' is not certain."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statements: All engineers are graduates. Some graduates are teachers. Conclusions: I. Some engineers are teachers. II. Some teachers are graduates. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only II follows",
+          "explanation": "1. 'Some graduates are teachers' can be reversed: 'Some teachers are graduates', so II follows.\n2. The teachers among graduates might all be non-engineers, so I is not certain."
+        },
+        {
+          "difficulty": 1,
+          "question": "Statements: All dogs are animals. All animals breathe. Which conclusion definitely follows?",
+          "options": [
+            "All dogs breathe",
+            "All breathing things are dogs",
+            "Some animals are not dogs",
+            "No dog breathes"
+          ],
+          "answer": "All dogs breathe",
+          "explanation": "1. Dogs sit inside animals, and animals sit inside things that breathe.\n2. So dogs are inside things that breathe: all dogs breathe.\n3. 'Some animals are not dogs' may be true, but the statements don't guarantee it."
+        },
+        {
+          "difficulty": 1,
+          "question": "Statements: No birds are fish. All sparrows are birds. Which conclusion follows?",
+          "options": [
+            "No sparrows are fish",
+            "Some sparrows are fish",
+            "All fish are sparrows",
+            "Some birds are fish"
+          ],
+          "answer": "No sparrows are fish",
+          "explanation": "1. Sparrows sit entirely inside birds.\n2. Birds and fish don't overlap at all.\n3. So sparrows and fish can't overlap: no sparrows are fish."
+        },
+        {
+          "difficulty": 2,
+          "question": "Statements: Some books are pens. All pens are pencils. Which conclusion definitely follows?",
+          "options": [
+            "Some books are pencils",
+            "All books are pencils",
+            "No book is a pencil",
+            "All pencils are books"
+          ],
+          "answer": "Some books are pencils",
+          "explanation": "1. The books that are pens must also be pencils, because all pens are pencils.\n2. So at least some books are pencils. Nothing tells us about all books."
+        },
+        {
+          "difficulty": 2,
+          "question": "Statements: All teachers are readers. Some readers are writers. Which conclusion follows?",
+          "options": [
+            "Some teachers are writers",
+            "All teachers are writers",
+            "No valid conclusion follows",
+            "No teacher is a writer"
+          ],
+          "answer": "No valid conclusion follows",
+          "explanation": "1. Teachers sit inside readers.\n2. The readers who are writers might all be non-teachers, or some might be teachers.\n3. Since both pictures are possible, nothing definite follows about teachers and writers."
+        },
+        {
+          "difficulty": 2,
+          "question": "Statements: All cars are vehicles. No vehicle is a toy. Which conclusion follows?",
+          "options": [
+            "No car is a toy",
+            "Some cars are toys",
+            "All toys are cars",
+            "Some vehicles are toys"
+          ],
+          "answer": "No car is a toy",
+          "explanation": "1. Cars sit entirely inside vehicles.\n2. Vehicles and toys don't overlap.\n3. So cars and toys can't overlap: no car is a toy."
+        },
+        {
+          "difficulty": 2,
+          "question": "Statements: All mangoes are fruits. Some fruits are sour. Conclusions: I. Some fruits are mangoes. II. All fruits are sour. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. All mangoes are fruits, so some fruits (the mangoes) are mangoes: I follows.\n2. 'Some fruits are sour' says nothing about all fruits, so II doesn't follow."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statements: Some apples are red. Some red things are cherries. Which conclusion follows?",
+          "options": [
+            "Some apples are cherries",
+            "No valid conclusion follows",
+            "All apples are cherries",
+            "No apple is a cherry"
+          ],
+          "answer": "No valid conclusion follows",
+          "explanation": "1. Two 'some' statements never give a definite conclusion.\n2. The red apples and the red cherries may or may not overlap, so nothing definite follows."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statements: All doctors are educated. Some doctors are singers. Conclusions: I. Some singers are educated. II. All singers are doctors. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. The singers who are doctors must be educated, so some singers are educated: I follows.\n2. Only some singers are doctors, not all, so II doesn't follow."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statements: No stone is a metal. Some metals are shiny. Conclusions: I. Some shiny things are not stones. II. No shiny thing is a stone. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. The shiny metals can't be stones (no stone is a metal), so some shiny things are not stones: I follows.\n2. Other shiny things might be stones, so II is not certain."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statements: All kings are rich. No rich person is lazy. Conclusions: I. No king is lazy. II. Some lazy people are kings. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. Kings are inside rich people, and rich people never overlap with lazy people.\n2. So no king is lazy: I follows, and II contradicts it."
+        },
+        {
+          "difficulty": 4,
+          "question": "Statements: Some boxes are chairs. Some chairs are tables. Conclusions: I. Some boxes are tables. II. Some tables are boxes. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Neither follows",
+          "explanation": "1. Two 'some' statements give no definite link between boxes and tables.\n2. I and II say the same thing in different words, and neither is certain."
+        },
+        {
+          "difficulty": 4,
+          "question": "Statements: All cups are plates. Some plates are spoons. No spoon is a fork. Conclusions: I. Some plates are not forks. II. Some cups are spoons. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. The plates that are spoons can't be forks, so some plates are not forks: I follows.\n2. The spoons among the plates might not include any cups, so II is not certain."
+        }
+      ]
+    },
+    "Number Series": {
+      "Finding the series pattern": [
+        {
+          "difficulty": 1,
+          "question": "Find the next number: 2, 6, 12, 20, 30, ?",
+          "options": [
+            "40",
+            "42",
+            "44",
+            "36"
+          ],
+          "answer": "42",
+          "explanation": "1. Differences: 4, 6, 8, 10, so the next difference is 12.\n2. 30 + 12 = 42.\nAlso: n × (n + 1) → 1×2, 2×3, 3×4, 4×5, 5×6, 6×7 = 42."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the next number: 3, 7, 15, 31, 63, ?",
+          "options": [
+            "125",
+            "127",
+            "129",
+            "126"
+          ],
+          "answer": "127",
+          "explanation": "1. Each term = previous × 2 + 1.\n2. 63 × 2 + 1 = 127."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the next number: 4, 9, 25, 49, 121, ?",
+          "options": [
+            "144",
+            "169",
+            "196",
+            "225"
+          ],
+          "answer": "169",
+          "explanation": "1. These are squares of prime numbers: 2², 3², 5², 7², 11².\n2. The next prime is 13, and 13² = 169."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the next number: 1, 4, 27, 256, ?",
+          "options": [
+            "625",
+            "1024",
+            "3125",
+            "3025"
+          ],
+          "answer": "3125",
+          "explanation": "1. The pattern is n to the power n: 1¹, 2², 3³, 4⁴.\n2. The next term is 5⁵ = 3125."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the next number: 7, 10, 16, 28, 52, ?",
+          "options": [
+            "100",
+            "96",
+            "104",
+            "76"
+          ],
+          "answer": "100",
+          "explanation": "1. Differences: 3, 6, 12, 24. Each difference doubles.\n2. The next difference is 48.\n3. 52 + 48 = 100."
+        }
+      ]
+    },
+    "Blood Relations": {
+      "Tracing relationship chains": [
+        {
+          "difficulty": 1,
+          "question": "Pointing to a man, Riya says, 'He is the son of my mother's only brother.' How is the man related to Riya?",
+          "options": [
+            "Brother",
+            "Cousin",
+            "Nephew",
+            "Uncle"
+          ],
+          "answer": "Cousin",
+          "explanation": "1. Riya's mother's brother is Riya's maternal uncle.\n2. The uncle's son is Riya's cousin."
+        },
+        {
+          "difficulty": 2,
+          "question": "A is the brother of B. B is the daughter of C. D is the father of A. How is C related to D?",
+          "options": [
+            "Wife",
+            "Sister",
+            "Daughter",
+            "Mother"
+          ],
+          "answer": "Wife",
+          "explanation": "1. A and B are siblings, so they share parents.\n2. D is their father, and C is another parent of B.\n3. So C is the mother, which makes C the wife of D."
+        },
+        {
+          "difficulty": 3,
+          "question": "Introducing a woman, Arjun says, 'Her mother is the only daughter of my mother.' How is Arjun related to the woman?",
+          "options": [
+            "Father",
+            "Brother",
+            "Maternal uncle",
+            "Grandfather"
+          ],
+          "answer": "Maternal uncle",
+          "explanation": "1. The only daughter of Arjun's mother is Arjun's sister.\n2. The woman's mother is Arjun's sister.\n3. So Arjun is the woman's maternal uncle."
+        },
+        {
+          "difficulty": 3,
+          "question": "P is the father of Q. R is the mother of P. S is the brother of R. How is S related to Q?",
+          "options": [
+            "Uncle",
+            "Great-uncle",
+            "Cousin",
+            "Grandfather"
+          ],
+          "answer": "Great-uncle",
+          "explanation": "1. R is P's mother, so R is Q's grandmother.\n2. S is R's brother, so S is the brother of Q's grandmother.\n3. A grandparent's brother is a great-uncle."
+        }
+      ]
+    },
+    "Coding-Decoding": {
+      "Letter-shift codes": [
+        {
+          "difficulty": 1,
+          "question": "If CAT is coded as DBU, how is DOG coded?",
+          "options": [
+            "EPH",
+            "CNF",
+            "EPG",
+            "DPH"
+          ],
+          "answer": "EPH",
+          "explanation": "1. Each letter moves one step forward: C→D, A→B, T→U.\n2. DOG: D→E, O→P, G→H, giving EPH."
+        },
+        {
+          "difficulty": 2,
+          "question": "If MANGO is written as OCPIQ, how is APPLE written?",
+          "options": [
+            "CRRNG",
+            "BQQMF",
+            "CRRMG",
+            "DSSOH"
+          ],
+          "answer": "CRRNG",
+          "explanation": "1. Each letter moves two steps forward: M→O, A→C, N→P, G→I, O→Q.\n2. APPLE: A→C, P→R, P→R, L→N, E→G, giving CRRNG."
+        },
+        {
+          "difficulty": 3,
+          "question": "In a code, FRIEND is written as HUMJTK. How is CANDLE written?",
+          "options": [
+            "EDRIRL",
+            "DCQHQK",
+            "EDRIRK",
+            "ESJFME"
+          ],
+          "answer": "EDRIRL",
+          "explanation": "1. The shifts grow by one each letter: F+2=H, R+3=U, I+4=M, E+5=J, N+6=T, D+7=K.\n2. CANDLE: C+2=E, A+3=D, N+4=R, D+5=I, L+6=R, E+7=L, giving EDRIRL."
+        }
+      ],
+      "Number codes": [
+        {
+          "difficulty": 2,
+          "question": "In a code, 2 = 6, 3 = 12 and 4 = 20. What does 6 equal?",
+          "options": [
+            "30",
+            "36",
+            "42",
+            "48"
+          ],
+          "answer": "42",
+          "explanation": "1. Each number n is coded as n × (n + 1): 2 × 3 = 6, 3 × 4 = 12, 4 × 5 = 20.\n2. 6 × 7 = 42."
+        },
+        {
+          "difficulty": 3,
+          "question": "If ROSE is coded as 6821, CHAIR as 73456 and PREACH as 961473, what is the code for SEARCH?",
+          "options": [
+            "214673",
+            "214763",
+            "241673",
+            "216473"
+          ],
+          "answer": "214673",
+          "explanation": "1. Each letter has a fixed digit. From ROSE: R=6, O=8, S=2, E=1.\n2. From CHAIR: C=7, H=3, A=4, I=5. PREACH confirms these and adds P=9.\n3. SEARCH = S E A R C H = 2 1 4 6 7 3."
+        }
+      ]
+    },
+    "Direction Sense": {
+      "Direction and displacement": [
+        {
+          "difficulty": 1,
+          "question": "Ravi walks 4 km north and then 3 km east. How far is he from his starting point?",
+          "options": [
+            "7 km",
+            "5 km",
+            "1 km",
+            "6 km"
+          ],
+          "answer": "5 km",
+          "explanation": "1. North and east are at right angles, so use Pythagoras.\n2. Distance = √(4² + 3²) = √25 = 5 km.\nThe 7 km option is the total path walked, not the distance from start."
+        },
+        {
+          "difficulty": 2,
+          "question": "Meena faces east. She turns 90° clockwise, then 180°, then 90° anticlockwise. Which direction does she face now?",
+          "options": [
+            "North",
+            "South",
+            "East",
+            "West"
+          ],
+          "answer": "West",
+          "explanation": "1. East turned 90° clockwise → South.\n2. South turned 180° → North.\n3. North turned 90° anticlockwise → West."
+        },
+        {
+          "difficulty": 3,
+          "question": "A man walks 10 m south, turns left and walks 6 m, turns left and walks 18 m, then turns right and walks 2 m. Where is he relative to his starting point?",
+          "options": [
+            "8√2 m, North-East",
+            "10 m, North",
+            "8√2 m, North-West",
+            "14 m, East"
+          ],
+          "answer": "8√2 m, North-East",
+          "explanation": "1. Take the start as (0, 0). 10 m south → (0, -10).\n2. Left while facing south means east: 6 m → (6, -10).\n3. Left while facing east means north: 18 m → (6, 8).\n4. Right while facing north means east: 2 m → (8, 8).\n5. Distance = √(8² + 8²) = 8√2 m, towards the north-east."
+        },
+        {
+          "difficulty": 2,
+          "question": "Just after sunrise, Kiran stands facing his own shadow. Which direction is he facing?",
+          "options": [
+            "East",
+            "West",
+            "North",
+            "South"
+          ],
+          "answer": "West",
+          "explanation": "1. At sunrise the sun is in the east.\n2. Shadows fall away from the sun, so his shadow points west.\n3. Facing his shadow means facing west."
+        }
+      ]
+    },
+    "Seating Arrangement": {
+      "Linear arrangement": [
+        {
+          "difficulty": 2,
+          "question": "A, B, C, D and E sit in a row facing north. B is second from the left. D is to the immediate right of B. A is at one end and E is not at an end. Who sits in the middle?",
+          "options": [
+            "B",
+            "C",
+            "D",
+            "E"
+          ],
+          "answer": "D",
+          "explanation": "1. Number the seats 1 to 5 from the left. B is in seat 2.\n2. D is immediately right of B, so D is in seat 3, the middle.\n3. The rest fits: E must take seat 4, and A and C take the two ends."
+        },
+        {
+          "difficulty": 3,
+          "question": "Five friends P, Q, R, S and T sit in a row facing north. R is in the middle. P is at the extreme left. T is to the immediate right of R. Q is not next to P. Who is at the extreme right?",
+          "options": [
+            "Q",
+            "S",
+            "T",
+            "R"
+          ],
+          "answer": "Q",
+          "explanation": "1. Seats 1 to 5 from the left: P is 1, R is 3, T is 4.\n2. Seats 2 and 5 are left for Q and S.\n3. Q is not next to P, so Q cannot be in seat 2. Q takes seat 5, the extreme right."
+        },
+        {
+          "difficulty": 4,
+          "question": "Six people sit in a row facing north. L is third from the right end. M is to the immediate left of L. N is at the extreme left. O sits between M and N. P is somewhere to the right of Q. Who is at the extreme right?",
+          "options": [
+            "P",
+            "Q",
+            "L",
+            "O"
+          ],
+          "answer": "P",
+          "explanation": "1. Seats 1 to 6 from the left. Third from the right is seat 4, so L is 4 and M is 3.\n2. N is at seat 1, so O, between N and M, is at seat 2.\n3. Seats 5 and 6 remain for P and Q. P is right of Q, so Q is 5 and P is 6."
+        }
+      ]
+    },
+    "Clocks and Calendars": {
+      "Clock angles": [
+        {
+          "difficulty": 2,
+          "question": "What is the angle between the hour and minute hands of a clock at 3:30?",
+          "options": [
+            "75°",
+            "90°",
+            "60°",
+            "105°"
+          ],
+          "answer": "75°",
+          "explanation": "1. The minute hand at 30 minutes points at 180°.\n2. The hour hand moves 30° per hour plus 0.5° per minute: 3 × 30 + 30 × 0.5 = 105°.\n3. Angle = 180 - 105 = 75°.\n90° is the trap: it forgets the hour hand has moved past 3."
+        },
+        {
+          "difficulty": 2,
+          "question": "A clock shows 8:20. What is the angle between the hands?",
+          "options": [
+            "130°",
+            "120°",
+            "140°",
+            "110°"
+          ],
+          "answer": "130°",
+          "explanation": "1. Hour hand: 8 × 30 + 20 × 0.5 = 250°.\n2. Minute hand: 20 × 6 = 120°.\n3. Angle = 250 - 120 = 130°."
+        },
+        {
+          "difficulty": 3,
+          "question": "At what time between 4 and 5 o'clock are the hands of a clock exactly together?",
+          "options": [
+            "21 9/11 minutes past 4",
+            "20 minutes past 4",
+            "22 minutes past 4",
+            "21 3/11 minutes past 4"
+          ],
+          "answer": "21 9/11 minutes past 4",
+          "explanation": "1. At 4:00 the minute hand is 120° behind the hour hand.\n2. It gains 6 - 0.5 = 5.5° per minute.\n3. Time to catch up = 120 / 5.5 = 240/11 = 21 9/11 minutes."
+        }
+      ],
+      "Day of the week": [
+        {
+          "difficulty": 2,
+          "question": "If today is Monday, what day of the week will it be 100 days from today?",
+          "options": [
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "answer": "Wednesday",
+          "explanation": "1. Every 7 days the weekday repeats, so only the remainder matters.\n2. 100 = 7 × 14 + 2.\n3. Monday + 2 days = Wednesday."
+        },
+        {
+          "difficulty": 2,
+          "question": "1 January 2025 was a Wednesday. What day of the week was 1 March 2025?",
+          "options": [
+            "Friday",
+            "Saturday",
+            "Sunday",
+            "Thursday"
+          ],
+          "answer": "Saturday",
+          "explanation": "1. Days from 1 January to 1 March 2025 = 31 (January) + 28 (February, not a leap year) = 59.\n2. 59 = 7 × 8 + 3, so 3 odd days.\n3. Wednesday + 3 = Saturday."
+        },
+        {
+          "difficulty": 3,
+          "question": "Which is the next year after 2021 that has exactly the same calendar as 2021?",
+          "options": [
+            "2027",
+            "2026",
+            "2032",
+            "2029"
+          ],
+          "answer": "2027",
+          "explanation": "1. The calendars match when the extra days add up to a multiple of 7 and both years have the same leap status.\n2. Extra days: 2021 (1), 2022 (1), 2023 (1), 2024 (2, leap), 2025 (1), 2026 (1). Total = 7.\n3. So 2027 starts on the same weekday as 2021 and, like 2021, is not a leap year."
+        }
+      ]
+    },
+    "Statements and Conclusions": {
+      "Evaluating conclusions": [
+        {
+          "difficulty": 2,
+          "question": "Statement: 'Only students who submit the form by Friday will be allowed to take the exam.' Conclusions: I. A student who submits the form on Saturday will not be allowed. II. Every student who submits by Friday will definitely take the exam. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. 'Only those who submit by Friday' rules out anyone later, so I follows.\n2. Being allowed to take the exam doesn't mean a student will take it, so II doesn't follow."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statement: 'All employees must wear ID cards inside the office. Ravi is inside the office without an ID card.' Conclusions: I. Ravi is breaking the rule. II. Ravi is not an employee. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Either I or II follows",
+            "Neither follows"
+          ],
+          "answer": "Either I or II follows",
+          "explanation": "1. If Ravi is an employee, he is breaking the rule (I).\n2. If he isn't an employee, the rule doesn't apply to him (II).\n3. One of the two must be true, but we can't tell which: either I or II."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statement: 'Metro ridership doubled after fares were cut by half.' Which assumption is needed to claim that the fare cut caused the increase?",
+          "options": [
+            "No other major factor raised ridership during the same period",
+            "Everyone in the city uses the metro",
+            "Fares will be cut again next year",
+            "Ridership will keep doubling every year"
+          ],
+          "answer": "No other major factor raised ridership during the same period",
+          "explanation": "1. To say the fare cut caused the rise, other possible causes must be ruled out.\n2. A new metro line or a fuel price rise at the same time would weaken the claim.\n3. The other options are about the future or everyone, which the claim doesn't need."
+        },
+        {
+          "difficulty": 1,
+          "question": "Statement: 'Please drink at least eight glasses of water a day to stay healthy.' Assumptions: I. Water helps keep people healthy. II. Some people drink less water than they should. Which assumptions are implicit?",
+          "options": [
+            "Only I is implicit",
+            "Only II is implicit",
+            "Both I and II are implicit",
+            "Neither is implicit"
+          ],
+          "answer": "Both I and II are implicit",
+          "explanation": "1. Advising water 'to stay healthy' assumes water helps health (I).\n2. Giving the advice at all assumes some people don't already drink enough (II)."
+        },
+        {
+          "difficulty": 2,
+          "question": "Statement: 'The school will remain closed tomorrow because of heavy rain.' Conclusions: I. Heavy rain is happening or expected. II. The school closes every rainy day. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. The closure is because of heavy rain, so heavy rain is happening or expected: I follows.\n2. One closure doesn't mean the school closes on every rainy day, so II doesn't follow."
+        },
+        {
+          "difficulty": 2,
+          "question": "Statement: 'Use our toothpaste for whiter teeth in seven days.' Assumptions: I. People want whiter teeth. II. Other toothpastes don't whiten teeth at all. Which assumptions are implicit?",
+          "options": [
+            "Only I is implicit",
+            "Only II is implicit",
+            "Both I and II are implicit",
+            "Neither is implicit"
+          ],
+          "answer": "Only I is implicit",
+          "explanation": "1. The advert only works if people want whiter teeth, so I is implicit.\n2. It says nothing about other toothpastes, so II is not assumed."
+        },
+        {
+          "difficulty": 2,
+          "question": "Statement: 'Entry to the museum is free for children under 12.' Conclusions: I. Some visitors have to pay for entry. II. The museum loses money because of children. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. Making entry free for one group implies that others pay: I follows.\n2. Nothing is said about the museum's finances, so II doesn't follow."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statement: 'If you want to score well, practise daily.' Conclusions: I. Daily practice helps you score well. II. Anyone who doesn't practise daily will definitely fail. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. The advice implies daily practice helps scores: I follows.\n2. 'Will definitely fail' is far too strong; not scoring well isn't the same as failing. II doesn't follow."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statement: 'The government has decided to plant one crore trees in the state this year.' Assumptions: I. There is enough land to plant the trees. II. Trees are good for the environment. Which assumptions are implicit?",
+          "options": [
+            "Only I is implicit",
+            "Only II is implicit",
+            "Both I and II are implicit",
+            "Neither is implicit"
+          ],
+          "answer": "Both I and II are implicit",
+          "explanation": "1. A plan to plant one crore trees assumes there is space to do it (I).\n2. The decision assumes planting trees is beneficial (II)."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statement: 'Most accidents on this road happen at night.' Courses of action: I. The road should be better lit at night. II. The road should be closed permanently. Which course of action follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. Better lighting targets the night-time problem directly: I is reasonable.\n2. Closing the road for good is extreme and stops daytime use too, so II doesn't follow."
+        },
+        {
+          "difficulty": 3,
+          "question": "Statement: 'The company has asked all employees to work from home on Fridays to save electricity.' Assumptions: I. Working from home reduces the office's electricity use. II. Employees can do their work from home. Which assumptions are implicit?",
+          "options": [
+            "Only I is implicit",
+            "Only II is implicit",
+            "Both I and II are implicit",
+            "Neither is implicit"
+          ],
+          "answer": "Both I and II are implicit",
+          "explanation": "1. The reason given (saving electricity) assumes an emptier office uses less power (I).\n2. Asking everyone to work from home assumes they can (II)."
+        },
+        {
+          "difficulty": 4,
+          "question": "Statement: 'Only graduates can apply for this post.' Conclusions: I. Anyone allowed to apply for the post is a graduate. II. All graduates who apply will be selected. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Only I follows",
+          "explanation": "1. 'Only graduates can apply' means every eligible applicant is a graduate: I follows.\n2. Being allowed to apply doesn't mean being selected, so II doesn't follow."
+        },
+        {
+          "difficulty": 4,
+          "question": "Statement: 'Ravi is taller than Mohan. Mohan is taller than Suresh.' Conclusions: I. Ravi is taller than Suresh. II. Suresh is the shortest of the three. Which follows?",
+          "options": [
+            "Only I follows",
+            "Only II follows",
+            "Both I and II follow",
+            "Neither follows"
+          ],
+          "answer": "Both I and II follow",
+          "explanation": "1. Ravi > Mohan > Suresh in height.\n2. So Ravi is taller than Suresh (I), and Suresh is the shortest of the three (II)."
+        }
+      ]
+    },
+    "Classification and Analogies": {
+      "Odd one out": [
+        {
+          "difficulty": 1,
+          "question": "Find the odd one out: Apple, Mango, Potato, Banana",
+          "options": [
+            "Apple",
+            "Mango",
+            "Potato",
+            "Banana"
+          ],
+          "answer": "Potato",
+          "explanation": "Apple, mango and banana are fruits; potato is a vegetable."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the odd one out: Circle, Square, Triangle, Cube",
+          "options": [
+            "Circle",
+            "Square",
+            "Triangle",
+            "Cube"
+          ],
+          "answer": "Cube",
+          "explanation": "Circle, square and triangle are flat 2D shapes; a cube is a 3D solid."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the odd one out: 27, 64, 125, 144",
+          "options": [
+            "27",
+            "64",
+            "125",
+            "144"
+          ],
+          "answer": "144",
+          "explanation": "1. 27 = 3³, 64 = 4³, 125 = 5³ are perfect cubes.\n2. 144 = 12² is a square, not a cube.\n64 is also a square (8²), but it still fits the cube pattern."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the odd one out: 2, 3, 5, 9, 11",
+          "options": [
+            "2",
+            "9",
+            "11",
+            "5"
+          ],
+          "answer": "9",
+          "explanation": "1. 2, 3, 5 and 11 are prime numbers.\n2. 9 = 3 × 3 is not prime.\n2 is the trap: it is even, but it is still prime."
+        }
+      ],
+      "Letter and number analogies": [
+        {
+          "difficulty": 1,
+          "question": "3 : 27 :: 4 : ?",
+          "options": [
+            "16",
+            "64",
+            "81",
+            "256"
+          ],
+          "answer": "64",
+          "explanation": "1. 27 = 3³, so each number maps to its cube.\n2. 4³ = 64."
+        },
+        {
+          "difficulty": 2,
+          "question": "ACE : BDF :: GIK : ?",
+          "options": [
+            "HJL",
+            "HIJ",
+            "IKM",
+            "GHI"
+          ],
+          "answer": "HJL",
+          "explanation": "1. Each letter moves forward by one: A→B, C→D, E→F.\n2. G→H, I→J, K→L, giving HJL."
+        },
+        {
+          "difficulty": 3,
+          "question": "6 : 35 :: 11 : ?",
+          "options": [
+            "120",
+            "121",
+            "110",
+            "132"
+          ],
+          "answer": "120",
+          "explanation": "1. 35 = 6² - 1.\n2. 11² - 1 = 121 - 1 = 120."
+        },
+        {
+          "difficulty": 3,
+          "question": "ZYX : ABC :: WVU : ?",
+          "options": [
+            "DEF",
+            "CDE",
+            "XYZ",
+            "EFG"
+          ],
+          "answer": "DEF",
+          "explanation": "1. Each letter is paired with its mirror in the alphabet: Z↔A, Y↔B, X↔C.\n2. W↔D, V↔E, U↔F, giving DEF."
+        }
+      ]
+    }
+  }
+}

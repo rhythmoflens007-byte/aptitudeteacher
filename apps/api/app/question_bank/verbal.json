@@ -1,0 +1,2814 @@
+{
+  "topic": "Verbal Ability",
+  "slug": "verbal",
+  "subtopics": {
+    "Analogies": {
+      "Word relationships": [
+        {
+          "difficulty": 1,
+          "question": "PEN is to WRITE as KNIFE is to ____?",
+          "options": [
+            "Sharp",
+            "Cut",
+            "Kitchen",
+            "Metal"
+          ],
+          "answer": "Cut",
+          "explanation": "1. The relationship is tool → its function: a pen is used to write.\n2. A knife is used to cut."
+        },
+        {
+          "difficulty": 1,
+          "question": "DOCTOR is to HOSPITAL as TEACHER is to ____?",
+          "options": [
+            "Student",
+            "School",
+            "Blackboard",
+            "Book"
+          ],
+          "answer": "School",
+          "explanation": "1. The relationship is professional → workplace.\n2. A doctor works in a hospital; a teacher works in a school."
+        },
+        {
+          "difficulty": 2,
+          "question": "BOOK is to CHAPTER as BUILDING is to ____?",
+          "options": [
+            "Floor",
+            "Brick",
+            "Architect",
+            "City"
+          ],
+          "answer": "Floor",
+          "explanation": "1. A chapter is one of the major sections that make up a book.\n2. A floor is one of the major sections of a building.\n3. A brick is a raw material, not a section, so it breaks the pattern."
+        },
+        {
+          "difficulty": 3,
+          "question": "OBSTINATE is to FLEXIBLE as TIMID is to ____?",
+          "options": [
+            "Shy",
+            "Bold",
+            "Fearful",
+            "Quiet"
+          ],
+          "answer": "Bold",
+          "explanation": "1. Obstinate (stubborn) is the opposite of flexible.\n2. The opposite of timid is bold.\n3. Shy and fearful are synonyms of timid, so they are traps."
+        },
+        {
+          "difficulty": 2,
+          "question": "BIRD is to NEST as BEE is to ____?",
+          "options": [
+            "Hive",
+            "Honey",
+            "Flower",
+            "Wax"
+          ],
+          "answer": "Hive",
+          "explanation": "1. The relationship is creature → home it builds: a bird lives in a nest.\n2. A bee lives in a hive. Honey and wax are things bees make, not homes."
+        },
+        {
+          "difficulty": 1,
+          "question": "EYE is to SEE as EAR is to ____?",
+          "options": [
+            "Hear",
+            "Noise",
+            "Head",
+            "Music"
+          ],
+          "answer": "Hear",
+          "explanation": "1. The relationship is organ → what it does: the eye is used to see.\n2. The ear is used to hear."
+        },
+        {
+          "difficulty": 1,
+          "question": "PUPPY is to DOG as KITTEN is to ____?",
+          "options": [
+            "Cat",
+            "Mouse",
+            "Cub",
+            "Lion"
+          ],
+          "answer": "Cat",
+          "explanation": "1. The relationship is young one → adult: a puppy grows into a dog.\n2. A kitten grows into a cat. A cub is the young of a lion or bear, so it's a trap."
+        },
+        {
+          "difficulty": 1,
+          "question": "COW is to HERD as FISH is to ____?",
+          "options": [
+            "School",
+            "Pond",
+            "Fin",
+            "Net"
+          ],
+          "answer": "School",
+          "explanation": "1. A herd is a group of cows.\n2. A group of fish is called a school (or a shoal). Pond is where fish live, not their group."
+        },
+        {
+          "difficulty": 1,
+          "question": "HOT is to COLD as UP is to ____?",
+          "options": [
+            "Down",
+            "High",
+            "Top",
+            "Over"
+          ],
+          "answer": "Down",
+          "explanation": "Hot and cold are opposites, so the answer is the opposite of up: down."
+        },
+        {
+          "difficulty": 1,
+          "question": "GLOVE is to HAND as SOCK is to ____?",
+          "options": [
+            "Foot",
+            "Shoe",
+            "Wool",
+            "Knee"
+          ],
+          "answer": "Foot",
+          "explanation": "1. A glove is worn on the hand.\n2. A sock is worn on the foot. A shoe is another thing worn on the foot, not the body part."
+        },
+        {
+          "difficulty": 1,
+          "question": "CARPENTER is to WOOD as TAILOR is to ____?",
+          "options": [
+            "Cloth",
+            "Needle",
+            "Shop",
+            "Shirt"
+          ],
+          "answer": "Cloth",
+          "explanation": "1. The relationship is worker → material: a carpenter works with wood.\n2. A tailor works with cloth. A needle is a tool, so it breaks the pattern."
+        },
+        {
+          "difficulty": 2,
+          "question": "FINGER is to HAND as TOE is to ____?",
+          "options": [
+            "Foot",
+            "Leg",
+            "Nail",
+            "Shoe"
+          ],
+          "answer": "Foot",
+          "explanation": "1. A finger is part of a hand.\n2. A toe is part of a foot."
+        },
+        {
+          "difficulty": 2,
+          "question": "PILOT is to AEROPLANE as CAPTAIN is to ____?",
+          "options": [
+            "Ship",
+            "Harbour",
+            "Sailor",
+            "Anchor"
+          ],
+          "answer": "Ship",
+          "explanation": "1. A pilot is in command of an aeroplane.\n2. A captain is in command of a ship."
+        },
+        {
+          "difficulty": 2,
+          "question": "THERMOMETER is to TEMPERATURE as BAROMETER is to ____?",
+          "options": [
+            "Pressure",
+            "Weather",
+            "Rain",
+            "Height"
+          ],
+          "answer": "Pressure",
+          "explanation": "1. A thermometer measures temperature.\n2. A barometer measures air pressure. Weather is what pressure helps predict, not what it measures."
+        },
+        {
+          "difficulty": 2,
+          "question": "AUTHOR is to NOVEL as COMPOSER is to ____?",
+          "options": [
+            "Symphony",
+            "Piano",
+            "Orchestra",
+            "Singer"
+          ],
+          "answer": "Symphony",
+          "explanation": "1. The relationship is creator → creation: an author writes a novel.\n2. A composer writes a symphony. A piano is an instrument, not a creation."
+        },
+        {
+          "difficulty": 2,
+          "question": "LION is to ROAR as SNAKE is to ____?",
+          "options": [
+            "Hiss",
+            "Crawl",
+            "Bite",
+            "Venom"
+          ],
+          "answer": "Hiss",
+          "explanation": "1. The relationship is animal → the sound it makes: a lion roars.\n2. A snake hisses."
+        },
+        {
+          "difficulty": 2,
+          "question": "WATER is to THIRST as FOOD is to ____?",
+          "options": [
+            "Hunger",
+            "Taste",
+            "Cook",
+            "Plate"
+          ],
+          "answer": "Hunger",
+          "explanation": "1. Water satisfies thirst.\n2. Food satisfies hunger."
+        },
+        {
+          "difficulty": 2,
+          "question": "SCULPTOR is to STATUE as POET is to ____?",
+          "options": [
+            "Poem",
+            "Pen",
+            "Rhyme",
+            "Book"
+          ],
+          "answer": "Poem",
+          "explanation": "1. A sculptor creates a statue.\n2. A poet creates a poem. Rhyme is a feature of many poems, not the creation itself."
+        },
+        {
+          "difficulty": 2,
+          "question": "LAUGH is to JOY as CRY is to ____?",
+          "options": [
+            "Sorrow",
+            "Tears",
+            "Baby",
+            "Loud"
+          ],
+          "answer": "Sorrow",
+          "explanation": "1. Laughing is an expression of joy.\n2. Crying is an expression of sorrow. Tears are what crying produces, not the feeling."
+        },
+        {
+          "difficulty": 2,
+          "question": "CHEF is to KITCHEN as SCIENTIST is to ____?",
+          "options": [
+            "Laboratory",
+            "Experiment",
+            "Microscope",
+            "Research"
+          ],
+          "answer": "Laboratory",
+          "explanation": "1. The relationship is professional → workplace: a chef works in a kitchen.\n2. A scientist works in a laboratory."
+        },
+        {
+          "difficulty": 3,
+          "question": "MYOPIA is to EYE as DEAFNESS is to ____?",
+          "options": [
+            "Ear",
+            "Sound",
+            "Hearing aid",
+            "Silence"
+          ],
+          "answer": "Ear",
+          "explanation": "1. Myopia (short-sightedness) is a problem of the eye.\n2. Deafness is a problem of the ear."
+        },
+        {
+          "difficulty": 3,
+          "question": "NUMISMATIST is to COINS as PHILATELIST is to ____?",
+          "options": [
+            "Stamps",
+            "Letters",
+            "Books",
+            "Paintings"
+          ],
+          "answer": "Stamps",
+          "explanation": "1. A numismatist collects and studies coins.\n2. A philatelist collects and studies stamps."
+        },
+        {
+          "difficulty": 3,
+          "question": "OBSERVE is to SCRUTINISE as LIKE is to ____?",
+          "options": [
+            "Adore",
+            "Dislike",
+            "Notice",
+            "Accept"
+          ],
+          "answer": "Adore",
+          "explanation": "1. To scrutinise is to observe very closely: a stronger form of the same action.\n2. To adore is to like very much, the stronger form of like."
+        },
+        {
+          "difficulty": 3,
+          "question": "DROUGHT is to WATER as FAMINE is to ____?",
+          "options": [
+            "Food",
+            "Disease",
+            "Rain",
+            "Death"
+          ],
+          "answer": "Food",
+          "explanation": "1. A drought is a severe shortage of water.\n2. A famine is a severe shortage of food."
+        },
+        {
+          "difficulty": 3,
+          "question": "ARCHIVE is to DOCUMENTS as ARSENAL is to ____?",
+          "options": [
+            "Weapons",
+            "Soldiers",
+            "Battles",
+            "Medals"
+          ],
+          "answer": "Weapons",
+          "explanation": "1. An archive is a place where documents are stored.\n2. An arsenal is a place where weapons are stored."
+        },
+        {
+          "difficulty": 3,
+          "question": "PROLOGUE is to PLAY as PREFACE is to ____?",
+          "options": [
+            "Book",
+            "Author",
+            "Index",
+            "Ending"
+          ],
+          "answer": "Book",
+          "explanation": "1. A prologue is the opening section of a play.\n2. A preface is the opening section of a book."
+        },
+        {
+          "difficulty": 4,
+          "question": "GREGARIOUS is to SOCIABLE as TACITURN is to ____?",
+          "options": [
+            "Reserved",
+            "Talkative",
+            "Angry",
+            "Clever"
+          ],
+          "answer": "Reserved",
+          "explanation": "1. Gregarious and sociable mean the same thing.\n2. Taciturn means saying very little, so its match is reserved. Talkative is the opposite, so it's the trap."
+        },
+        {
+          "difficulty": 4,
+          "question": "LIBEL is to WRITTEN as SLANDER is to ____?",
+          "options": [
+            "Spoken",
+            "False",
+            "Printed",
+            "Legal"
+          ],
+          "answer": "Spoken",
+          "explanation": "1. Libel is a false, damaging statement that is written or printed.\n2. Slander is the same kind of statement when it is spoken."
+        }
+      ]
+    },
+    "Synonyms and Antonyms": {
+      "Synonyms": [
+        {
+          "difficulty": 1,
+          "question": "Choose the word closest in meaning to ABUNDANT.",
+          "options": [
+            "Plentiful",
+            "Scarce",
+            "Tiny",
+            "Rare"
+          ],
+          "answer": "Plentiful",
+          "explanation": "Abundant means existing in large quantities, so its synonym is plentiful. Scarce and rare are antonyms."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to CANDID.",
+          "options": [
+            "Frank",
+            "Secretive",
+            "Sweet",
+            "Careful"
+          ],
+          "answer": "Frank",
+          "explanation": "Candid means truthful and straightforward, so its synonym is frank. Don't confuse it with 'candy' (sweet)."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word closest in meaning to EPHEMERAL.",
+          "options": [
+            "Permanent",
+            "Short-lived",
+            "Ethereal",
+            "Ancient"
+          ],
+          "answer": "Short-lived",
+          "explanation": "Ephemeral means lasting a very short time, so its synonym is short-lived. 'Ethereal' only sounds similar; it means delicate or heavenly."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to BENEVOLENT.",
+          "options": [
+            "Kind",
+            "Cruel",
+            "Wealthy",
+            "Curious"
+          ],
+          "answer": "Kind",
+          "explanation": "Benevolent means well-meaning and generous (bene = good, volent = wishing), so its synonym is kind. Cruel is the opposite."
+        },
+        {
+          "difficulty": 1,
+          "question": "Choose the word closest in meaning to DIFFICULT.",
+          "options": [
+            "Hard",
+            "Easy",
+            "Simple",
+            "Soft"
+          ],
+          "answer": "Hard",
+          "explanation": "Difficult means not easy to do, so its synonym is hard. Easy and simple are antonyms."
+        },
+        {
+          "difficulty": 1,
+          "question": "Choose the word closest in meaning to BRAVE.",
+          "options": [
+            "Courageous",
+            "Cowardly",
+            "Weak",
+            "Angry"
+          ],
+          "answer": "Courageous",
+          "explanation": "Brave means willing to face danger, so its synonym is courageous. Cowardly is the opposite."
+        },
+        {
+          "difficulty": 1,
+          "question": "Choose the word closest in meaning to RAPID.",
+          "options": [
+            "Fast",
+            "Slow",
+            "Late",
+            "Steady"
+          ],
+          "answer": "Fast",
+          "explanation": "Rapid means happening at great speed, so its synonym is fast."
+        },
+        {
+          "difficulty": 1,
+          "question": "Choose the word closest in meaning to JOYFUL.",
+          "options": [
+            "Happy",
+            "Sad",
+            "Tired",
+            "Bored"
+          ],
+          "answer": "Happy",
+          "explanation": "Joyful means full of joy, so its synonym is happy."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to VACANT.",
+          "options": [
+            "Empty",
+            "Full",
+            "Busy",
+            "Quiet"
+          ],
+          "answer": "Empty",
+          "explanation": "Vacant means not occupied, as in a vacant seat, so its synonym is empty."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to DILIGENT.",
+          "options": [
+            "Hardworking",
+            "Lazy",
+            "Clever",
+            "Careless"
+          ],
+          "answer": "Hardworking",
+          "explanation": "Diligent means showing steady, careful effort, so its synonym is hardworking. Lazy and careless are opposites."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to VIVID.",
+          "options": [
+            "Bright",
+            "Dull",
+            "Faint",
+            "Vague"
+          ],
+          "answer": "Bright",
+          "explanation": "Vivid means strong and bright (vivid colours) or very clear (a vivid memory). The other options are its opposites."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to OBSOLETE.",
+          "options": [
+            "Outdated",
+            "Modern",
+            "Useful",
+            "Rare"
+          ],
+          "answer": "Outdated",
+          "explanation": "Obsolete means no longer in use because something newer has replaced it, so its synonym is outdated."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to METICULOUS.",
+          "options": [
+            "Careful",
+            "Careless",
+            "Quick",
+            "Rough"
+          ],
+          "answer": "Careful",
+          "explanation": "Meticulous means paying great attention to detail, so its synonym is careful."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to HOSTILE.",
+          "options": [
+            "Unfriendly",
+            "Welcoming",
+            "Calm",
+            "Shy"
+          ],
+          "answer": "Unfriendly",
+          "explanation": "Hostile means showing dislike or opposition, so its synonym is unfriendly. Welcoming is the opposite."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to CONCISE.",
+          "options": [
+            "Brief",
+            "Lengthy",
+            "Clear",
+            "Vague"
+          ],
+          "answer": "Brief",
+          "explanation": "Concise means giving information in few words, so its synonym is brief. A concise answer is often clear, but 'clear' isn't what the word means."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word closest in meaning to RELUCTANT.",
+          "options": [
+            "Unwilling",
+            "Eager",
+            "Ready",
+            "Happy"
+          ],
+          "answer": "Unwilling",
+          "explanation": "Reluctant means hesitant and unwilling to do something, so its synonym is unwilling. Eager is the opposite."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word closest in meaning to AMELIORATE.",
+          "options": [
+            "Improve",
+            "Worsen",
+            "Ignore",
+            "Measure"
+          ],
+          "answer": "Improve",
+          "explanation": "Ameliorate means to make something bad better, so its synonym is improve. Worsen is the opposite."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word closest in meaning to GARRULOUS.",
+          "options": [
+            "Talkative",
+            "Silent",
+            "Grumpy",
+            "Generous"
+          ],
+          "answer": "Talkative",
+          "explanation": "Garrulous means excessively talkative, especially about unimportant things. Silent is the opposite."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word closest in meaning to PRAGMATIC.",
+          "options": [
+            "Practical",
+            "Idealistic",
+            "Dramatic",
+            "Proud"
+          ],
+          "answer": "Practical",
+          "explanation": "Pragmatic means dealing with things in a sensible, realistic way, so its synonym is practical. Idealistic is closer to the opposite."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word closest in meaning to ADMONISH.",
+          "options": [
+            "Warn",
+            "Praise",
+            "Admire",
+            "Forget"
+          ],
+          "answer": "Warn",
+          "explanation": "Admonish means to warn or scold someone firmly. Praise is the opposite, and 'admire' only sounds similar."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word closest in meaning to LUCID.",
+          "options": [
+            "Clear",
+            "Confusing",
+            "Lucky",
+            "Lazy"
+          ],
+          "answer": "Clear",
+          "explanation": "Lucid means expressed clearly and easy to understand, so its synonym is clear. 'Lucky' only sounds similar."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word closest in meaning to ZEAL.",
+          "options": [
+            "Enthusiasm",
+            "Laziness",
+            "Jealousy",
+            "Anger"
+          ],
+          "answer": "Enthusiasm",
+          "explanation": "Zeal means great energy and enthusiasm for a cause. 'Jealousy' only sounds similar (zealous vs jealous)."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word closest in meaning to TENACIOUS.",
+          "options": [
+            "Persistent",
+            "Weak",
+            "Tense",
+            "Timid"
+          ],
+          "answer": "Persistent",
+          "explanation": "Tenacious means holding on firmly and not giving up, so its synonym is persistent. 'Tense' only sounds similar."
+        },
+        {
+          "difficulty": 4,
+          "question": "Choose the word closest in meaning to PERFUNCTORY.",
+          "options": [
+            "Cursory",
+            "Thorough",
+            "Sincere",
+            "Punctual"
+          ],
+          "answer": "Cursory",
+          "explanation": "Perfunctory means done quickly with little care or interest, just like cursory. Thorough is the opposite."
+        },
+        {
+          "difficulty": 4,
+          "question": "Choose the word closest in meaning to SANGUINE.",
+          "options": [
+            "Optimistic",
+            "Gloomy",
+            "Bloody",
+            "Angry"
+          ],
+          "answer": "Optimistic",
+          "explanation": "Sanguine means hopeful and confident about the future. It comes from the Latin for blood, which makes 'bloody' a trap."
+        },
+        {
+          "difficulty": 4,
+          "question": "Choose the word closest in meaning to ESOTERIC.",
+          "options": [
+            "Obscure",
+            "Popular",
+            "Exotic",
+            "Simple"
+          ],
+          "answer": "Obscure",
+          "explanation": "Esoteric means understood by only a small group with special knowledge, so its synonym is obscure. 'Exotic' only sounds similar."
+        }
+      ],
+      "Antonyms": [
+        {
+          "difficulty": 1,
+          "question": "Choose the word opposite in meaning to ANCIENT.",
+          "options": [
+            "Old",
+            "Modern",
+            "Historic",
+            "Aged"
+          ],
+          "answer": "Modern",
+          "explanation": "Ancient means very old, so its opposite is modern. The other options are synonyms."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to FRUGAL.",
+          "options": [
+            "Thrifty",
+            "Extravagant",
+            "Careful",
+            "Poor"
+          ],
+          "answer": "Extravagant",
+          "explanation": "Frugal means careful and sparing with money, so its opposite is extravagant. Thrifty is a synonym."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word opposite in meaning to LOQUACIOUS.",
+          "options": [
+            "Talkative",
+            "Reticent",
+            "Eloquent",
+            "Lively"
+          ],
+          "answer": "Reticent",
+          "explanation": "Loquacious means very talkative, so its opposite is reticent (reserved, saying little)."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to TRANSPARENT.",
+          "options": [
+            "Opaque",
+            "Clear",
+            "Visible",
+            "Obvious"
+          ],
+          "answer": "Opaque",
+          "explanation": "Transparent means see-through, so its opposite is opaque (light cannot pass through). The other options are close in meaning to transparent."
+        },
+        {
+          "difficulty": 1,
+          "question": "Choose the word opposite in meaning to EXPAND.",
+          "options": [
+            "Contract",
+            "Enlarge",
+            "Grow",
+            "Spread"
+          ],
+          "answer": "Contract",
+          "explanation": "Expand means to become larger, so its opposite is contract (to become smaller). The other options are synonyms."
+        },
+        {
+          "difficulty": 1,
+          "question": "Choose the word opposite in meaning to GENEROUS.",
+          "options": [
+            "Stingy",
+            "Kind",
+            "Giving",
+            "Rich"
+          ],
+          "answer": "Stingy",
+          "explanation": "Generous means willing to give freely, so its opposite is stingy (unwilling to give or spend)."
+        },
+        {
+          "difficulty": 1,
+          "question": "Choose the word opposite in meaning to VICTORY.",
+          "options": [
+            "Defeat",
+            "Win",
+            "Battle",
+            "Success"
+          ],
+          "answer": "Defeat",
+          "explanation": "A victory is a win, so its opposite is defeat. Win and success are synonyms."
+        },
+        {
+          "difficulty": 1,
+          "question": "Choose the word opposite in meaning to ARRIVE.",
+          "options": [
+            "Depart",
+            "Reach",
+            "Come",
+            "Enter"
+          ],
+          "answer": "Depart",
+          "explanation": "Arrive means to reach a place, so its opposite is depart (to leave)."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to HUMBLE.",
+          "options": [
+            "Arrogant",
+            "Modest",
+            "Simple",
+            "Polite"
+          ],
+          "answer": "Arrogant",
+          "explanation": "Humble means modest about one's importance, so its opposite is arrogant. Modest is a synonym."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to TEMPORARY.",
+          "options": [
+            "Permanent",
+            "Brief",
+            "Passing",
+            "Short"
+          ],
+          "answer": "Permanent",
+          "explanation": "Temporary means lasting only for a short time, so its opposite is permanent."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to ADVERSITY.",
+          "options": [
+            "Prosperity",
+            "Misfortune",
+            "Hardship",
+            "Difficulty"
+          ],
+          "answer": "Prosperity",
+          "explanation": "Adversity means a time of difficulty or bad luck, so its opposite is prosperity. The other options are synonyms."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to CONCEAL.",
+          "options": [
+            "Reveal",
+            "Hide",
+            "Cover",
+            "Bury"
+          ],
+          "answer": "Reveal",
+          "explanation": "Conceal means to hide, so its opposite is reveal (to show or make known)."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to SCARCE.",
+          "options": [
+            "Plentiful",
+            "Rare",
+            "Limited",
+            "Few"
+          ],
+          "answer": "Plentiful",
+          "explanation": "Scarce means in short supply, so its opposite is plentiful. Rare and limited are synonyms."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to OPTIMISTIC.",
+          "options": [
+            "Pessimistic",
+            "Hopeful",
+            "Cheerful",
+            "Positive"
+          ],
+          "answer": "Pessimistic",
+          "explanation": "Optimistic means expecting good things, so its opposite is pessimistic (expecting the worst)."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to ARTIFICIAL.",
+          "options": [
+            "Natural",
+            "Fake",
+            "Synthetic",
+            "Man-made"
+          ],
+          "answer": "Natural",
+          "explanation": "Artificial means made by people rather than occurring in nature, so its opposite is natural."
+        },
+        {
+          "difficulty": 2,
+          "question": "Choose the word opposite in meaning to RIGID.",
+          "options": [
+            "Flexible",
+            "Stiff",
+            "Firm",
+            "Strict"
+          ],
+          "answer": "Flexible",
+          "explanation": "Rigid means stiff and unable to bend, so its opposite is flexible."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word opposite in meaning to BENIGN.",
+          "options": [
+            "Malignant",
+            "Gentle",
+            "Harmless",
+            "Kind"
+          ],
+          "answer": "Malignant",
+          "explanation": "Benign means gentle or harmless (a benign tumour is not cancerous), so its opposite is malignant."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word opposite in meaning to VERBOSE.",
+          "options": [
+            "Concise",
+            "Wordy",
+            "Lengthy",
+            "Talkative"
+          ],
+          "answer": "Concise",
+          "explanation": "Verbose means using more words than needed, so its opposite is concise. The other options are close to verbose."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word opposite in meaning to LETHARGIC.",
+          "options": [
+            "Energetic",
+            "Sluggish",
+            "Sleepy",
+            "Tired"
+          ],
+          "answer": "Energetic",
+          "explanation": "Lethargic means sluggish and lacking energy, so its opposite is energetic."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word opposite in meaning to OBSCURE (as in an obscure writer).",
+          "options": [
+            "Famous",
+            "Unknown",
+            "Hidden",
+            "Vague"
+          ],
+          "answer": "Famous",
+          "explanation": "An obscure writer is one few people know about, so the opposite is famous. Unknown is a synonym."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word opposite in meaning to AFFLUENT.",
+          "options": [
+            "Impoverished",
+            "Wealthy",
+            "Prosperous",
+            "Fortunate"
+          ],
+          "answer": "Impoverished",
+          "explanation": "Affluent means wealthy, so its opposite is impoverished (very poor)."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word opposite in meaning to ACQUIT.",
+          "options": [
+            "Convict",
+            "Release",
+            "Free",
+            "Pardon"
+          ],
+          "answer": "Convict",
+          "explanation": "To acquit is to declare someone not guilty, so its opposite is convict (to declare guilty)."
+        },
+        {
+          "difficulty": 3,
+          "question": "Choose the word opposite in meaning to EMINENT.",
+          "options": [
+            "Unknown",
+            "Famous",
+            "Distinguished",
+            "Important"
+          ],
+          "answer": "Unknown",
+          "explanation": "Eminent means famous and respected, so its opposite is unknown. The other options are synonyms."
+        },
+        {
+          "difficulty": 4,
+          "question": "Choose the word opposite in meaning to FRIVOLOUS.",
+          "options": [
+            "Serious",
+            "Silly",
+            "Playful",
+            "Trivial"
+          ],
+          "answer": "Serious",
+          "explanation": "Frivolous means not serious or sensible, so its opposite is serious. Silly and trivial are synonyms."
+        },
+        {
+          "difficulty": 4,
+          "question": "Choose the word opposite in meaning to DIFFIDENT.",
+          "options": [
+            "Confident",
+            "Shy",
+            "Timid",
+            "Modest"
+          ],
+          "answer": "Confident",
+          "explanation": "Diffident means shy and lacking self-confidence, so its opposite is confident."
+        },
+        {
+          "difficulty": 4,
+          "question": "Choose the word opposite in meaning to CANDOUR.",
+          "options": [
+            "Deceit",
+            "Honesty",
+            "Frankness",
+            "Sincerity"
+          ],
+          "answer": "Deceit",
+          "explanation": "Candour means openness and honesty, so its opposite is deceit. The other options are synonyms."
+        }
+      ]
+    },
+    "Sentence Correction": {
+      "Subject-verb agreement": [
+        {
+          "difficulty": 1,
+          "question": "Choose the grammatically correct sentence.",
+          "options": [
+            "Each of the students have a book.",
+            "Each of the students has a book.",
+            "Each of the student has a book.",
+            "Each of the students having a book."
+          ],
+          "answer": "Each of the students has a book.",
+          "explanation": "1. The subject is 'Each', which is singular.\n2. A singular subject takes a singular verb: has.\n3. 'of the students' stays plural because it means one of many students."
+        },
+        {
+          "difficulty": 2,
+          "question": "Neither the teacher nor the students ____ present.",
+          "options": [
+            "is",
+            "was",
+            "are",
+            "has been"
+          ],
+          "answer": "are",
+          "explanation": "With 'neither...nor', the verb agrees with the nearer subject. 'Students' is plural, so use 'are'."
+        },
+        {
+          "difficulty": 3,
+          "question": "The quality of the mangoes ____ not good this season.",
+          "options": [
+            "were",
+            "are",
+            "was",
+            "have been"
+          ],
+          "answer": "was",
+          "explanation": "1. The true subject is 'quality' (singular); 'of the mangoes' only describes it.\n2. A singular subject takes a singular verb: was."
+        },
+        {
+          "difficulty": 2,
+          "question": "Which sentence uses 'one of' correctly?",
+          "options": [
+            "One of my friends are coming.",
+            "One of my friend is coming.",
+            "One of my friends is coming.",
+            "One of my friend are coming."
+          ],
+          "answer": "One of my friends is coming.",
+          "explanation": "1. 'One of' is always followed by a plural noun: friends.\n2. The subject is 'One', which is singular, so the verb is 'is'."
+        },
+        {
+          "difficulty": 1,
+          "question": "The list of items ____ on the desk.",
+          "options": [
+            "is",
+            "are",
+            "were",
+            "have been"
+          ],
+          "answer": "is",
+          "explanation": "1. The true subject is 'list' (singular); 'of items' only describes it.\n2. A singular subject takes a singular verb: is."
+        },
+        {
+          "difficulty": 1,
+          "question": "My brother and I ____ going to the fair.",
+          "options": [
+            "are",
+            "is",
+            "am",
+            "was"
+          ],
+          "answer": "are",
+          "explanation": "Two subjects joined by 'and' make a plural subject, so the verb is plural: are."
+        },
+        {
+          "difficulty": 1,
+          "question": "Everyone in the class ____ to win the prize.",
+          "options": [
+            "wants",
+            "want",
+            "wanting",
+            "are wanting"
+          ],
+          "answer": "wants",
+          "explanation": "'Everyone' is singular even though it refers to many people, so it takes 'wants'."
+        },
+        {
+          "difficulty": 2,
+          "question": "Which sentence uses 'do' or 'does' correctly?",
+          "options": [
+            "She doesn't like coffee.",
+            "She don't like coffee.",
+            "She do not likes coffee.",
+            "She not like coffee."
+          ],
+          "answer": "She doesn't like coffee.",
+          "explanation": "With a singular subject like 'she', the helping verb is 'does', and the main verb stays in its base form: She doesn't like coffee."
+        },
+        {
+          "difficulty": 2,
+          "question": "Which sentence uses 'there is' or 'there are' correctly?",
+          "options": [
+            "There are many books on the shelf.",
+            "There is many books on the shelf.",
+            "There be many books on the shelf.",
+            "There has many books on the shelf."
+          ],
+          "answer": "There are many books on the shelf.",
+          "explanation": "In 'there is/are' sentences the verb agrees with the noun that follows. 'Books' is plural, so use 'are'."
+        },
+        {
+          "difficulty": 2,
+          "question": "Either the manager or his assistants ____ responsible for the error.",
+          "options": [
+            "are",
+            "is",
+            "was",
+            "has been"
+          ],
+          "answer": "are",
+          "explanation": "With 'either...or', the verb agrees with the nearer subject. 'Assistants' is plural, so use 'are'."
+        },
+        {
+          "difficulty": 2,
+          "question": "Mathematics ____ my favourite subject.",
+          "options": [
+            "is",
+            "are",
+            "were",
+            "have been"
+          ],
+          "answer": "is",
+          "explanation": "Subjects like mathematics, physics and economics end in -s but are singular, so use 'is'."
+        },
+        {
+          "difficulty": 2,
+          "question": "The news from the village ____ shocking.",
+          "options": [
+            "was",
+            "were",
+            "are",
+            "have been"
+          ],
+          "answer": "was",
+          "explanation": "'News' looks plural but is always singular, so it takes 'was'."
+        },
+        {
+          "difficulty": 2,
+          "question": "Ten kilometres ____ a long distance to walk.",
+          "options": [
+            "is",
+            "are",
+            "were",
+            "have been"
+          ],
+          "answer": "is",
+          "explanation": "A plural amount treated as one quantity (a distance, a sum of money, a period of time) takes a singular verb: is."
+        },
+        {
+          "difficulty": 2,
+          "question": "The scissors ____ on the table.",
+          "options": [
+            "are",
+            "is",
+            "was",
+            "has been"
+          ],
+          "answer": "are",
+          "explanation": "Words for things with two joined parts (scissors, trousers, glasses) are plural, so use 'are'."
+        },
+        {
+          "difficulty": 2,
+          "question": "A number of students ____ absent today.",
+          "options": [
+            "are",
+            "is",
+            "was",
+            "has been"
+          ],
+          "answer": "are",
+          "explanation": "'A number of' means 'many', so the subject is plural: are. Compare 'The number of students is...', which is singular."
+        },
+        {
+          "difficulty": 2,
+          "question": "The number of students in the school ____ increasing every year.",
+          "options": [
+            "is",
+            "are",
+            "were",
+            "have been"
+          ],
+          "answer": "is",
+          "explanation": "'The number' is a single figure, so it takes a singular verb: is. 'A number of' would be plural."
+        },
+        {
+          "difficulty": 3,
+          "question": "Neither of the answers ____ correct.",
+          "options": [
+            "is",
+            "are",
+            "were",
+            "have been"
+          ],
+          "answer": "is",
+          "explanation": "'Neither' means 'not either one', so it is singular and takes 'is'."
+        },
+        {
+          "difficulty": 3,
+          "question": "The teacher, along with her students, ____ visiting the museum.",
+          "options": [
+            "is",
+            "are",
+            "were",
+            "have been"
+          ],
+          "answer": "is",
+          "explanation": "1. The subject is 'the teacher' (singular).\n2. Phrases like 'along with', 'as well as' and 'together with' don't change the subject, so use 'is'."
+        },
+        {
+          "difficulty": 3,
+          "question": "Bread and butter ____ my usual breakfast.",
+          "options": [
+            "is",
+            "are",
+            "were",
+            "have been"
+          ],
+          "answer": "is",
+          "explanation": "'Bread and butter' names one dish, so it is treated as a single thing and takes 'is'."
+        },
+        {
+          "difficulty": 3,
+          "question": "Physics, as well as chemistry, ____ taught in this lab.",
+          "options": [
+            "is",
+            "are",
+            "were",
+            "have been"
+          ],
+          "answer": "is",
+          "explanation": "The subject is 'physics'; 'as well as chemistry' is extra information and doesn't make it plural. So: is taught."
+        },
+        {
+          "difficulty": 3,
+          "question": "Each boy and each girl ____ given a prize.",
+          "options": [
+            "was",
+            "were",
+            "are",
+            "have been"
+          ],
+          "answer": "was",
+          "explanation": "When 'each' comes before nouns joined by 'and', each one is considered separately, so the verb is singular: was."
+        },
+        {
+          "difficulty": 3,
+          "question": "One of the most beautiful places I have visited ____ Munnar.",
+          "options": [
+            "is",
+            "are",
+            "were",
+            "have been"
+          ],
+          "answer": "is",
+          "explanation": "The subject is 'One', which is singular. 'Of the most beautiful places' describes it, so use 'is'."
+        }
+      ],
+      "Common grammar errors": [
+        {
+          "difficulty": 1,
+          "question": "Find the part of the sentence with an error: (A) She has went / (B) to the market / (C) to buy vegetables. / (D) No error",
+          "options": [
+            "(A) She has went",
+            "(B) to the market",
+            "(C) to buy vegetables",
+            "(D) No error"
+          ],
+          "answer": "(A) She has went",
+          "explanation": "'Has' needs the past participle 'gone', not the past tense 'went'. Correct: She has gone to the market to buy vegetables."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the part of the sentence with an error: (A) Each of the players / (B) have been given / (C) a new jersey. / (D) No error",
+          "options": [
+            "(A) Each of the players",
+            "(B) have been given",
+            "(C) a new jersey",
+            "(D) No error"
+          ],
+          "answer": "(B) have been given",
+          "explanation": "'Each' is singular, so the verb must be 'has been given'. Correct: Each of the players has been given a new jersey."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the part of the sentence with an error: (A) If I would have known / (B) about the traffic, / (C) I would have left earlier. / (D) No error",
+          "options": [
+            "(A) If I would have known",
+            "(B) about the traffic",
+            "(C) I would have left earlier",
+            "(D) No error"
+          ],
+          "answer": "(A) If I would have known",
+          "explanation": "1. For an imagined past situation, the if-clause uses the past perfect: 'If I had known'.\n2. 'Would have' belongs only in the result clause, which (C) already uses correctly."
+        },
+        {
+          "difficulty": 1,
+          "question": "Find the part of the sentence with an error: (A) He did not knew / (B) the answer / (C) to the question. / (D) No error",
+          "options": [
+            "(A) He did not knew",
+            "(B) the answer",
+            "(C) to the question",
+            "(D) No error"
+          ],
+          "answer": "(A) He did not knew",
+          "explanation": "After 'did' or 'did not', use the base form of the verb: 'He did not know the answer'."
+        },
+        {
+          "difficulty": 1,
+          "question": "Find the part of the sentence with an error: (A) She is more taller / (B) than her / (C) elder sister. / (D) No error",
+          "options": [
+            "(A) She is more taller",
+            "(B) than her",
+            "(C) elder sister",
+            "(D) No error"
+          ],
+          "answer": "(A) She is more taller",
+          "explanation": "'Taller' is already a comparative, so 'more' is a double comparative. Correct: She is taller than her elder sister."
+        },
+        {
+          "difficulty": 1,
+          "question": "Find the part of the sentence with an error: (A) We went / (B) to the market / (C) yesterday evening. / (D) No error",
+          "options": [
+            "(A) We went",
+            "(B) to the market",
+            "(C) yesterday evening",
+            "(D) No error"
+          ],
+          "answer": "(D) No error",
+          "explanation": "The sentence is correct: 'went' is the simple past, which matches 'yesterday evening'."
+        },
+        {
+          "difficulty": 1,
+          "question": "Find the part of the sentence with an error: (A) I am living here / (B) since 2015 / (C) with my family. / (D) No error",
+          "options": [
+            "(A) I am living here",
+            "(B) since 2015",
+            "(C) with my family",
+            "(D) No error"
+          ],
+          "answer": "(A) I am living here",
+          "explanation": "An action that started in the past and continues now ('since 2015') needs the present perfect continuous: 'I have been living here since 2015'."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the part of the sentence with an error: (A) All the furnitures / (B) in this room / (C) were bought last year. / (D) No error",
+          "options": [
+            "(A) All the furnitures",
+            "(B) in this room",
+            "(C) were bought last year",
+            "(D) No error"
+          ],
+          "answer": "(A) All the furnitures",
+          "explanation": "'Furniture' is uncountable and has no plural form. Correct: All the furniture in this room was bought last year."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the part of the sentence with an error: (A) He gave me / (B) many advices / (C) about my career. / (D) No error",
+          "options": [
+            "(A) He gave me",
+            "(B) many advices",
+            "(C) about my career",
+            "(D) No error"
+          ],
+          "answer": "(B) many advices",
+          "explanation": "'Advice' is uncountable. Say 'a lot of advice' or 'many pieces of advice'."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the part of the sentence with an error: (A) Despite of the rain, / (B) the match / (C) continued as planned. / (D) No error",
+          "options": [
+            "(A) Despite of the rain",
+            "(B) the match",
+            "(C) continued as planned",
+            "(D) No error"
+          ],
+          "answer": "(A) Despite of the rain",
+          "explanation": "'Despite' is never followed by 'of'. Use 'Despite the rain' or 'In spite of the rain'."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the part of the sentence with an error: (A) The police has / (B) arrested the thief / (C) who stole the car. / (D) No error",
+          "options": [
+            "(A) The police has",
+            "(B) arrested the thief",
+            "(C) who stole the car",
+            "(D) No error"
+          ],
+          "answer": "(A) The police has",
+          "explanation": "'Police' is always plural, so it takes 'have': The police have arrested the thief."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the part of the sentence with an error: (A) I prefer tea / (B) than coffee / (C) in the morning. / (D) No error",
+          "options": [
+            "(A) I prefer tea",
+            "(B) than coffee",
+            "(C) in the morning",
+            "(D) No error"
+          ],
+          "answer": "(B) than coffee",
+          "explanation": "'Prefer' is followed by 'to', not 'than': I prefer tea to coffee."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the part of the sentence with an error: (A) She has been / (B) working here / (C) for 2018. / (D) No error",
+          "options": [
+            "(A) She has been",
+            "(B) working here",
+            "(C) for 2018",
+            "(D) No error"
+          ],
+          "answer": "(C) for 2018",
+          "explanation": "Use 'since' with a point in time (2018) and 'for' with a length of time (six years). Correct: since 2018."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the part of the sentence with an error: (A) Me and my friend / (B) went to the cinema / (C) last night. / (D) No error",
+          "options": [
+            "(A) Me and my friend",
+            "(B) went to the cinema",
+            "(C) last night",
+            "(D) No error"
+          ],
+          "answer": "(A) Me and my friend",
+          "explanation": "The subject needs the subject pronoun 'I', and politely comes second: My friend and I went to the cinema."
+        },
+        {
+          "difficulty": 2,
+          "question": "Find the part of the sentence with an error: (A) If he will come / (B) tomorrow, / (C) we will discuss it. / (D) No error",
+          "options": [
+            "(A) If he will come",
+            "(B) tomorrow",
+            "(C) we will discuss it",
+            "(D) No error"
+          ],
+          "answer": "(A) If he will come",
+          "explanation": "In a first conditional, the if-clause uses the simple present: 'If he comes tomorrow, we will discuss it'."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the part of the sentence with an error: (A) Hardly had I reached / (B) the station / (C) than the train left. / (D) No error",
+          "options": [
+            "(A) Hardly had I reached",
+            "(B) the station",
+            "(C) than the train left",
+            "(D) No error"
+          ],
+          "answer": "(C) than the train left",
+          "explanation": "'Hardly' pairs with 'when', not 'than': Hardly had I reached the station when the train left."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the part of the sentence with an error: (A) No sooner did he arrive / (B) when it / (C) started raining. / (D) No error",
+          "options": [
+            "(A) No sooner did he arrive",
+            "(B) when it",
+            "(C) started raining",
+            "(D) No error"
+          ],
+          "answer": "(B) when it",
+          "explanation": "'No sooner' pairs with 'than', not 'when': No sooner did he arrive than it started raining."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the part of the sentence with an error: (A) Scarcely had the meeting begun / (B) when the lights / (C) went out. / (D) No error",
+          "options": [
+            "(A) Scarcely had the meeting begun",
+            "(B) when the lights",
+            "(C) went out",
+            "(D) No error"
+          ],
+          "answer": "(D) No error",
+          "explanation": "The sentence is correct: 'scarcely' correctly pairs with 'when', and 'had begun' is the right past perfect."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the part of the sentence with an error: (A) He is one of those men / (B) who always / (C) helps others. / (D) No error",
+          "options": [
+            "(A) He is one of those men",
+            "(B) who always",
+            "(C) helps others",
+            "(D) No error"
+          ],
+          "answer": "(C) helps others",
+          "explanation": "1. 'Who' refers to 'those men' (plural), not to 'one'.\n2. So the verb must be plural: who always help others."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the part of the sentence with an error: (A) The reason why he failed / (B) is because / (C) he did not study. / (D) No error",
+          "options": [
+            "(A) The reason why he failed",
+            "(B) is because",
+            "(C) he did not study",
+            "(D) No error"
+          ],
+          "answer": "(B) is because",
+          "explanation": "'The reason... is because' repeats the idea of cause. Correct: The reason he failed is that he did not study."
+        },
+        {
+          "difficulty": 3,
+          "question": "Find the part of the sentence with an error: (A) Between you and I, / (B) this plan / (C) will not work. / (D) No error",
+          "options": [
+            "(A) Between you and I",
+            "(B) this plan",
+            "(C) will not work",
+            "(D) No error"
+          ],
+          "answer": "(A) Between you and I",
+          "explanation": "'Between' is a preposition, so it takes object pronouns: between you and me."
+        }
+      ]
+    },
+    "Fill in the Blanks": {
+      "Vocabulary in context": [
+        {
+          "difficulty": 1,
+          "question": "The scientist was ____ about the results, so she repeated the experiment to confirm them.",
+          "options": [
+            "skeptical",
+            "careless",
+            "indifferent",
+            "lazy"
+          ],
+          "answer": "skeptical",
+          "explanation": "Repeating an experiment to confirm results shows doubt, so 'skeptical' fits. The other words contradict her careful action."
+        },
+        {
+          "difficulty": 2,
+          "question": "Despite his ____ income, he donated generously to charity.",
+          "options": [
+            "modest",
+            "huge",
+            "lavish",
+            "excessive"
+          ],
+          "answer": "modest",
+          "explanation": "'Despite' signals a contrast with 'donated generously', so the income must be small: modest."
+        },
+        {
+          "difficulty": 3,
+          "question": "The committee's decision was ____; no member could find a single flaw in it.",
+          "options": [
+            "impeccable",
+            "dubious",
+            "arbitrary",
+            "tentative"
+          ],
+          "answer": "impeccable",
+          "explanation": "The second clause explains the first: no flaw at all means flawless, which is 'impeccable'."
+        },
+        {
+          "difficulty": 2,
+          "question": "The medicine had an immediate ____ on the patient's fever.",
+          "options": [
+            "effect",
+            "affect",
+            "afflict",
+            "infect"
+          ],
+          "answer": "effect",
+          "explanation": "After 'an', the blank needs a noun. 'Effect' is the noun (a result); 'affect' is usually a verb (to influence)."
+        },
+        {
+          "difficulty": 1,
+          "question": "She was so ____ that she fell asleep during the film.",
+          "options": [
+            "tired",
+            "excited",
+            "alert",
+            "awake"
+          ],
+          "answer": "tired",
+          "explanation": "Falling asleep shows she was tired. Excited, alert and awake would keep her from sleeping."
+        },
+        {
+          "difficulty": 1,
+          "question": "Please ____ the door when you leave; it is cold outside.",
+          "options": [
+            "close",
+            "open",
+            "paint",
+            "break"
+          ],
+          "answer": "close",
+          "explanation": "The cold outside is the reason, so you would close the door to keep the cold out."
+        },
+        {
+          "difficulty": 1,
+          "question": "The streets were ____ after the festival, with litter everywhere.",
+          "options": [
+            "messy",
+            "tidy",
+            "silent",
+            "new"
+          ],
+          "answer": "messy",
+          "explanation": "'Litter everywhere' describes streets that are messy. Tidy is the opposite."
+        },
+        {
+          "difficulty": 2,
+          "question": "The two brothers look so ____ that people often confuse them.",
+          "options": [
+            "alike",
+            "different",
+            "distant",
+            "angry"
+          ],
+          "answer": "alike",
+          "explanation": "People confuse the brothers because they look alike. 'Different' would make that impossible."
+        },
+        {
+          "difficulty": 2,
+          "question": "The new law was ____ by everyone because it was unfair.",
+          "options": [
+            "criticised",
+            "praised",
+            "welcomed",
+            "celebrated"
+          ],
+          "answer": "criticised",
+          "explanation": "'Because it was unfair' gives a reason for disapproval, so the law was criticised."
+        },
+        {
+          "difficulty": 2,
+          "question": "The museum houses a ____ collection of rare coins, one of the largest in the country.",
+          "options": [
+            "vast",
+            "tiny",
+            "missing",
+            "broken"
+          ],
+          "answer": "vast",
+          "explanation": "'One of the largest in the country' tells us the collection is vast (very large)."
+        },
+        {
+          "difficulty": 2,
+          "question": "Although the task seemed ____, she completed it in an hour.",
+          "options": [
+            "daunting",
+            "easy",
+            "simple",
+            "boring"
+          ],
+          "answer": "daunting",
+          "explanation": "'Although' signals a contrast: the task seemed hard (daunting) but she finished it quickly."
+        },
+        {
+          "difficulty": 2,
+          "question": "The speaker's arguments were so ____ that the whole audience was convinced.",
+          "options": [
+            "persuasive",
+            "weak",
+            "confusing",
+            "boring"
+          ],
+          "answer": "persuasive",
+          "explanation": "Arguments that convince people are persuasive."
+        },
+        {
+          "difficulty": 2,
+          "question": "The doctor advised him to ____ from sugar for a month.",
+          "options": [
+            "abstain",
+            "absorb",
+            "obtain",
+            "attain"
+          ],
+          "answer": "abstain",
+          "explanation": "To abstain from something is to choose not to have it. The other words look similar but mean taking in or getting."
+        },
+        {
+          "difficulty": 2,
+          "question": "Water is ____ for all living things; nothing can survive without it.",
+          "options": [
+            "essential",
+            "optional",
+            "harmful",
+            "useless"
+          ],
+          "answer": "essential",
+          "explanation": "'Nothing can survive without it' means water is essential (absolutely necessary)."
+        },
+        {
+          "difficulty": 2,
+          "question": "The teacher asked the students to ____ the passage in their own words.",
+          "options": [
+            "paraphrase",
+            "memorise",
+            "ignore",
+            "translate"
+          ],
+          "answer": "paraphrase",
+          "explanation": "To paraphrase is to express the same meaning in your own words, which matches 'in their own words'."
+        },
+        {
+          "difficulty": 2,
+          "question": "The ____ of the bridge took three years, but it was finally opened to the public.",
+          "options": [
+            "construction",
+            "destruction",
+            "instruction",
+            "obstruction"
+          ],
+          "answer": "construction",
+          "explanation": "A bridge that was finally opened had been built, so the word is construction (building)."
+        },
+        {
+          "difficulty": 2,
+          "question": "I could not ____ the noise any longer, so I shut the window.",
+          "options": [
+            "bear",
+            "bare",
+            "bore",
+            "bar"
+          ],
+          "answer": "bear",
+          "explanation": "'Bear' means to tolerate. 'Bare' (uncovered) sounds the same but has a different meaning."
+        },
+        {
+          "difficulty": 3,
+          "question": "The witness gave an ____ account of the accident, leaving out nothing.",
+          "options": [
+            "exhaustive",
+            "incomplete",
+            "vague",
+            "brief"
+          ],
+          "answer": "exhaustive",
+          "explanation": "'Leaving out nothing' describes an exhaustive (complete and thorough) account."
+        },
+        {
+          "difficulty": 3,
+          "question": "Her ____ remarks hurt everyone's feelings, though she claimed she was only joking.",
+          "options": [
+            "caustic",
+            "kind",
+            "gentle",
+            "sincere"
+          ],
+          "answer": "caustic",
+          "explanation": "Remarks that hurt feelings are harsh and biting: caustic."
+        },
+        {
+          "difficulty": 3,
+          "question": "The company had to ____ its expansion plans because it ran out of money.",
+          "options": [
+            "shelve",
+            "expand",
+            "launch",
+            "celebrate"
+          ],
+          "answer": "shelve",
+          "explanation": "To shelve a plan is to put it aside for later, which fits a lack of money."
+        },
+        {
+          "difficulty": 3,
+          "question": "The evidence was ____, so the judge could not reach a firm conclusion.",
+          "options": [
+            "inconclusive",
+            "decisive",
+            "convincing",
+            "clear"
+          ],
+          "answer": "inconclusive",
+          "explanation": "If no firm conclusion could be reached, the evidence was inconclusive (not settling the question)."
+        },
+        {
+          "difficulty": 3,
+          "question": "He is known for his ____; he never wastes a single rupee.",
+          "options": [
+            "thrift",
+            "extravagance",
+            "generosity",
+            "laziness"
+          ],
+          "answer": "thrift",
+          "explanation": "Never wasting money is thrift (careful use of money). Extravagance is the opposite."
+        },
+        {
+          "difficulty": 3,
+          "question": "The ____ of the mountain made it difficult for climbers to breathe.",
+          "options": [
+            "altitude",
+            "attitude",
+            "aptitude",
+            "latitude"
+          ],
+          "answer": "altitude",
+          "explanation": "Altitude is height above sea level; thin air at high altitude makes breathing hard. The others only look similar."
+        },
+        {
+          "difficulty": 3,
+          "question": "Unlike his ____ brother, who spends every rupee he earns, Raj saves most of his salary.",
+          "options": [
+            "spendthrift",
+            "frugal",
+            "miserly",
+            "careful"
+          ],
+          "answer": "spendthrift",
+          "explanation": "'Unlike' sets up a contrast with Raj, a saver, and the clause describes someone who spends everything: a spendthrift."
+        },
+        {
+          "difficulty": 3,
+          "question": "The rumour turned out to be ____; there was no truth in it at all.",
+          "options": [
+            "unfounded",
+            "accurate",
+            "confirmed",
+            "reliable"
+          ],
+          "answer": "unfounded",
+          "explanation": "'No truth in it at all' means the rumour was unfounded (not based on facts)."
+        },
+        {
+          "difficulty": 4,
+          "question": "The diplomat's ____ reply avoided offending either country.",
+          "options": [
+            "tactful",
+            "blunt",
+            "rude",
+            "hasty"
+          ],
+          "answer": "tactful",
+          "explanation": "A reply that offends no one is tactful (careful and sensitive). Blunt and rude would cause offence."
+        }
+      ]
+    },
+    "Idioms and Phrases": {
+      "Idiom meanings": [
+        {
+          "difficulty": 1,
+          "question": "What does the idiom 'a piece of cake' mean?",
+          "options": [
+            "Something very easy",
+            "A small reward",
+            "A sweet deal",
+            "Something shared equally"
+          ],
+          "answer": "Something very easy",
+          "explanation": "'A piece of cake' describes a task that is very easy to do, e.g. 'The test was a piece of cake.'"
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'to burn the midnight oil' mean?",
+          "options": [
+            "To waste resources",
+            "To work or study late into the night",
+            "To get angry quickly",
+            "To finish just in time"
+          ],
+          "answer": "To work or study late into the night",
+          "explanation": "Before electric lights, working late meant burning oil in a lamp, so the idiom means working or studying late at night."
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'to let the cat out of the bag' mean?",
+          "options": [
+            "To reveal a secret",
+            "To cause confusion",
+            "To free someone",
+            "To make a mistake"
+          ],
+          "answer": "To reveal a secret",
+          "explanation": "It means revealing something that was meant to be kept secret, usually by accident."
+        },
+        {
+          "difficulty": 3,
+          "question": "What does 'to bite the bullet' mean?",
+          "options": [
+            "To act without thinking",
+            "To face something unpleasant with courage",
+            "To speak harshly",
+            "To avoid a problem"
+          ],
+          "answer": "To face something unpleasant with courage",
+          "explanation": "It means accepting and facing a painful or difficult situation bravely, e.g. 'He bit the bullet and apologised.'"
+        },
+        {
+          "difficulty": 1,
+          "question": "What does the idiom 'once in a blue moon' mean?",
+          "options": [
+            "Very rarely",
+            "Every night",
+            "On a full moon",
+            "Never"
+          ],
+          "answer": "Very rarely",
+          "explanation": "'Once in a blue moon' means very rarely, e.g. 'He visits us once in a blue moon.'"
+        },
+        {
+          "difficulty": 1,
+          "question": "What does 'to break the ice' mean?",
+          "options": [
+            "To start a friendly conversation and ease tension",
+            "To break something cold",
+            "To end a friendship",
+            "To make a mistake"
+          ],
+          "answer": "To start a friendly conversation and ease tension",
+          "explanation": "Breaking the ice means doing or saying something to make people feel relaxed, especially when they first meet."
+        },
+        {
+          "difficulty": 1,
+          "question": "What does 'under the weather' mean?",
+          "options": [
+            "Feeling slightly ill",
+            "Out in the rain",
+            "Very happy",
+            "Worried about the future"
+          ],
+          "answer": "Feeling slightly ill",
+          "explanation": "If you feel under the weather, you are a little unwell, e.g. 'She stayed home because she felt under the weather.'"
+        },
+        {
+          "difficulty": 1,
+          "question": "What does 'a blessing in disguise' mean?",
+          "options": [
+            "Something good that at first seemed bad",
+            "A hidden enemy",
+            "A secret gift",
+            "A lucky charm"
+          ],
+          "answer": "Something good that at first seemed bad",
+          "explanation": "A blessing in disguise is a setback that later turns out well, e.g. 'Missing the bus was a blessing in disguise.'"
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'to spill the beans' mean?",
+          "options": [
+            "To reveal a secret",
+            "To waste food",
+            "To make a mess",
+            "To cook badly"
+          ],
+          "answer": "To reveal a secret",
+          "explanation": "Spilling the beans means telling something that was supposed to stay secret."
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'to hit the nail on the head' mean?",
+          "options": [
+            "To be exactly right",
+            "To hurt oneself",
+            "To work as a carpenter",
+            "To lose one's temper"
+          ],
+          "answer": "To be exactly right",
+          "explanation": "It means describing a problem or situation exactly right, e.g. 'You hit the nail on the head with that answer.'"
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'to cost an arm and a leg' mean?",
+          "options": [
+            "To be very expensive",
+            "To cause an injury",
+            "To take a long time",
+            "To be cheap"
+          ],
+          "answer": "To be very expensive",
+          "explanation": "Something that costs an arm and a leg is very expensive."
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'to pull someone's leg' mean?",
+          "options": [
+            "To tease or joke with someone",
+            "To hurt someone",
+            "To help someone walk",
+            "To trip someone"
+          ],
+          "answer": "To tease or joke with someone",
+          "explanation": "Pulling someone's leg means playfully trying to make them believe something untrue as a joke."
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'to beat around the bush' mean?",
+          "options": [
+            "To avoid talking about the main point",
+            "To search a garden",
+            "To work very hard",
+            "To win easily"
+          ],
+          "answer": "To avoid talking about the main point",
+          "explanation": "Beating around the bush means talking indirectly instead of saying what you really mean."
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'the ball is in your court' mean?",
+          "options": [
+            "It is your turn to decide or act",
+            "You have won the game",
+            "You must play sports",
+            "You are in trouble"
+          ],
+          "answer": "It is your turn to decide or act",
+          "explanation": "From tennis: when the ball is in your court, the next move is yours."
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'to turn a blind eye' mean?",
+          "options": [
+            "To deliberately ignore something",
+            "To lose one's sight",
+            "To look closely",
+            "To stare angrily"
+          ],
+          "answer": "To deliberately ignore something",
+          "explanation": "Turning a blind eye means pretending not to notice something, usually something wrong."
+        },
+        {
+          "difficulty": 2,
+          "question": "What does 'to cry over spilt milk' mean?",
+          "options": [
+            "To be upset about something that can't be changed",
+            "To waste food",
+            "To cry easily",
+            "To clean up a mess"
+          ],
+          "answer": "To be upset about something that can't be changed",
+          "explanation": "It means worrying about a past mistake that cannot be undone, e.g. 'It's no use crying over spilt milk.'"
+        },
+        {
+          "difficulty": 3,
+          "question": "What does 'to add fuel to the fire' mean?",
+          "options": [
+            "To make a bad situation worse",
+            "To cook faster",
+            "To calm someone down",
+            "To start something new"
+          ],
+          "answer": "To make a bad situation worse",
+          "explanation": "Adding fuel to the fire means doing or saying something that makes an argument or problem worse."
+        },
+        {
+          "difficulty": 3,
+          "question": "What does 'a wild goose chase' mean?",
+          "options": [
+            "A hopeless search for something",
+            "A fun outdoor game",
+            "A quick victory",
+            "A hunting trip"
+          ],
+          "answer": "A hopeless search for something",
+          "explanation": "A wild goose chase is a search or effort that is pointless because the thing cannot be found."
+        },
+        {
+          "difficulty": 3,
+          "question": "What does 'to bury the hatchet' mean?",
+          "options": [
+            "To make peace after a quarrel",
+            "To hide a weapon",
+            "To start a fight",
+            "To finish work"
+          ],
+          "answer": "To make peace after a quarrel",
+          "explanation": "Burying the hatchet means ending a disagreement and becoming friendly again."
+        },
+        {
+          "difficulty": 3,
+          "question": "What does 'to be on cloud nine' mean?",
+          "options": [
+            "To be extremely happy",
+            "To be confused",
+            "To be daydreaming",
+            "To be flying"
+          ],
+          "answer": "To be extremely happy",
+          "explanation": "Someone on cloud nine is extremely happy, e.g. 'She was on cloud nine after the results.'"
+        },
+        {
+          "difficulty": 3,
+          "question": "What does 'to get cold feet' mean?",
+          "options": [
+            "To become nervous about something you planned to do",
+            "To catch a cold",
+            "To walk barefoot",
+            "To lose interest in sport"
+          ],
+          "answer": "To become nervous about something you planned to do",
+          "explanation": "Getting cold feet means losing your nerve just before doing something you had decided to do."
+        },
+        {
+          "difficulty": 3,
+          "question": "What does 'to steal someone's thunder' mean?",
+          "options": [
+            "To take attention or credit meant for someone else",
+            "To rob someone",
+            "To shout loudly",
+            "To spoil the weather"
+          ],
+          "answer": "To take attention or credit meant for someone else",
+          "explanation": "If you steal someone's thunder, you do or say what they planned first and take away their moment."
+        },
+        {
+          "difficulty": 3,
+          "question": "What does 'a storm in a teacup' mean?",
+          "options": [
+            "A big fuss about something unimportant",
+            "A dangerous situation",
+            "A sudden change in weather",
+            "A spilled drink"
+          ],
+          "answer": "A big fuss about something unimportant",
+          "explanation": "A storm in a teacup is a lot of anger or worry about a very small matter."
+        },
+        {
+          "difficulty": 4,
+          "question": "What does 'to throw in the towel' mean?",
+          "options": [
+            "To give up",
+            "To start cleaning",
+            "To win a fight",
+            "To take a break"
+          ],
+          "answer": "To give up",
+          "explanation": "From boxing, where a towel thrown into the ring means a fighter surrenders. It means to admit defeat."
+        },
+        {
+          "difficulty": 4,
+          "question": "What does 'to read between the lines' mean?",
+          "options": [
+            "To understand a hidden meaning",
+            "To read very slowly",
+            "To skip some lines",
+            "To read aloud"
+          ],
+          "answer": "To understand a hidden meaning",
+          "explanation": "Reading between the lines means understanding what someone means but hasn't said directly."
+        },
+        {
+          "difficulty": 4,
+          "question": "What does 'to be at sixes and sevens' mean?",
+          "options": [
+            "To be in a state of confusion",
+            "To be good at maths",
+            "To be very late",
+            "To be lucky"
+          ],
+          "answer": "To be in a state of confusion",
+          "explanation": "If things are at sixes and sevens, they are disorganised and confused."
+        }
+      ]
+    },
+    "One-Word Substitution": {
+      "One-word substitutes": [
+        {
+          "difficulty": 1,
+          "question": "One who can speak two languages fluently:",
+          "options": [
+            "Bilingual",
+            "Linguist",
+            "Polyglot",
+            "Bipartisan"
+          ],
+          "answer": "Bilingual",
+          "explanation": "Bi = two, lingual = language. A polyglot speaks many languages; a linguist studies languages."
+        },
+        {
+          "difficulty": 2,
+          "question": "A person who does not believe in the existence of God:",
+          "options": [
+            "Atheist",
+            "Agnostic",
+            "Theist",
+            "Heretic"
+          ],
+          "answer": "Atheist",
+          "explanation": "An atheist denies that God exists. An agnostic believes it cannot be known either way, so it is the trap."
+        },
+        {
+          "difficulty": 2,
+          "question": "A speech delivered without any preparation:",
+          "options": [
+            "Extempore",
+            "Eulogy",
+            "Monologue",
+            "Soliloquy"
+          ],
+          "answer": "Extempore",
+          "explanation": "Extempore means spoken without preparation. A eulogy praises someone who has died; a soliloquy is spoken alone on stage."
+        },
+        {
+          "difficulty": 3,
+          "question": "A cure for all diseases or problems:",
+          "options": [
+            "Panacea",
+            "Placebo",
+            "Antidote",
+            "Remedy"
+          ],
+          "answer": "Panacea",
+          "explanation": "A panacea is a supposed cure for everything. An antidote counters one specific poison; a remedy treats one problem."
+        },
+        {
+          "difficulty": 1,
+          "question": "A person who writes books:",
+          "options": [
+            "Author",
+            "Reader",
+            "Editor",
+            "Publisher"
+          ],
+          "answer": "Author",
+          "explanation": "An author writes books. An editor corrects them and a publisher produces and sells them."
+        },
+        {
+          "difficulty": 1,
+          "question": "A place where birds are kept:",
+          "options": [
+            "Aviary",
+            "Apiary",
+            "Aquarium",
+            "Kennel"
+          ],
+          "answer": "Aviary",
+          "explanation": "An aviary is a large enclosure for birds (avis = bird). An apiary is for bees, so it's the trap."
+        },
+        {
+          "difficulty": 1,
+          "question": "A doctor who treats teeth:",
+          "options": [
+            "Dentist",
+            "Optician",
+            "Surgeon",
+            "Pharmacist"
+          ],
+          "answer": "Dentist",
+          "explanation": "A dentist treats teeth. An optician deals with eyes and glasses."
+        },
+        {
+          "difficulty": 1,
+          "question": "A group of ships:",
+          "options": [
+            "Fleet",
+            "Herd",
+            "Flock",
+            "Swarm"
+          ],
+          "answer": "Fleet",
+          "explanation": "A fleet is a group of ships. A herd is cattle, a flock is birds or sheep, and a swarm is insects."
+        },
+        {
+          "difficulty": 2,
+          "question": "The life story of a person written by someone else:",
+          "options": [
+            "Biography",
+            "Autobiography",
+            "Memoir",
+            "Diary"
+          ],
+          "answer": "Biography",
+          "explanation": "A biography is written by someone else. An autobiography is written by the person themselves, so it's the trap."
+        },
+        {
+          "difficulty": 2,
+          "question": "A person who always looks on the bright side:",
+          "options": [
+            "Optimist",
+            "Pessimist",
+            "Realist",
+            "Fatalist"
+          ],
+          "answer": "Optimist",
+          "explanation": "An optimist expects good things. A pessimist expects the worst."
+        },
+        {
+          "difficulty": 2,
+          "question": "A word that means the opposite of another word:",
+          "options": [
+            "Antonym",
+            "Synonym",
+            "Homonym",
+            "Acronym"
+          ],
+          "answer": "Antonym",
+          "explanation": "An antonym has the opposite meaning (hot/cold). A synonym has the same meaning."
+        },
+        {
+          "difficulty": 2,
+          "question": "An extreme fear of heights:",
+          "options": [
+            "Acrophobia",
+            "Claustrophobia",
+            "Hydrophobia",
+            "Agoraphobia"
+          ],
+          "answer": "Acrophobia",
+          "explanation": "Acrophobia is fear of heights (acro = high). Claustrophobia is fear of closed spaces; hydrophobia, of water."
+        },
+        {
+          "difficulty": 2,
+          "question": "An animal that eats only plants:",
+          "options": [
+            "Herbivore",
+            "Carnivore",
+            "Omnivore",
+            "Insectivore"
+          ],
+          "answer": "Herbivore",
+          "explanation": "A herbivore eats only plants. A carnivore eats meat and an omnivore eats both."
+        },
+        {
+          "difficulty": 2,
+          "question": "Something that cannot be seen:",
+          "options": [
+            "Invisible",
+            "Illegible",
+            "Inaudible",
+            "Intangible"
+          ],
+          "answer": "Invisible",
+          "explanation": "Invisible means cannot be seen. Inaudible means cannot be heard; illegible means cannot be read."
+        },
+        {
+          "difficulty": 2,
+          "question": "Handwriting that cannot be read:",
+          "options": [
+            "Illegible",
+            "Invisible",
+            "Ineligible",
+            "Illiterate"
+          ],
+          "answer": "Illegible",
+          "explanation": "Illegible writing cannot be read. 'Ineligible' (not allowed) only looks similar, and 'illiterate' describes a person who cannot read."
+        },
+        {
+          "difficulty": 3,
+          "question": "A person who is unable to pay their debts:",
+          "options": [
+            "Insolvent",
+            "Insolent",
+            "Infamous",
+            "Indolent"
+          ],
+          "answer": "Insolvent",
+          "explanation": "Insolvent means unable to pay debts. Insolent means rude, and indolent means lazy: both are sound-alike traps."
+        },
+        {
+          "difficulty": 3,
+          "question": "Government by a small group of powerful people:",
+          "options": [
+            "Oligarchy",
+            "Monarchy",
+            "Democracy",
+            "Anarchy"
+          ],
+          "answer": "Oligarchy",
+          "explanation": "An oligarchy is rule by a few (oligo = few). A monarchy is rule by one king or queen; anarchy means no government."
+        },
+        {
+          "difficulty": 3,
+          "question": "A person who hates mankind:",
+          "options": [
+            "Misanthrope",
+            "Philanthropist",
+            "Misogynist",
+            "Optimist"
+          ],
+          "answer": "Misanthrope",
+          "explanation": "A misanthrope dislikes people in general. A philanthropist is the opposite: someone who helps others."
+        },
+        {
+          "difficulty": 3,
+          "question": "The killing of a king:",
+          "options": [
+            "Regicide",
+            "Homicide",
+            "Genocide",
+            "Patricide"
+          ],
+          "answer": "Regicide",
+          "explanation": "Regicide is the killing of a king (rex = king). Patricide is killing one's father; genocide is killing a whole group."
+        },
+        {
+          "difficulty": 3,
+          "question": "A drug or drink that makes you sleepy:",
+          "options": [
+            "Soporific",
+            "Stimulant",
+            "Antiseptic",
+            "Analgesic"
+          ],
+          "answer": "Soporific",
+          "explanation": "A soporific causes sleep. A stimulant does the opposite, and an analgesic relieves pain."
+        },
+        {
+          "difficulty": 3,
+          "question": "A person who walks in their sleep:",
+          "options": [
+            "Somnambulist",
+            "Insomniac",
+            "Hypnotist",
+            "Ventriloquist"
+          ],
+          "answer": "Somnambulist",
+          "explanation": "A somnambulist walks in their sleep (somnus = sleep, ambulare = walk). An insomniac can't sleep."
+        },
+        {
+          "difficulty": 3,
+          "question": "A person or habit that cannot be corrected or reformed:",
+          "options": [
+            "Incorrigible",
+            "Inevitable",
+            "Indelible",
+            "Infallible"
+          ],
+          "answer": "Incorrigible",
+          "explanation": "Incorrigible means impossible to correct. Indelible means impossible to erase; inevitable means certain to happen."
+        },
+        {
+          "difficulty": 3,
+          "question": "Incapable of making a mistake:",
+          "options": [
+            "Infallible",
+            "Invincible",
+            "Incorrigible",
+            "Invulnerable"
+          ],
+          "answer": "Infallible",
+          "explanation": "Infallible means never wrong. Invincible means impossible to defeat."
+        },
+        {
+          "difficulty": 4,
+          "question": "A place where dead bodies are kept until they are identified or buried:",
+          "options": [
+            "Mortuary",
+            "Cemetery",
+            "Monastery",
+            "Sanctuary"
+          ],
+          "answer": "Mortuary",
+          "explanation": "A mortuary holds bodies before burial. A cemetery is where they are buried."
+        },
+        {
+          "difficulty": 4,
+          "question": "Speaking one's thoughts aloud when alone, especially on stage:",
+          "options": [
+            "Soliloquy",
+            "Dialogue",
+            "Epilogue",
+            "Prologue"
+          ],
+          "answer": "Soliloquy",
+          "explanation": "A soliloquy is a speech made alone on stage to reveal thoughts. A dialogue needs two or more speakers."
+        },
+        {
+          "difficulty": 4,
+          "question": "The study of ancient handwriting:",
+          "options": [
+            "Palaeography",
+            "Archaeology",
+            "Calligraphy",
+            "Cartography"
+          ],
+          "answer": "Palaeography",
+          "explanation": "Palaeography is the study of old handwriting. Calligraphy is the art of beautiful writing; cartography is map-making."
+        }
+      ]
+    },
+    "Para Jumbles": {
+      "Sentence ordering": [
+        {
+          "difficulty": 2,
+          "question": "Arrange the sentences in order. P: Then add the tea leaves and let it boil for a minute. Q: First, boil a cup of water. R: Finally, strain it into a cup. S: Add milk and sugar to taste.",
+          "options": [
+            "QPSR",
+            "QSPR",
+            "PQSR",
+            "QPRS"
+          ],
+          "answer": "QPSR",
+          "explanation": "1. 'First' marks Q as the opening sentence, and 'Finally' marks R as the last.\n2. 'Then' links P directly after Q.\n3. S (milk and sugar) goes before straining, giving Q-P-S-R."
+        },
+        {
+          "difficulty": 2,
+          "question": "Arrange the sentences in order. P: She opened it and found a letter from her grandmother. Q: Meera came home and saw a parcel on the table. R: Tears filled her eyes as she read it. S: It had her name written on it.",
+          "options": [
+            "QSPR",
+            "QPSR",
+            "SQPR",
+            "QSRP"
+          ],
+          "answer": "QSPR",
+          "explanation": "1. Q introduces Meera and the parcel, so it comes first.\n2. S ('It had her name') describes the parcel.\n3. P opens the parcel, and R reacts to the letter, giving Q-S-P-R."
+        },
+        {
+          "difficulty": 3,
+          "question": "Arrange the sentences in order. P: As a result, many small shops lost customers. Q: Some of them have now started selling online too. R: Online shopping grew rapidly over the last decade. S: Buyers liked the convenience and the lower prices.",
+          "options": [
+            "RSPQ",
+            "RPSQ",
+            "SRPQ",
+            "RSQP"
+          ],
+          "answer": "RSPQ",
+          "explanation": "1. R introduces the topic.\n2. S explains why online shopping grew.\n3. 'As a result' in P follows that cause.\n4. 'Some of them' in Q refers to the small shops in P, giving R-S-P-Q."
+        },
+        {
+          "difficulty": 1,
+          "question": "Arrange the sentences in order. P: She then brushed her teeth. Q: Riya woke up at six o'clock. R: Finally, she left for school. S: After brushing, she ate her breakfast.",
+          "options": [
+            "QPSR",
+            "QSPR",
+            "PQSR",
+            "QPRS"
+          ],
+          "answer": "QPSR",
+          "explanation": "1. Q introduces Riya, so it comes first; 'Finally' marks R as the last.\n2. 'Then' links P after Q.\n3. 'After brushing' in S follows P, giving Q-P-S-R."
+        },
+        {
+          "difficulty": 2,
+          "question": "Arrange the sentences in order. P: The seeds soon sprouted into small plants. Q: Arun bought a packet of seeds. R: Within months, his garden was full of flowers. S: He sowed them in his backyard and watered them daily.",
+          "options": [
+            "QSPR",
+            "QPSR",
+            "SQPR",
+            "QSRP"
+          ],
+          "answer": "QSPR",
+          "explanation": "1. Q introduces Arun and the seeds.\n2. S ('He sowed them') must follow Q.\n3. P (sprouting) comes after sowing, and R (a full garden) is the result, giving Q-S-P-R."
+        },
+        {
+          "difficulty": 2,
+          "question": "Arrange the sentences in order. P: She planned to take the 9 o'clock bus. Q: However, she missed it. R: Neha left home early for her interview. S: So she took an auto-rickshaw and reached just in time.",
+          "options": [
+            "RPQS",
+            "RQPS",
+            "PRQS",
+            "RPSQ"
+          ],
+          "answer": "RPQS",
+          "explanation": "1. R introduces Neha, so it comes first.\n2. P gives her plan, and 'However, she missed it' in Q must follow P.\n3. 'So' in S is the result of missing the bus, giving R-P-Q-S."
+        },
+        {
+          "difficulty": 2,
+          "question": "Arrange the sentences in order. P: It was first used for sending messages between universities. Q: The internet began as a small research project. R: Today, billions of people use it every day. S: Over time, businesses and homes joined the network.",
+          "options": [
+            "QPSR",
+            "QSPR",
+            "PQSR",
+            "QPRS"
+          ],
+          "answer": "QPSR",
+          "explanation": "1. Q introduces the internet, which 'It' in P refers to.\n2. 'Over time' in S moves the story forward.\n3. 'Today' in R brings it to the present, giving Q-P-S-R."
+        },
+        {
+          "difficulty": 2,
+          "question": "Arrange the sentences in order. P: He trained every morning for six months. Q: Vijay wanted to run a marathon. R: On race day, he finished in under four hours. S: He also changed his diet to stay fit.",
+          "options": [
+            "QPSR",
+            "QSRP",
+            "PQSR",
+            "QRPS"
+          ],
+          "answer": "QPSR",
+          "explanation": "1. Q introduces Vijay's goal.\n2. P describes his training, and 'also' in S adds to it.\n3. R, the race itself, comes last, giving Q-P-S-R."
+        },
+        {
+          "difficulty": 3,
+          "question": "Arrange the sentences in order. P: Soon, photos of the murals spread on social media. Q: Now, the town's small shops are busy all year. R: A local artist painted colourful murals on old walls. S: This made the town famous among tourists.",
+          "options": [
+            "RPSQ",
+            "RSPQ",
+            "PRSQ",
+            "RPQS"
+          ],
+          "answer": "RPSQ",
+          "explanation": "1. R introduces the murals.\n2. P ('photos of the murals') follows, and 'This' in S refers to the photos spreading.\n3. 'Now' in Q gives the final result, giving R-P-S-Q."
+        },
+        {
+          "difficulty": 3,
+          "question": "Arrange the sentences in order. P: Next, list possible solutions and choose the best one. Q: Finally, test the solution and adjust it if needed. R: Solving a problem well needs a simple method. S: The first step is to identify the problem clearly.",
+          "options": [
+            "RSPQ",
+            "RPSQ",
+            "SRPQ",
+            "RSQP"
+          ],
+          "answer": "RSPQ",
+          "explanation": "1. R is the general opening statement.\n2. The order words then decide the rest: 'The first step' (S), 'Next' (P), 'Finally' (Q), giving R-S-P-Q."
+        },
+        {
+          "difficulty": 3,
+          "question": "Arrange the sentences in order. P: The farmers protested because the price was too low. Q: The government announced a new price for wheat. R: After talks, the price was raised by ten per cent. S: Their protest lasted for two weeks.",
+          "options": [
+            "QPSR",
+            "QSPR",
+            "PQSR",
+            "QPRS"
+          ],
+          "answer": "QPSR",
+          "explanation": "1. Q sets up the event (the new price).\n2. P is the farmers' reaction, and 'Their protest' in S refers back to it.\n3. R resolves the protest, giving Q-P-S-R."
+        },
+        {
+          "difficulty": 3,
+          "question": "Arrange the sentences in order. P: Plastic takes hundreds of years to break down. Q: As a result, it piles up in landfills and oceans. R: Many cities have now banned single-use plastic bags. S: This harms fish, birds and other wildlife.",
+          "options": [
+            "PQSR",
+            "PSQR",
+            "QPSR",
+            "PQRS"
+          ],
+          "answer": "PQSR",
+          "explanation": "1. P states the basic fact.\n2. 'As a result' in Q follows it, and 'This' in S refers to the plastic piling up.\n3. R is the response to the problem, giving P-Q-S-R."
+        },
+        {
+          "difficulty": 3,
+          "question": "Arrange the sentences in order. P: When it is hungry, it cries loudly. Q: A baby cannot speak. R: Its parents soon learn what each cry means. S: So it uses crying to communicate.",
+          "options": [
+            "QSPR",
+            "QPSR",
+            "SQPR",
+            "QSRP"
+          ],
+          "answer": "QSPR",
+          "explanation": "1. Q introduces the baby.\n2. 'So' in S follows from Q, and P gives an example of that crying.\n3. R ends with the parents understanding, giving Q-S-P-R."
+        },
+        {
+          "difficulty": 4,
+          "question": "Arrange the sentences in order. P: He tried to pull it down with a rope. Q: Then his sister brought a longer pole and freed it. R: The boy's kite got stuck high in a tree. S: But the rope was too short.",
+          "options": [
+            "RPSQ",
+            "RSPQ",
+            "PRSQ",
+            "RPQS"
+          ],
+          "answer": "RPSQ",
+          "explanation": "1. R introduces the kite, which 'it' in P refers to.\n2. 'But the rope' in S must follow P, where the rope appears.\n3. 'Then' in Q gives the solution, giving R-P-S-Q."
+        },
+        {
+          "difficulty": 4,
+          "question": "Arrange the sentences in order. P: It was the first time anyone had reached the summit. Q: In 1953, Tenzing Norgay and Edmund Hillary climbed Mount Everest. R: Since then, thousands of climbers have followed their route. S: The news quickly spread around the world.",
+          "options": [
+            "QPSR",
+            "QSPR",
+            "PQSR",
+            "QRPS"
+          ],
+          "answer": "QPSR",
+          "explanation": "1. Q introduces the climb, so it comes first.\n2. P explains why it mattered, and S is the reaction to the news.\n3. 'Since then' in R moves to the present, giving Q-P-S-R."
+        }
+      ]
+    },
+    "Reading Comprehension": {
+      "Inference from a passage": [
+        {
+          "difficulty": 2,
+          "question": "Passage: 'About a third of the food we eat depends on pollination, much of it done by bees. In recent years, bee populations have fallen sharply in many regions.' Which statement is best supported?",
+          "options": [
+            "A continued fall in bee numbers could threaten food supply",
+            "Bees make crops grow faster",
+            "All of our food depends on bees",
+            "Bee populations are rising everywhere"
+          ],
+          "answer": "A continued fall in bee numbers could threaten food supply",
+          "explanation": "1. The passage links a large share of food to pollination by bees and says bees are declining.\n2. Together these support a risk to food supply.\n3. 'All food' overstates 'a third', and the passage says populations are falling, not rising."
+        },
+        {
+          "difficulty": 3,
+          "question": "Passage: 'Although the new library opened with longer hours, visitor numbers stayed flat. A survey found that most residents did not know the library had moved.' What most likely explains the flat visitor numbers?",
+          "options": [
+            "Residents were unaware of the new location",
+            "Longer hours discourage visitors",
+            "Residents dislike reading",
+            "The survey was inaccurate"
+          ],
+          "answer": "Residents were unaware of the new location",
+          "explanation": "The survey directly shows most residents didn't know about the move, which explains why more hours didn't bring more visitors. Nothing in the passage supports the other options."
+        },
+        {
+          "difficulty": 3,
+          "question": "Passage: 'Students who slept at least eight hours before the exam scored higher on average than those who slept less.' Which conclusion is NOT justified by this information alone?",
+          "options": [
+            "Sleeping eight hours causes higher scores",
+            "Sleep and scores were linked in this group",
+            "Some students slept fewer than eight hours",
+            "Average scores differed between the two groups"
+          ],
+          "answer": "Sleeping eight hours causes higher scores",
+          "explanation": "1. The data shows a link, not a cause: well-prepared students might both sleep more and score higher.\n2. The other three statements restate what was observed."
+        },
+        {
+          "difficulty": 1,
+          "question": "Passage: 'Ravi waters his plants every evening. Since he went on holiday last week, no one has watered them, and the leaves are turning brown.' What is the most likely reason the leaves are turning brown?",
+          "options": [
+            "The plants are not getting water",
+            "The plants are getting too much water",
+            "Ravi dislikes his plants",
+            "The plants are a new variety"
+          ],
+          "answer": "The plants are not getting water",
+          "explanation": "The passage links the browning to the plants not being watered since Ravi left. Nothing supports the other options."
+        },
+        {
+          "difficulty": 2,
+          "question": "Passage: 'Online classes save travel time, but many students say they find it harder to concentrate at home because of noise and distractions.' Which statement is best supported?",
+          "options": [
+            "Some students find it harder to focus in online classes",
+            "Online classes waste time",
+            "All students prefer online classes",
+            "Homes are always quiet"
+          ],
+          "answer": "Some students find it harder to focus in online classes",
+          "explanation": "1. The passage says many students find concentrating harder at home.\n2. It says online classes save time, so 'waste time' is wrong, and nothing suggests all students prefer them."
+        },
+        {
+          "difficulty": 2,
+          "question": "Passage: 'Although the hotel had excellent reviews for its food, most guests complained that the rooms were noisy because of the nearby highway.' What was the main problem for guests?",
+          "options": [
+            "Noise in the rooms",
+            "Poor food",
+            "High prices",
+            "Rude staff"
+          ],
+          "answer": "Noise in the rooms",
+          "explanation": "Most guests complained about noisy rooms. The food got excellent reviews, and prices and staff are never mentioned."
+        },
+        {
+          "difficulty": 2,
+          "question": "Passage: 'Mangroves grow along coasts, and their dense roots slow down waves. Villages behind thick mangrove forests suffered less damage during the last cyclone.' What is the main idea?",
+          "options": [
+            "Mangroves can protect coastal villages from storm damage",
+            "Cyclones only hit villages without trees",
+            "Mangroves grow fastest during cyclones",
+            "Coastal villages should move inland"
+          ],
+          "answer": "Mangroves can protect coastal villages from storm damage",
+          "explanation": "Both sentences point to mangroves reducing wave damage. The other options claim things the passage never says."
+        },
+        {
+          "difficulty": 2,
+          "question": "Passage: 'The city added 50 new electric buses last year. Since then, complaints about air quality near bus depots have dropped by half.' Which conclusion is best supported?",
+          "options": [
+            "The new buses may have helped improve air quality near the depots",
+            "Electric buses are cheaper to buy",
+            "All pollution in the city has ended",
+            "Bus depots will be closed"
+          ],
+          "answer": "The new buses may have helped improve air quality near the depots",
+          "explanation": "1. The timing suggests a link between the buses and fewer complaints.\n2. 'May have helped' is careful enough; 'all pollution has ended' goes far beyond the facts."
+        },
+        {
+          "difficulty": 3,
+          "question": "Passage: 'Sales of umbrellas rose sharply in June. The weather department reported that June had twice the usual rainfall.' Which assumption links the two facts?",
+          "options": [
+            "The extra rain led more people to buy umbrellas",
+            "Umbrella prices fell in June",
+            "People buy umbrellas only in June",
+            "The weather department sells umbrellas"
+          ],
+          "answer": "The extra rain led more people to buy umbrellas",
+          "explanation": "To connect the rain to the sales, you must assume the rain caused people to buy umbrellas. The other options don't link the two facts."
+        },
+        {
+          "difficulty": 3,
+          "question": "Passage: 'A factory claims its new machine doubles output. However, the test was run only with its best workers on a single day.' What is the strongest criticism of the claim?",
+          "options": [
+            "The test may not reflect normal working conditions",
+            "The machine is too expensive",
+            "The workers were tired",
+            "Output can never double"
+          ],
+          "answer": "The test may not reflect normal working conditions",
+          "explanation": "Using only the best workers for one day may not show what happens normally. The passage says nothing about cost or tiredness."
+        },
+        {
+          "difficulty": 3,
+          "question": "Passage: 'Reading for 20 minutes a day exposes a child to about 1.8 million words a year. Children who read this much tend to have larger vocabularies.' Which conclusion does NOT follow from the passage alone?",
+          "options": [
+            "Reading 20 minutes a day guarantees top exam marks",
+            "Daily reading exposes children to many words",
+            "These readers tend to know more words",
+            "Amount of reading is linked to vocabulary"
+          ],
+          "answer": "Reading 20 minutes a day guarantees top exam marks",
+          "explanation": "The passage talks about word exposure and vocabulary, not exam marks, and 'guarantees' is far too strong. The other three restate the passage."
+        },
+        {
+          "difficulty": 3,
+          "question": "Passage: 'The library extended its hours to midnight during exam month. Seat occupancy after 8 p.m. went up from 20% to 85%.' Which statement is best supported?",
+          "options": [
+            "Students made good use of the extra evening hours",
+            "The library should stay open all night every month",
+            "Students study only at night",
+            "Daytime visits fell to zero"
+          ],
+          "answer": "Students made good use of the extra evening hours",
+          "explanation": "The jump in evening occupancy shows the extra hours were used. The other options are recommendations or claims the data doesn't cover."
+        },
+        {
+          "difficulty": 3,
+          "question": "Passage: 'Honey found in ancient Egyptian tombs was still edible after thousands of years. Honey contains very little water and is slightly acidic, which stops bacteria from growing.' According to the passage, why does honey last so long?",
+          "options": [
+            "Its low water content and acidity stop bacteria from growing",
+            "It was kept in tombs",
+            "The Egyptians added preservatives",
+            "Bacteria like sugar"
+          ],
+          "answer": "Its low water content and acidity stop bacteria from growing",
+          "explanation": "The second sentence gives the reason directly: low water and acidity stop bacteria. The tombs are only where it was found."
+        },
+        {
+          "difficulty": 4,
+          "question": "Passage: 'Town A has more hospitals than Town B, and also more reported illnesses. A newspaper concluded that hospitals make people sick.' What is the main flaw in the newspaper's reasoning?",
+          "options": [
+            "More hospitals may simply mean more illnesses get recorded",
+            "Town B has no hospitals",
+            "Hospitals are expensive to build",
+            "The newspaper is old"
+          ],
+          "answer": "More hospitals may simply mean more illnesses get recorded",
+          "explanation": "1. Two things rising together doesn't mean one causes the other.\n2. More hospitals likely means more illnesses are diagnosed and reported, which explains the link without hospitals causing illness."
+        },
+        {
+          "difficulty": 4,
+          "question": "Passage: 'A tea company says 9 out of 10 customers who replied to its survey love the new flavour. Only 5% of customers replied.' Which point most weakens the claim that most customers love the flavour?",
+          "options": [
+            "The people who replied may not represent all customers",
+            "Nine is a large number",
+            "The flavour is new",
+            "Tea is popular in India"
+          ],
+          "answer": "The people who replied may not represent all customers",
+          "explanation": "Only 5% replied, and people who reply are often the ones with strong opinions. So the result may not reflect the other 95%."
+        }
+      ]
+    }
+  }
+}

@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app import ai
+from app import ai, question_templates
 from app.db.models import Attempt, DailyGoal, Question, QuestionSkill, Skill, SkillMastery, Subtopic, utcnow
 
 WRONG_PENALTY = {"careless_slip": 3.0, "no_attempt": 6.0, "partial_method": 7.0, "conceptual_gap": 12.0}
@@ -91,6 +91,16 @@ def question_for_skill(db: Session, user_id: str, skill: Skill, exclude_id: str 
     ]
     if fresh:
         return min(fresh, key=lambda q: (abs(q.difficulty - target), random.random()))
+
+    # Quant and logical skills never run dry: write a brand-new, computed question.
+    made = question_templates.generate(skill.subtopic.name, skill.name, target, {q.body for q in questions})
+    if made:
+        data, difficulty = made
+        question = Question(subtopic_id=skill.subtopic_id, difficulty=difficulty, source="generated", **data)
+        question.skills = [skill]
+        db.add(question)
+        db.commit()
+        return question
 
     generated = ai.generate_question(skill.subtopic.name, skill.name, target, questions) if ai.enabled() else None
     if generated:

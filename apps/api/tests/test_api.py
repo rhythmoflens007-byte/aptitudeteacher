@@ -229,20 +229,31 @@ def test_generate_and_ocr_need_the_ai(client, user):
     assert res.status_code == 503
 
 
-def test_recently_answered_questions_are_not_repeated_until_all_are_seen(client, user):
-    from sqlalchemy import select
+def _skill_with_questions(topic_slug: str, subtopic: str | None = None):
+    from sqlalchemy import func, select
 
-    from sqlalchemy import func
+    from app.db.models import QuestionSkill, Skill, Subtopic, Topic
+    from app.db.session import SessionLocal
 
-    from app.db.models import QuestionSkill, Skill
+    stmt = (
+        select(QuestionSkill.skill_id, func.count())
+        .join(Skill, Skill.id == QuestionSkill.skill_id)
+        .join(Subtopic)
+        .join(Topic)
+        .where(Topic.slug == topic_slug)
+        .group_by(QuestionSkill.skill_id)
+        .having(func.count() >= 2)
+    )
+    if subtopic:
+        stmt = stmt.where(Subtopic.name == subtopic)
+    with SessionLocal() as db:
+        return db.execute(stmt.limit(1)).one()
+
+
+def _answer_every_question(client, user, user_id, skill_id, total):
+    from app.db.models import Skill
     from app.db.session import SessionLocal
     from app.engine import mastery
-
-    user_id = client.get("/auth/me", headers=user).json()["id"]
-    with SessionLocal() as db:
-        skill_id, total = db.execute(
-            select(QuestionSkill.skill_id, func.count()).group_by(QuestionSkill.skill_id).having(func.count() >= 2).limit(1)
-        ).one()
 
     seen = []
     for _ in range(total):
@@ -251,7 +262,36 @@ def test_recently_answered_questions_are_not_repeated_until_all_are_seen(client,
         assert q.id not in seen, "a recently answered question came back while unseen ones remained"
         seen.append(q.id)
         answer_wrong(client, user, {"id": q.id, "options": q.options})
+    return seen
+
+
+def test_recently_answered_questions_are_not_repeated_until_all_are_seen(client, user):
+    from app.db.models import Skill
+    from app.db.session import SessionLocal
+    from app.engine import mastery
+
+    user_id = client.get("/auth/me", headers=user).json()["id"]
+    # Verbal skills have no templates, so once every question is seen they cycle.
+    skill_id, total = _skill_with_questions("verbal")
+    seen = _answer_every_question(client, user, user_id, skill_id, total)
 
     # Everything has been seen: the one seen longest ago comes back first.
     with SessionLocal() as db:
         assert mastery.question_for_skill(db, user_id, db.get(Skill, skill_id)).id == seen[0]
+
+
+def test_templated_skills_write_a_new_question_instead_of_repeating(client, user):
+    from app.db.models import Question, Skill
+    from app.db.session import SessionLocal
+    from app.engine import mastery
+
+    user_id = client.get("/auth/me", headers=user).json()["id"]
+    skill_id, total = _skill_with_questions("logical-reasoning", "Clocks and Calendars")
+    seen = _answer_every_question(client, user, user_id, skill_id, total)
+
+    with SessionLocal() as db:
+        fresh = mastery.question_for_skill(db, user_id, db.get(Skill, skill_id))
+        assert fresh.id not in seen
+        assert fresh.source == "generated"
+        assert fresh.correct_option in fresh.options
+        assert db.get(Question, fresh.id) is not None, "the new question is saved so it can be answered"

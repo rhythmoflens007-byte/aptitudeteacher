@@ -1,3 +1,4 @@
+import random
 from typing import get_args
 
 from sqlalchemy import func, inspect, select, text
@@ -6,8 +7,11 @@ from sqlalchemy.orm import Session
 from app.db.models import Badge, Question, Skill, Subtopic, Topic
 from app.db.session import Base, SessionLocal, engine
 from app.engine.gamification import BADGES
+from app.question_templates import TEMPLATES
 from app.schemas import Locale
 from app.seed_data import CURRICULUM
+
+PER_TEMPLATE = 8
 
 
 def _get_or_create(db: Session, model, **fields):
@@ -26,6 +30,7 @@ def seed(db: Session) -> int:
             db.add(Badge(code=code, name=name, description=description))
 
     existing = set(db.scalars(select(Question.body)).all())
+    skills_by_name: dict[tuple[str, str], Skill] = {}
     added = 0
     for (topic_name, slug), subtopics in CURRICULUM.items():
         topic = db.scalar(select(Topic).where(Topic.slug == slug)) or _get_or_create(db, Topic, name=topic_name, slug=slug)
@@ -33,6 +38,7 @@ def seed(db: Session) -> int:
             subtopic = _get_or_create(db, Subtopic, topic_id=topic.id, name=subtopic_name)
             for skill_name, questions in skills.items():
                 skill = _get_or_create(db, Skill, subtopic_id=subtopic.id, name=skill_name)
+                skills_by_name[(subtopic_name, skill_name)] = skill
                 for difficulty, body, options, correct, explanation in questions:
                     if body in existing:
                         continue
@@ -49,7 +55,33 @@ def seed(db: Session) -> int:
                     db.add(question)
                     existing.add(body)
                     added += 1
+    added += seed_templates(db, skills_by_name, existing)
     db.commit()
+    return added
+
+
+def seed_templates(db: Session, skills_by_name: dict[tuple[str, str], Skill], existing: set[str]) -> int:
+    """A fixed starter set from every template. Seeded by name, so each restart recreates the same
+    questions and adds nothing new unless a template itself changes."""
+    added = 0
+    for tpl in TEMPLATES:
+        skill = skills_by_name[(tpl.subtopic, tpl.skill)]
+        rng = random.Random(tpl.name)
+        batch: set[str] = set()
+        for _ in range(PER_TEMPLATE * 10):
+            if len(batch) == PER_TEMPLATE:
+                break
+            made = tpl.make(rng)
+            if made["body"] in batch:
+                continue
+            batch.add(made["body"])
+            if made["body"] in existing:
+                continue
+            question = Question(subtopic_id=skill.subtopic_id, difficulty=tpl.difficulty, source="template", **made)
+            question.skills = [skill]
+            db.add(question)
+            existing.add(made["body"])
+            added += 1
     return added
 
 

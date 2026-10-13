@@ -43,9 +43,10 @@ npm run dev
 ```
 
 Open http://localhost:3000 and create an account. The database (`apps/api/aptitude.db`) is
-created automatically and loaded with 140 hand-checked questions across 28 subtopics. New
-questions added to `app/seed_data.py` are picked up on the next start without touching
-existing progress. Delete the database file to reset all data.
+created automatically and loaded with about 1,200 questions across 28 subtopics: 355 written by
+hand and the rest made by question templates. New questions added to `app/question_bank/*.json`
+are picked up on the next start without touching existing progress. Delete the database file to
+reset all data.
 
 On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python`.
 
@@ -76,7 +77,11 @@ On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python`.
   each with an offline fallback.
 - `app/routes/`: `auth`, `practice` (questions + attempts), `quizzes` (quiz/mock + reports),
   `tutor` (chat + OCR), `progress` (dashboard).
-- `app/seed_data.py`: the question bank. Add questions here; they load on a fresh database.
+- `app/question_bank/`: the hand-written questions, one JSON file per section. Add questions here.
+- `app/question_templates/`: about 110 templates for Quantitative Aptitude and Logical Reasoning. Each one
+  picks fresh numbers, computes the answer, builds wrong options from common mistakes and writes the
+  steps. Eight from each are stored at start-up; once a student has seen every question for a skill,
+  practice writes a brand-new one instead of repeating (shown as "Brand-new question").
 - API docs: http://localhost:8000/docs
 
 **Frontend: `apps/web` (Next.js 16 + Tailwind 4, installable as a PWA)**

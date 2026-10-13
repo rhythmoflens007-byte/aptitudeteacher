@@ -477,7 +477,7 @@ function Features() {
                 <Icon name="target" className="h-6 w-6" />
               </span>
               <h3 className="mt-6 font-display text-3xl">Practice that adapts to you.</h3>
-              <p className="mt-2 max-w-md text-ink-soft">140+ hand-checked questions. Each one picked from your weakest skill, at your level.</p>
+              <p className="mt-2 max-w-md text-ink-soft">1,200+ questions, and a brand-new one whenever you run out. Each one picked from your weakest skill, at your level.</p>
               <div className="mt-8 flex flex-col gap-3">
                 {[
                   ["Percentages", 88, "bg-iris"],
@@ -646,7 +646,7 @@ function Languages() {
 
 function Numbers() {
   const stats = [
-    { value: 140, suffix: "+", label: "hand-checked questions", tone: "text-iris" },
+    { value: 1200, suffix: "+", label: "practice questions", tone: "text-iris" },
     { value: 28, suffix: "", label: "topics across 3 sections", tone: "text-coral" },
     { value: 4, suffix: "", label: "languages", tone: "text-lagoon-600" },
     { value: 100, suffix: "%", label: "free", tone: "text-sun-600" },
