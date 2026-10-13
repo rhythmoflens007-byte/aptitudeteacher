@@ -4,12 +4,14 @@ import { motion, useAnimate } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import type { Locale } from "@/lib/api";
+import { ApiError, type Locale } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { LANGUAGES } from "@/lib/i18n";
+import { LANGUAGES, setGuestLocale, useT } from "@/lib/i18n";
+import LanguageMenu from "./LanguageMenu";
 import Logo from "./Logo";
 import { EASE, Orb } from "./motion";
 import PageTransition from "./PageTransition";
+import { ThemeToggle } from "./ThemeToggle";
 import TutorAvatar from "./TutorAvatar";
 import { Blobs, Button, ErrorNote, Icon } from "./ui";
 
@@ -18,11 +20,11 @@ const field =
 
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   const { user, login, register } = useAuth();
+  const { t, locale, errorText } = useT();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [locale, setLocale] = useState<Locale>("en");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [formScope, animateForm] = useAnimate<HTMLFormElement>();
@@ -39,7 +41,8 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
       if (mode === "login") await login(email, password);
       else await register(email, password, name, locale);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      const status = err instanceof ApiError ? err.status : 0;
+      setError(status === 401 ? t("auth.badLogin") : status === 409 ? t("auth.emailTaken") : errorText(err));
       animateForm(formScope.current, { x: [0, -10, 10, -6, 6, 0] }, { duration: 0.45 });
     } finally {
       setBusy(false);
@@ -49,16 +52,16 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   const fields = [
     mode === "register" && (
       <label key="name" className="flex flex-col gap-2 text-sm font-semibold">
-        Your name
+        {t("auth.name")}
         <input id="name" className={field} value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} autoComplete="name" placeholder="Priya Sharma" />
       </label>
     ),
     <label key="email" className="flex flex-col gap-2 text-sm font-semibold">
-      Email
+      {t("auth.email")}
       <input id="email" type="email" className={field} value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="you@example.com" />
     </label>,
     <label key="password" className="flex flex-col gap-2 text-sm font-semibold">
-      Password
+      {t("auth.password")}
       <input
         id="password"
         type="password"
@@ -68,19 +71,20 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
         required
         minLength={mode === "register" ? 8 : undefined}
         autoComplete={mode === "login" ? "current-password" : "new-password"}
-        placeholder={mode === "register" ? "At least 8 characters" : undefined}
+        placeholder={mode === "register" ? t("auth.passwordHint") : undefined}
       />
     </label>,
     mode === "register" && (
       <fieldset key="locale" className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-semibold">Learn in</legend>
+        <legend className="mb-2 text-sm font-semibold">{t("auth.learnIn")}</legend>
         <div className="grid grid-cols-2 gap-2">
           {LANGUAGES.map((l) => (
             <button
               key={l.code}
               type="button"
               aria-pressed={locale === l.code}
-              onClick={() => setLocale(l.code)}
+              lang={l.code}
+              onClick={() => setGuestLocale(l.code as Locale)}
               className={`press rounded-2xl px-3 py-2.5 text-[15px] font-semibold ${locale === l.code ? "bg-iris text-white shadow-[var(--shadow-iris)]" : "bg-surface-2 text-ink-soft hover:text-ink"}`}
             >
               {l.label}
@@ -98,14 +102,18 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
         <Orb className="h-full w-full" />
       </div>
 
-      <div className="relative flex items-center justify-between px-5 py-5 sm:px-8">
+      <div className="relative flex items-center justify-between gap-2 px-5 py-5 sm:px-8">
         <Logo />
-        <Link href="/" className="press rounded-full px-4 py-2 text-sm font-medium text-ink-soft hover:bg-surface hover:text-ink">
-          ← Home
-        </Link>
+        <div className="flex items-center gap-1">
+          <LanguageMenu />
+          <ThemeToggle />
+          <Link href="/" className="press rounded-full px-3 py-2 text-sm font-medium text-ink-soft hover:bg-surface hover:text-ink max-sm:hidden">
+            ← {t("auth.home")}
+          </Link>
+        </div>
       </div>
 
-      <div className="relative flex flex-1 items-center justify-center px-4 pb-10 pt-16">
+      <main className="relative flex flex-1 items-center justify-center px-4 pb-10 pt-16">
         <motion.div
           className="relative w-full max-w-md"
           initial={{ opacity: 0, y: 40, scale: 0.96, filter: "blur(12px)" }}
@@ -113,7 +121,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
           transition={{ type: "spring", stiffness: 180, damping: 22 }}
         >
           <motion.div
-            className="absolute -top-24 left-1/2 z-10 h-32 w-32 -translate-x-1/2 overflow-hidden rounded-full bg-gradient-to-b from-iris-soft to-surface shadow-[var(--shadow-md)] ring-4 ring-white"
+            className="absolute -top-24 left-1/2 z-10 h-32 w-32 -translate-x-1/2 overflow-hidden rounded-full bg-gradient-to-b from-iris-soft to-surface shadow-[var(--shadow-md)] ring-4 ring-surface"
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 220, damping: 16, delay: 0.3 }}
@@ -121,10 +129,10 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
             <TutorAvatar gender="female" mood="happy" framing="portrait" stage={false} className="h-full w-full" />
           </motion.div>
 
-          <form ref={formScope} onSubmit={onSubmit} className="glass flex flex-col gap-5 rounded-[36px] px-6 pb-8 pt-14 shadow-[var(--shadow-lg)] ring-1 ring-black/[0.04] sm:px-9">
+          <form ref={formScope} onSubmit={onSubmit} className="glass flex flex-col gap-5 rounded-[36px] px-6 pb-8 pt-14 shadow-[var(--shadow-lg)] ring-1 ring-hairline sm:px-9">
             <div className="text-center">
-              <h1 className="font-display text-3xl sm:text-4xl">{mode === "login" ? "Welcome back!" : "Let's get started."}</h1>
-              <p className="mt-2 text-ink-soft">{mode === "login" ? "Asha has your next lesson ready." : "Free forever. Takes 30 seconds."}</p>
+              <h1 className="font-display text-3xl sm:text-4xl">{mode === "login" ? t("auth.welcomeBack") : t("auth.getStarted")}</h1>
+              <p className="mt-2 text-ink-soft">{mode === "login" ? t("auth.loginSub") : t("auth.registerSub")}</p>
             </div>
 
             <motion.div
@@ -143,19 +151,19 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
             <ErrorNote message={error} />
 
             <Button type="submit" variant="spark" disabled={busy} className="w-full py-4 text-[17px]">
-              {busy ? "One moment…" : mode === "login" ? "Sign in" : "Create my account"}
+              {busy ? t("common.oneMoment") : mode === "login" ? t("auth.signIn") : t("auth.create")}
               {!busy && <Icon name="arrow" className="h-4 w-4" />}
             </Button>
 
             <p className="text-center text-sm text-ink-soft">
-              {mode === "login" ? "New here? " : "Already have an account? "}
+              {mode === "login" ? t("auth.newHere") : t("auth.haveAccount")}{" "}
               <Link href={mode === "login" ? "/register" : "/login"} className="font-semibold text-iris hover:underline">
-                {mode === "login" ? "Create an account" : "Sign in"}
+                {mode === "login" ? t("auth.createLink") : t("auth.signIn")}
               </Link>
             </p>
           </form>
         </motion.div>
-      </div>
+      </main>
     </PageTransition>
   );
 }

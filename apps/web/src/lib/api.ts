@@ -125,9 +125,55 @@ export type Dashboard = {
   }[];
 };
 
+/** offline: no connection or server down · timeout · server: 5xx · rate: 429 · client: other 4xx (message from the API). */
+export type ApiErrorKind = "offline" | "timeout" | "server" | "rate" | "client";
+
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+    public kind: ApiErrorKind = status === 0 ? "offline" : status >= 500 ? "server" : status === 429 ? "rate" : "client",
+  ) {
     super(message);
+  }
+}
+
+/* Whether the backend is reachable, so a banner can say so and retry. */
+type Connection = "ok" | "down";
+let connection: Connection = "ok";
+let recoveredAt = 0;
+const connectionListeners = new Set<() => void>();
+
+function setConnection(next: Connection) {
+  if (next === connection) return;
+  if (next === "ok") recoveredAt = Date.now();
+  connection = next;
+  connectionListeners.forEach((listener) => listener());
+}
+
+/** When the backend last came back after being unreachable (0 if never). */
+export function getRecoveredAt() {
+  return recoveredAt;
+}
+
+export function subscribeConnection(listener: () => void) {
+  connectionListeners.add(listener);
+  return () => connectionListeners.delete(listener);
+}
+
+export function getConnection() {
+  return connection;
+}
+
+/** Pings the backend; resolves true when it answers. */
+export async function checkConnection(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_URL}/health`, { cache: "no-store", signal: AbortSignal.timeout(5000) });
+    setConnection(res.ok ? "ok" : "down");
+    return res.ok;
+  } catch {
+    setConnection("down");
+    return false;
   }
 }
 
@@ -151,7 +197,9 @@ export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler;
 }
 
-export async function api<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
+const DEFAULT_TIMEOUT_MS = 20_000;
+
+async function send(path: string, init: RequestInit & { json?: unknown; timeoutMs?: number }) {
   const headers = new Headers(init.headers);
   const token = getToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -160,25 +208,62 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
     headers.set("Content-Type", "application/json");
     body = JSON.stringify(init.json);
   }
-
-  let res: Response;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort("timeout"), init.timeoutMs ?? DEFAULT_TIMEOUT_MS);
   try {
-    res = await fetch(`${API_URL}${path}`, { ...init, headers, body });
-  } catch {
-    throw new ApiError(0, "Can't reach the server. Check that the backend is running on port 8000.");
+    const res = await fetch(`${API_URL}${path}`, { ...init, headers, body, signal: init.signal ?? controller.signal });
+    setConnection("ok");
+    if (res.status === 401 && token) onUnauthorized?.();
+    return res;
+  } catch (e) {
+    if (controller.signal.aborted) throw new ApiError(0, "The request took too long.", "timeout");
+    setConnection("down");
+    throw new ApiError(0, e instanceof Error ? e.message : "Network error", "offline");
+  } finally {
+    clearTimeout(timer);
   }
+}
 
-  if (res.status === 401 && token) onUnauthorized?.();
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    const detail = data?.detail;
-    const message =
-      typeof detail === "string"
-        ? detail
-        : Array.isArray(detail)
-          ? detail.map((d: { msg: string }) => d.msg.replace(/^Value error, /, "")).join(" ")
-          : "Something went wrong. Please try again.";
-    throw new ApiError(res.status, message);
+async function failure(res: Response): Promise<ApiError> {
+  const data = await res.json().catch(() => null);
+  const detail = data?.detail;
+  const message =
+    typeof detail === "string"
+      ? detail
+      : Array.isArray(detail)
+        ? detail.map((d: { msg: string }) => d.msg.replace(/^Value error, /, "")).join(" ")
+        : "";
+  return new ApiError(res.status, message);
+}
+
+/**
+ * Streams newline-delimited JSON events (used for tutor replies), calling `onEvent` for each line
+ * as it arrives. The overall timeout is generous because the AI keeps writing for a while.
+ */
+export async function apiStream<E>(path: string, json: unknown, onEvent: (event: E) => void, timeoutMs = 90_000): Promise<void> {
+  const res = await send(path, { method: "POST", json, timeoutMs });
+  if (!res.ok) throw await failure(res);
+  if (!res.body) throw new ApiError(0, "No response body", "server");
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    let newline = buffer.indexOf("\n");
+    while (newline >= 0) {
+      const line = buffer.slice(0, newline).trim();
+      buffer = buffer.slice(newline + 1);
+      if (line) onEvent(JSON.parse(line) as E);
+      newline = buffer.indexOf("\n");
+    }
+    if (done) break;
   }
+  if (buffer.trim()) onEvent(JSON.parse(buffer) as E);
+}
+
+export async function api<T>(path: string, init: RequestInit & { json?: unknown; timeoutMs?: number } = {}): Promise<T> {
+  const res = await send(path, init);
+  if (!res.ok) throw await failure(res);
   return (res.status === 204 ? null : await res.json()) as T;
 }

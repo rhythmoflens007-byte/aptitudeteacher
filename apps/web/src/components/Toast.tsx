@@ -31,7 +31,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={push}>
       {children}
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 top-4 z-[60] flex flex-col items-center gap-2 px-4">
+      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 top-20 z-[60] lg:top-4 flex flex-col items-center gap-2 px-4">
         <AnimatePresence>
           {toasts.map((t) => (
             <motion.div
@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -16, scale: 0.95, filter: "blur(6px)" }}
               transition={{ type: "spring", stiffness: 380, damping: 28 }}
-              className="glass pointer-events-auto flex items-center gap-3 rounded-full py-2 pl-2 pr-5 shadow-[var(--shadow-lg)] ring-1 ring-black/[0.04]"
+              className="glass pointer-events-auto flex items-center gap-3 rounded-full py-2 pl-2 pr-5 shadow-[var(--shadow-lg)] ring-1 ring-hairline"
             >
               <span className={`grid h-9 w-9 place-items-center rounded-full ${TONES[t.tone]}`}>
                 <Icon name={t.icon} className="h-[18px] w-[18px]" />

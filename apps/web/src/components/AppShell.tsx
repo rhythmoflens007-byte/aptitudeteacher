@@ -9,6 +9,7 @@ import { useT } from "@/lib/i18n";
 import { useTutor } from "@/lib/tutor";
 import Logo from "./Logo";
 import PageTransition from "./PageTransition";
+import { ThemeToggle } from "./ThemeToggle";
 import { Blobs, Icon, Skeleton } from "./ui";
 
 const NAV = [
@@ -63,10 +64,13 @@ export default function AppShell({ children, wide = false }: { children: React.R
 
       {/* Desktop sidebar: a floating glass panel */}
       <aside style={{ viewTransitionName: "app-sidebar" }} className="fixed inset-y-3 left-3 z-30 hidden w-66 flex-col lg:flex">
-        <div className="glass flex h-full flex-col rounded-[28px] p-4 shadow-[var(--shadow-lg)] ring-1 ring-black/[0.04]">
-          <Logo href="/dashboard" className="px-2 py-1" />
+        <div className="glass flex h-full flex-col rounded-[28px] p-4 shadow-[var(--shadow-lg)] ring-1 ring-hairline">
+          <div className="flex items-center justify-between">
+            <Logo href="/dashboard" className="px-2 py-1" />
+            <ThemeToggle />
+          </div>
 
-          <nav className="mt-8 flex flex-col gap-1" aria-label="Main">
+          <nav className="mt-8 flex flex-col gap-1" aria-label={t("nav.main")}>
             {NAV.map((item, index) => {
               const active = index === currentIndex;
               return (
@@ -98,7 +102,7 @@ export default function AppShell({ children, wide = false }: { children: React.R
               <span className="flex items-center gap-3 rounded-[22px] bg-surface/95 p-3">
                 <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-spark text-base font-bold text-white">
                   {tutor.name.charAt(0).toUpperCase()}
-                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-success" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface bg-success" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{tutor.name}</span>
@@ -108,7 +112,7 @@ export default function AppShell({ children, wide = false }: { children: React.R
               </span>
             </Link>
             <div className="flex items-center gap-3 rounded-2xl px-2 py-2">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-sm font-semibold text-white">{initial}</span>
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-sm font-semibold text-canvas">{initial}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold">{user.display_name}</span>
                 <span className="block truncate text-xs text-ink-soft">{user.email}</span>
@@ -122,10 +126,10 @@ export default function AppShell({ children, wide = false }: { children: React.R
       </aside>
 
       {/* Top bar below desktop */}
-      <header style={{ viewTransitionName: "app-topbar" }} className="glass sticky top-0 z-30 border-b border-black/[0.04] lg:hidden">
+      <header style={{ viewTransitionName: "app-topbar" }} className="glass sticky top-0 z-30 border-b border-hairline lg:hidden">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <Logo href="/dashboard" compact />
-          <nav className="ml-4 hidden flex-1 items-center gap-1 md:flex" aria-label="Main">
+          <nav className="ml-4 hidden flex-1 items-center gap-1 md:flex" aria-label={t("nav.main")}>
             {NAV.map((item, index) => {
               const active = index === currentIndex;
               return (
@@ -143,11 +147,12 @@ export default function AppShell({ children, wide = false }: { children: React.R
             })}
           </nav>
           <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
             <Link href="/tutor" className="press flex items-center gap-2 rounded-full bg-surface py-1 pl-1 pr-3 text-sm font-medium shadow-[var(--shadow-sm)] md:hidden">
               <span className="grid h-7 w-7 place-items-center rounded-full bg-spark text-xs font-bold text-white">{tutor.name.charAt(0).toUpperCase()}</span>
               <span className="max-w-24 truncate">{tutor.name}</span>
             </Link>
-            <Link href="/profile" aria-label={t("nav.profile")} className="press grid h-8 w-8 place-items-center rounded-full bg-ink text-xs font-semibold text-white">
+            <Link href="/profile" aria-label={t("nav.profile")} className="press grid h-8 w-8 place-items-center rounded-full bg-ink text-xs font-semibold text-canvas">
               {initial}
             </Link>
           </div>
@@ -157,8 +162,8 @@ export default function AppShell({ children, wide = false }: { children: React.R
       <main className={`mx-auto w-full flex-1 px-4 pb-32 pt-6 sm:px-6 md:pb-14 lg:px-10 lg:pt-12 ${container}`}>{children}</main>
 
       {/* Phone tab bar: a floating glass pill */}
-      <nav style={{ viewTransitionName: "app-tabbar" }} className="pb-safe fixed inset-x-3 bottom-3 z-30 md:hidden" aria-label="Main">
-        <ul className="glass mx-auto grid max-w-md grid-cols-5 rounded-[26px] p-1.5 shadow-[var(--shadow-lg)] ring-1 ring-black/[0.05]">
+      <nav style={{ viewTransitionName: "app-tabbar" }} className="pb-safe fixed inset-x-3 bottom-3 z-30 md:hidden" aria-label={t("nav.main")}>
+        <ul className="glass mx-auto grid max-w-md grid-cols-5 rounded-[26px] p-1.5 shadow-[var(--shadow-lg)] ring-1 ring-hairline">
           {NAV.map((item, index) => {
             const active = index === currentIndex;
             return (

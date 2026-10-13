@@ -2,19 +2,14 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { FadeIn } from "@/components/motion";
 import TutorAvatar from "@/components/TutorAvatar";
-import { ActivityRings, buttonClass, CountUp, ErrorNote, Icon, IconTile, MISCONCEPTION_LABEL, Pill, ProgressBar, Ring, Skeleton, SpotlightCard } from "@/components/ui";
+import { ActivityRings, buttonClass, CountUp, ErrorState, Icon, IconTile, MISCONCEPTION_KEYS, Pill, ProgressBar, Ring, Skeleton, SpotlightCard } from "@/components/ui";
 import { api, Dashboard } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { useTutor } from "@/lib/tutor";
-
-function plural(n: number, word: string) {
-  if (n === 1) return `${n} ${word}`;
-  return `${n} ${/[^aeiou]y$/.test(word) ? `${word.slice(0, -1)}ies` : `${word}s`}`;
-}
 
 const TOPIC_STYLE = [
   { icon: "brain", tone: "iris" as const, bar: "iris" as const },
@@ -31,22 +26,31 @@ export default function DashboardPage() {
 }
 
 function DashboardView() {
-  const { t } = useT();
+  const { t, tn, dateLocale, errorText } = useT();
   const tutor = useTutor();
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openTopic, setOpenTopic] = useState<string | null>(null);
 
+  const load = useCallback(async () => {
+    try {
+      setData(await api<Dashboard>("/progress/dashboard"));
+      setError(null);
+    } catch (e) {
+      setError(errorText(e));
+    }
+  }, [errorText]);
+
   useEffect(() => {
     api<Dashboard>("/progress/dashboard")
       .then(setData)
-      .catch((e) => setError(e.message));
-  }, []);
+      .catch((e) => setError(errorText(e)));
+  }, [errorText]);
 
-  if (error) return <ErrorNote message={error} />;
+  if (error && !data) return <ErrorState message={error} onRetry={load} />;
   if (!data) {
     return (
-      <div className="flex flex-col gap-5" aria-busy>
+      <div className="flex flex-col gap-5" aria-busy aria-label={t("common.loading")}>
         <Skeleton className="h-20 w-2/3" />
         <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
           <Skeleton className="h-56" />
@@ -65,16 +69,12 @@ function DashboardView() {
   const maxTrend = Math.max(1, ...data.trend.map((d) => d.attempts));
   const goalPct = (100 * goal.completed) / goal.target;
   const weakest = data.weak_skills[0];
-  const tip = weakest
-    ? `${weakest.name} is your trickiest skill right now. Want to crack it together?`
-    : stats.attempts
-      ? "You're on a roll! A mock test would show how far you've come."
-      : "Answer a few questions and I'll figure out exactly where to start. Ready?";
+  const tip = weakest ? t("dash.tipWeak", { skill: tn(weakest.name) }) : stats.attempts ? t("dash.tipRoll") : t("dash.tipStart", { gender: tutor.gender });
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const greeting = hour < 12 ? t("dash.morning") : hour < 17 ? t("dash.afternoon") : t("dash.evening");
 
   const tiles = [
-    { label: t("dash.level"), icon: "sparkles", tone: "iris" as const, value: <CountUp value={g.level} />, sub: `${g.xp} XP total` },
+    { label: t("dash.level"), icon: "sparkles", tone: "iris" as const, value: <CountUp value={g.level} />, sub: t("dash.xpTotal", { n: g.xp }) },
     {
       label: t("dash.streak"),
       icon: "flame",
@@ -82,24 +82,28 @@ function DashboardView() {
       value: (
         <span className="flex items-baseline gap-1">
           <CountUp value={g.streak_days} />
-          {g.streak_days > 0 && <span className="flame text-2xl">🔥</span>}
+          {g.streak_days > 0 && (
+            <span className="flame text-2xl" aria-hidden>
+              🔥
+            </span>
+          )}
         </span>
       ),
-      sub: `Best: ${plural(g.longest_streak_days, "day")}`,
+      sub: t("dash.best", { n: g.longest_streak_days }),
     },
     {
       label: t("dash.accuracy"),
       icon: "target",
       tone: "lagoon" as const,
       value: stats.accuracy === null ? "—" : <CountUp value={stats.accuracy} suffix="%" />,
-      sub: `${plural(stats.attempts, "question")} answered`,
+      sub: t("dash.answered", { n: stats.attempts }),
     },
     {
       label: t("dash.speed"),
       icon: "clock",
       tone: "sun" as const,
       value: stats.avg_time_s === null ? "—" : <CountUp value={stats.avg_time_s} decimals={1} suffix="s" />,
-      sub: `${stats.today} answered today`,
+      sub: t("dash.today", { n: stats.today }),
     },
   ];
 
@@ -108,11 +112,13 @@ function DashboardView() {
       <FadeIn className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow mb-1">{greeting}</p>
-          <h1 className="font-display text-4xl sm:text-5xl">{data.user.display_name.split(" ")[0]} 👋</h1>
+          <h1 className="font-display text-4xl sm:text-5xl">
+            {data.user.display_name.split(" ")[0]} <span aria-hidden>👋</span>
+          </h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/tests" transitionTypes={["nav-forward"]} className={buttonClass("secondary")}>
-            <Icon name="clipboard" className="h-4 w-4" /> Mock test
+            <Icon name="clipboard" className="h-4 w-4" /> {t("dash.mockTest")}
           </Link>
           <Link href="/practice" transitionTypes={["nav-forward"]} className={buttonClass("spark")}>
             {t("dash.goalStart")} <Icon name="arrow" className="h-4 w-4" />
@@ -123,16 +129,16 @@ function DashboardView() {
       <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
         <FadeIn delay={0.05}>
           <div className="relative flex h-full items-end overflow-hidden rounded-[32px] bg-gradient-to-br from-iris via-violet to-coral p-1 shadow-[var(--shadow-lg)]">
-            <div className="relative flex h-full w-full items-center gap-4 overflow-hidden rounded-[29px] bg-gradient-to-br from-iris to-violet text-white">
+            <div className="relative flex h-full w-full items-center gap-4 overflow-hidden rounded-[29px] bg-gradient-to-br from-[#5b5bf5] to-[#8a55ef] text-white">
               <motion.div aria-hidden className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-coral/40 blur-3xl" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 7, repeat: Infinity }} />
               <TutorAvatar gender={tutor.gender} mood="happy" stage={false} className="relative hidden h-48 w-40 shrink-0 self-end sm:block" />
               <div className="relative flex min-w-0 flex-1 flex-col gap-4 p-6 sm:pl-0">
                 <span className="flex w-fit items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sun" /> {tutor.name} says
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sun" /> {t("dash.says", { name: tutor.name, gender: tutor.gender })}
                 </span>
                 <p className="font-display text-2xl leading-snug text-balance sm:text-[28px]">{tip}</p>
-                <Link href="/tutor" transitionTypes={["nav-forward"]} className="press flex w-fit items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-ink">
-                  Let&apos;s talk <Icon name="arrow" className="h-4 w-4" />
+                <Link href="/tutor" transitionTypes={["nav-forward"]} className="press flex w-fit items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-coal">
+                  {t("dash.letsTalk")} <Icon name="arrow" className="h-4 w-4" />
                 </Link>
               </div>
             </div>
@@ -144,17 +150,17 @@ function DashboardView() {
             <ActivityRings
               size={150}
               rings={[
-                { value: goalPct, tone: "coral", label: "Daily goal" },
-                { value: stats.accuracy ?? 0, tone: "lagoon", label: "Accuracy" },
-                { value: Math.min(100, (g.streak_days / 7) * 100), tone: "sun", label: "Weekly streak" },
+                { value: goalPct, tone: "coral", label: t("dash.goal") },
+                { value: stats.accuracy ?? 0, tone: "lagoon", label: t("dash.accuracy") },
+                { value: Math.min(100, (g.streak_days / 7) * 100), tone: "sun", label: t("dash.weeklyStreak") },
               ]}
             />
             <div className="flex min-w-0 flex-1 flex-col gap-3">
-              <p className="font-semibold">Today</p>
+              <p className="font-semibold">{t("dash.todayTitle")}</p>
               {[
-                { label: "Goal", value: `${goal.completed}/${goal.target}`, dot: "bg-coral" },
-                { label: "Accuracy", value: stats.accuracy === null ? "—" : `${stats.accuracy}%`, dot: "bg-lagoon" },
-                { label: "Streak", value: `${g.streak_days}/7 days`, dot: "bg-sun" },
+                { label: t("dash.goalShort"), value: `${goal.completed}/${goal.target}`, dot: "bg-coral" },
+                { label: t("dash.accuracy"), value: stats.accuracy === null ? "—" : `${stats.accuracy}%`, dot: "bg-lagoon" },
+                { label: t("dash.streakShort"), value: t("dash.streakOf7", { n: g.streak_days }), dot: "bg-sun" },
               ].map((row) => (
                 <div key={row.label} className="flex items-center gap-2 text-sm">
                   <span className={`h-2.5 w-2.5 rounded-full ${row.dot}`} />
@@ -163,7 +169,7 @@ function DashboardView() {
                 </div>
               ))}
               <Pill tone={goal.completed >= goal.target ? "good" : "coral"}>
-                {goal.completed >= goal.target ? "Goal smashed! 🎉" : `${goal.target - goal.completed} to go`}
+                {goal.completed >= goal.target ? t("dash.goalDone") : t("dash.toGo", { n: goal.target - goal.completed })}
               </Pill>
             </div>
           </SpotlightCard>
@@ -180,10 +186,8 @@ function DashboardView() {
               <p className="text-xs text-ink-soft tabular">{tile.sub}</p>
               {i === 0 && (
                 <div className="mt-3">
-                  <ProgressBar value={(100 * g.xp_into_level) / g.xp_per_level} tone="spark" />
-                  <p className="mt-1.5 text-[11px] text-ink-soft tabular">
-                    {g.xp_into_level}/{g.xp_per_level} XP to level {g.level + 1}
-                  </p>
+                  <ProgressBar value={(100 * g.xp_into_level) / g.xp_per_level} tone="spark" label={t("dash.toLevel", { have: g.xp_into_level, need: g.xp_per_level, level: g.level + 1 })} />
+                  <p className="mt-1.5 text-[11px] text-ink-soft tabular">{t("dash.toLevel", { have: g.xp_into_level, need: g.xp_per_level, level: g.level + 1 })}</p>
                 </div>
               )}
             </SpotlightCard>
@@ -196,7 +200,7 @@ function DashboardView() {
           <div className="rounded-[32px] bg-surface p-2 shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between px-5 pb-2 pt-4">
               <h2 className="font-display text-2xl">{t("dash.mastery")}</h2>
-              <span className="text-xs text-ink-soft">Tap for skills</span>
+              <span className="text-xs text-ink-soft">{t("dash.tapForSkills")}</span>
             </div>
             <ul className="flex flex-col gap-1">
               {data.topics.map((topic, ti) => {
@@ -208,15 +212,15 @@ function DashboardView() {
                       <IconTile name={style.icon} tone={style.tone} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="truncate font-semibold">{topic.name}</span>
+                          <span className="truncate font-semibold">{tn(topic.name)}</span>
                           <span className="text-sm font-bold tabular">{topic.mastery}%</span>
                         </div>
                         <div className="mt-2">
                           <ProgressBar value={topic.mastery} tone={style.bar} />
                         </div>
                         <p className="mt-1.5 text-xs text-ink-soft tabular">
-                          {plural(topic.attempts, "attempt")}
-                          {topic.accuracy !== null ? ` · ${topic.accuracy}% accuracy` : ""} · {plural(topic.skills.length, "skill")}
+                          {t("dash.attempts", { n: topic.attempts })}
+                          {topic.accuracy !== null ? ` · ${t("dash.accuracyPct", { n: topic.accuracy })}` : ""} · {t("dash.skills", { n: topic.skills.length })}
                         </p>
                       </div>
                       <motion.span animate={{ rotate: open ? 90 : 0 }} className="text-ink-faint">
@@ -230,8 +234,8 @@ function DashboardView() {
                             {topic.skills.map((s) => (
                               <li key={s.id} className="flex items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-sm">
                                 <span className="min-w-0 flex-1 truncate">
-                                  <span className="text-ink-soft">{s.subtopic} · </span>
-                                  {s.name}
+                                  <span className="text-ink-soft">{tn(s.subtopic)} · </span>
+                                  {tn(s.name)}
                                 </span>
                                 <span className="w-20">
                                   <ProgressBar value={s.mastery} tone={style.bar} />
@@ -257,20 +261,20 @@ function DashboardView() {
                 <h2 className="font-display text-2xl">{t("dash.trend")}</h2>
                 <span className="flex items-center gap-3 text-[11px] text-ink-soft">
                   <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-iris" /> correct
+                    <span className="h-2 w-2 rounded-full bg-iris" /> {t("dash.correct")}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-coral-soft ring-1 ring-coral/40" /> wrong
+                    <span className="h-2 w-2 rounded-full bg-coral-soft ring-1 ring-coral/40" /> {t("dash.wrong")}
                   </span>
                 </span>
               </div>
-              <div className="mt-6 flex h-36 items-end gap-2.5" aria-label="Questions answered per day over the last 7 days">
+              <div className="mt-6 flex h-36 items-end gap-2.5" role="img" aria-label={t("dash.trendLabel")}>
                 {data.trend.map((d, i) => {
-                  const day = new Date(d.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short" });
+                  const day = new Date(d.date + "T00:00:00").toLocaleDateString(dateLocale, { weekday: "short" });
                   const isToday = i === data.trend.length - 1;
                   const height = (96 * d.attempts) / maxTrend;
                   return (
-                    <div key={d.date} className="group flex flex-1 flex-col items-center gap-2" title={`${d.correct} of ${d.attempts} correct`}>
+                    <div key={d.date} className="group flex flex-1 flex-col items-center gap-2" title={t("dash.correctOf", { correct: d.correct, n: d.attempts })}>
                       <span className="text-[10px] font-semibold text-ink-soft tabular">{d.attempts || ""}</span>
                       <div className="flex w-full max-w-9 flex-col justify-end overflow-hidden rounded-xl bg-surface-2" style={{ height: 96 }}>
                         <motion.div
@@ -298,7 +302,7 @@ function DashboardView() {
               {data.weak_skills.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 py-6 text-center text-sm text-ink-soft">
                   <IconTile name="target" tone="iris" />
-                  Answer a few questions and your weakest skills will show up here.
+                  {t("dash.weakEmpty")}
                 </div>
               ) : (
                 <ul className="mt-4 flex flex-col gap-3">
@@ -308,9 +312,9 @@ function DashboardView() {
                         <span className="text-[10px] font-bold tabular">{s.mastery}</span>
                       </Ring>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{s.name}</p>
+                        <p className="truncate text-sm font-semibold">{tn(s.name)}</p>
                         <p className="truncate text-xs text-ink-soft tabular">
-                          {s.subtopic} · {s.accuracy}% over {plural(s.attempts, "try")}
+                          {tn(s.subtopic)} · {t("dash.overTries", { pct: s.accuracy ?? 0, n: s.attempts })}
                         </p>
                       </div>
                     </li>
@@ -318,7 +322,7 @@ function DashboardView() {
                 </ul>
               )}
               <Link href="/tutor" transitionTypes={["nav-forward"]} className={buttonClass("secondary", "mt-5 w-full")}>
-                <Icon name="chat" className="h-4 w-4" /> Work on these with {tutor.name}
+                <Icon name="chat" className="h-4 w-4" /> {t("dash.workOn", { name: tutor.name })}
               </Link>
             </div>
           </FadeIn>
@@ -329,9 +333,7 @@ function DashboardView() {
         <div className="rounded-[32px] bg-surface p-6 shadow-[var(--shadow-md)]">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-2xl">{t("dash.badges")}</h2>
-            <Pill tone="sun">
-              {data.badges.filter((b) => b.earned_at).length} / {data.badges.length} earned
-            </Pill>
+            <Pill tone="sun">{t("dash.earned", { have: data.badges.filter((b) => b.earned_at).length, total: data.badges.length })}</Pill>
           </div>
           <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {data.badges.map((b, i) => (
@@ -342,13 +344,13 @@ function DashboardView() {
                 viewport={{ once: true }}
                 transition={{ type: "spring", stiffness: 260, damping: 18, delay: i * 0.04 }}
                 whileHover={b.earned_at ? { y: -4, rotate: -1.5 } : undefined}
-                className={`rounded-3xl p-4 ${b.earned_at ? "bg-gradient-to-br from-sun-soft to-coral-soft" : "bg-surface-2 opacity-70"}`}
+                className={`rounded-3xl p-4 ${b.earned_at ? "bg-gradient-to-br from-sun-soft to-coral-soft" : "bg-surface-2"}`}
               >
                 <span className={`grid h-11 w-11 place-items-center rounded-2xl ${b.earned_at ? "bg-spark text-white shadow-[var(--shadow-sm)]" : "bg-surface text-ink-faint"}`}>
                   <Icon name={b.earned_at ? "trophy" : "lock"} className="h-5 w-5" />
                 </span>
-                <p className="mt-3 text-sm font-semibold">{b.name}</p>
-                <p className="mt-0.5 text-xs text-ink-soft">{b.description}</p>
+                <p className={`mt-3 text-sm font-semibold ${b.earned_at ? "" : "text-ink-soft"}`}>{tn(`badge.${b.code}.name`, b.name)}</p>
+                <p className="mt-0.5 text-xs text-ink-soft">{tn(`badge.${b.code}.desc`, b.description)}</p>
               </motion.li>
             ))}
           </ul>
@@ -361,19 +363,20 @@ function DashboardView() {
             <h2 className="font-display text-2xl">{t("dash.history")}</h2>
           </div>
           {data.recent.length === 0 ? (
-            <p className="px-5 pb-5 text-sm text-ink-soft">No answers yet.</p>
+            <p className="px-5 pb-5 text-sm text-ink-soft">{t("dash.noAnswers")}</p>
           ) : (
             <ul className="flex flex-col">
               {data.recent.map((a) => (
                 <li key={a.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl px-5 py-3 text-sm transition-colors hover:bg-surface-2">
                   <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${a.is_correct ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}>
                     <Icon name={a.is_correct ? "check" : "x"} className="h-3.5 w-3.5" />
+                    <span className="sr-only">{a.is_correct ? t("dash.correct") : t("dash.wrong")}</span>
                   </span>
                   <span className="min-w-0 flex-1 truncate">{a.body}</span>
-                  {a.misconception_type && <Pill tone="coral">{MISCONCEPTION_LABEL[a.misconception_type]?.title}</Pill>}
+                  {a.misconception_type && <Pill tone="coral">{t(MISCONCEPTION_KEYS[a.misconception_type].title)}</Pill>}
                   <span className="w-full pl-10 text-xs text-ink-soft tabular sm:w-auto sm:pl-0">
-                    {a.topic}
-                    {a.from_test ? " · test" : ""} · {new Date(a.created_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                    {tn(a.topic)}
+                    {a.from_test ? ` · ${t("dash.fromTest")}` : ""} · {new Date(a.created_at).toLocaleString(dateLocale, { dateStyle: "short", timeStyle: "short" })}
                   </span>
                 </li>
               ))}

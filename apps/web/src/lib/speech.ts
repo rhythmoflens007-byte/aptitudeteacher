@@ -50,9 +50,10 @@ export function useSpeechRecognition(lang: string) {
         }
         setInterim(finalText + live);
       };
+      // Error codes, not text: the page translates them.
       rec.onerror = (e) => {
-        if (e.error === "not-allowed") setError("Microphone access is blocked. Allow it in your browser's site settings.");
-        else if (e.error !== "no-speech" && e.error !== "aborted") setError(`Voice input stopped (${e.error}).`);
+        if (e.error === "not-allowed") setError("blocked");
+        else if (e.error !== "no-speech" && e.error !== "aborted") setError("stopped");
       };
       rec.onend = () => {
         setListening(false);
@@ -172,64 +173,4 @@ export function pickVoice(lang: string, gender: "female" | "male") {
   // No voice of the right gender installed: shift the pitch of whatever voice is available instead.
   const neutral = inLanguage.find((v) => !unwanted.test(v.name)) ?? inLanguage[0] ?? null;
   return { voice: neutral, pitch: gender === "female" ? 1.15 : 0.8 };
-}
-
-export type SpeechHandlers = {
-  onStart?: () => void;
-  onEnd?: () => void;
-  onWord?: (word: string) => void;
-  onSentence?: (index: number) => void;
-};
-
-let generation = 0;
-
-/**
- * Speaks text one sentence at a time. Chrome silently stops a single long utterance after about
- * 15 seconds, and per-sentence events let the avatar change gesture and the UI highlight the sentence.
- */
-export async function speak(text: string, lang: string, handlers: SpeechHandlers, gender: "female" | "male" = "female") {
-  const s = synth();
-  if (!s) return;
-  const run = ++generation;
-  s.cancel();
-  await voicesReady();
-  if (run !== generation) return;
-
-  const sentences = sentenceLines(text).flat();
-  if (!sentences.length) return;
-  const { voice, pitch } = pickVoice(lang, gender);
-  let started = false;
-  sentences.forEach((sentence, index) => {
-    const spoken = cleanForSpeech(sentence);
-    const utterance = new SpeechSynthesisUtterance(spoken);
-    utterance.lang = lang;
-    utterance.voice = voice;
-    utterance.pitch = pitch;
-    utterance.rate = 1;
-    const last = index === sentences.length - 1;
-    utterance.onstart = () => {
-      if (run !== generation) return;
-      if (!started) {
-        started = true;
-        handlers.onStart?.();
-      }
-      handlers.onSentence?.(index);
-    };
-    utterance.onboundary = (e) => {
-      if (run !== generation || e.name !== "word") return;
-      handlers.onWord?.(spoken.slice(e.charIndex).split(/\s/, 1)[0] ?? "");
-    };
-    utterance.onend = () => {
-      if (run === generation && last) handlers.onEnd?.();
-    };
-    utterance.onerror = () => {
-      if (run === generation && last) handlers.onEnd?.();
-    };
-    s.speak(utterance);
-  });
-}
-
-export function stopSpeaking() {
-  generation++;
-  synth()?.cancel();
 }

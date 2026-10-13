@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api, getToken, Locale, setToken, setUnauthorizedHandler, User } from "./api";
+import { api, ApiError, getToken, Locale, setToken, setUnauthorizedHandler, User } from "./api";
 
 type AuthState = {
   user: User | null;
@@ -14,13 +14,20 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | null>(null);
 
-async function loadCurrentUser(): Promise<User | null> {
+const RETRY_MS = 3000;
+
+/** The signed-in user, null if signed out, or "retry" when the server can't be reached right now. */
+async function loadCurrentUser(): Promise<User | null | "retry"> {
   if (!getToken()) return null;
   try {
     return await api<User>("/auth/me");
-  } catch {
-    setToken(null);
-    return null;
+  } catch (e) {
+    // Only a rejected session signs you out; a network blip or server restart keeps it.
+    if (e instanceof ApiError && e.status === 401) {
+      setToken(null);
+      return null;
+    }
+    return "retry";
   }
 }
 
@@ -36,13 +43,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setUnauthorizedHandler(logout);
     let cancelled = false;
-    loadCurrentUser().then((me) => {
-      if (cancelled) return;
-      setUser(me);
-      setLoading(false);
-    });
+    let timer = 0;
+    const attempt = () =>
+      loadCurrentUser().then((me) => {
+        if (cancelled) return;
+        if (me === "retry") {
+          timer = window.setTimeout(attempt, RETRY_MS);
+          return;
+        }
+        setUser(me);
+        setLoading(false);
+      });
+    void attempt();
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
   }, [logout]);
 

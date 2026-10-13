@@ -120,8 +120,9 @@ function Hand({ shape, fill, shade }: { shape: HandShape; fill: string; shade: s
     return (
       <g>
         {fist}
-        <rect x="5" y="6" width="9" height="32" rx="4.5" fill={fill} stroke={shade} strokeWidth="1" />
-        <path d="M-8 12 Q-2 14 4 12 M-8 18 Q-2 20 4 18" stroke={shade} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+        {/* The thumb stands well clear of the fist so a thumbs-up reads at small sizes. */}
+        <rect x="4" y="10" width="10" height="44" rx="5" fill={fill} stroke={shade} strokeWidth="1" />
+        <path d="M-8 12 Q-3 14 1 12 M-8 18 Q-3 20 1 18" stroke={shade} strokeWidth="1.1" fill="none" strokeLinecap="round" />
       </g>
     );
   if (shape === "ok")

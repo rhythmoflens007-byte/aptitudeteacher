@@ -52,7 +52,7 @@ export function TextReveal({
   return (
     <Tag className={className} initial="hidden" variants={variants} {...trigger} aria-label={words.map((w) => w.word).join(" ")}>
       {words.map((w, i) => (
-        <span key={i} aria-hidden className="inline-block overflow-hidden pb-[0.12em] -mb-[0.12em] align-bottom">
+        <span key={i} aria-hidden className="-mb-[0.12em] -mt-[0.1em] inline-block overflow-hidden pb-[0.12em] pt-[0.1em] align-bottom">
           <motion.span variants={word} className={`inline-block origin-bottom-left ${w.className ?? ""}`}>
             {w.word}
           </motion.span>

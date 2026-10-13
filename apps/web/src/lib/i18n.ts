@@ -1,7 +1,14 @@
 "use client";
 
-import { useAuth } from "./auth";
+import { useSyncExternalStore } from "react";
 import type { Locale } from "./api";
+import { ApiError } from "./api";
+import { useAuth } from "./auth";
+import { en } from "./locales/en";
+import { hi } from "./locales/hi";
+import { NAMES } from "./locales/names";
+import { ta } from "./locales/ta";
+import { te } from "./locales/te";
 
 export const LANGUAGES: { code: Locale; label: string; english: string; speech: string }[] = [
   { code: "en", label: "English", english: "English", speech: "en-IN" },
@@ -10,273 +17,88 @@ export const LANGUAGES: { code: Locale; label: string; english: string; speech: 
   { code: "te", label: "తెలుగు", english: "Telugu", speech: "te-IN" },
 ];
 
-const en = {
-  "nav.dashboard": "Dashboard",
-  "nav.practice": "Practice",
-  "nav.tests": "Tests",
-  "nav.tutor": "Tutor",
-  "nav.profile": "Profile",
-  "nav.signOut": "Sign out",
-  "dash.greeting": "Welcome back",
-  "dash.level": "Level",
-  "dash.streak": "Day streak",
-  "dash.accuracy": "Accuracy",
-  "dash.speed": "Avg. time / question",
-  "dash.goal": "Today's goal",
-  "dash.goalStart": "Practice now",
-  "dash.mastery": "Topic mastery",
-  "dash.weak": "Needs attention",
-  "dash.badges": "Badges",
-  "dash.history": "Learning history",
-  "dash.trend": "Last 7 days",
-  "practice.title": "Adaptive practice",
-  "practice.all": "All topics",
-  "practice.submit": "Check answer",
-  "practice.skip": "I don't know",
-  "practice.next": "Next question",
-  "practice.retest": "Try a similar question",
-  "practice.askTutor": "Ask the tutor",
-  "practice.correct": "Correct!",
-  "practice.incorrect": "Not quite",
-  "practice.explanation": "Step-by-step solution",
-  "practice.lesson": "Quick lesson on this idea",
-  "tests.title": "Quizzes & mock tests",
-  "tests.quiz": "Quick quiz",
-  "tests.mock": "Full mock test",
-  "tests.start": "Start",
-  "tests.submit": "Submit test",
-  "tests.review": "Answer review",
-  "tutor.title": "AI tutor",
-  "tutor.placeholder": "Ask a doubt, or paste a question…",
-  "tutor.send": "Send",
-  "tutor.newChat": "New conversation",
-  "tutor.photo": "Photo of a question",
-  "tutor.speak": "Speak replies",
-  "tutor.listening": "Listening…",
-  "tutor.listeningFemale": "Listening…",
-  "profile.title": "Profile",
-  "profile.name": "Display name",
-  "profile.language": "Language",
-  "profile.save": "Save changes",
-  "profile.saved": "Saved",
-  "tutor.customise": "Customise tutor",
-  "tutor.yourTutor": "Your tutor",
-  "tutor.name": "Tutor name",
-  "tutor.gender": "Tutor",
-  "tutor.female": "Female",
-  "tutor.male": "Male",
-  "tutor.save": "Save tutor",
-  "tutor.saved": "Tutor updated",
-  "tutor.history": "Conversations",
-  "tutor.explainRequest": "Please explain this question step by step.",
-  "tutor.explain": "Explain this question",
-  "tutor.language": "Tutor language",
-  "nav.greeting": "Hi",
-};
+/** Every key in the English dictionary. Keys ending in "#one" are singular forms used when n === 1. */
+export type Key = keyof typeof en;
+type BaseKey = Exclude<Key, `${string}#one`>;
+/**
+ * Other languages must translate every base key. Singular forms ("#one") are optional, and so are
+ * "#male" forms for languages whose verbs change with the tutor's gender (passed as vars.gender).
+ */
+export type Dictionary = Record<BaseKey, string> & Partial<Record<Extract<Key, `${string}#one`>, string>> & Partial<Record<`${BaseKey}#male`, string>>;
+export type Vars = Record<string, string | number>;
 
-type Key = keyof typeof en;
+const DICTIONARIES: Record<Locale, Record<string, string | undefined>> = { en, hi, ta, te };
+const EN: Record<string, string | undefined> = en;
 
-const hi: Partial<Record<Key, string>> = {
-  "nav.dashboard": "डैशबोर्ड",
-  "nav.practice": "अभ्यास",
-  "nav.tests": "टेस्ट",
-  "nav.tutor": "ट्यूटर",
-  "nav.profile": "प्रोफ़ाइल",
-  "nav.signOut": "साइन आउट",
-  "dash.greeting": "फिर से स्वागत है",
-  "dash.level": "लेवल",
-  "dash.streak": "दिन की स्ट्रीक",
-  "dash.accuracy": "सटीकता",
-  "dash.speed": "प्रति प्रश्न औसत समय",
-  "dash.goal": "आज का लक्ष्य",
-  "dash.goalStart": "अभ्यास शुरू करें",
-  "dash.mastery": "विषय महारत",
-  "dash.weak": "ध्यान देने योग्य",
-  "dash.badges": "बैज",
-  "dash.history": "सीखने का इतिहास",
-  "dash.trend": "पिछले 7 दिन",
-  "practice.title": "अनुकूली अभ्यास",
-  "practice.all": "सभी विषय",
-  "practice.submit": "उत्तर जाँचें",
-  "practice.skip": "मुझे नहीं पता",
-  "practice.next": "अगला प्रश्न",
-  "practice.retest": "ऐसा ही एक और प्रश्न",
-  "practice.askTutor": "ट्यूटर से पूछें",
-  "practice.correct": "सही!",
-  "practice.incorrect": "थोड़ा चूक गए",
-  "practice.explanation": "चरण-दर-चरण हल",
-  "practice.lesson": "इस विचार पर छोटा पाठ",
-  "tests.title": "क्विज़ और मॉक टेस्ट",
-  "tests.quiz": "छोटा क्विज़",
-  "tests.mock": "पूरा मॉक टेस्ट",
-  "tests.start": "शुरू करें",
-  "tests.submit": "टेस्ट जमा करें",
-  "tests.review": "उत्तरों की समीक्षा",
-  "tutor.title": "AI ट्यूटर",
-  "tutor.placeholder": "अपना संदेह पूछें या प्रश्न चिपकाएँ…",
-  "tutor.send": "भेजें",
-  "tutor.newChat": "नई बातचीत",
-  "tutor.photo": "प्रश्न की फ़ोटो",
-  "tutor.speak": "उत्तर बोलकर सुनाएँ",
-  "tutor.listening": "सुन रहा हूँ…",
-  "tutor.listeningFemale": "सुन रही हूँ…",
-  "profile.title": "प्रोफ़ाइल",
-  "profile.name": "प्रदर्शित नाम",
-  "profile.language": "भाषा",
-  "profile.save": "बदलाव सहेजें",
-  "profile.saved": "सहेजा गया",
-  "tutor.customise": "ट्यूटर बदलें",
-  "tutor.yourTutor": "आपका ट्यूटर",
-  "tutor.name": "ट्यूटर का नाम",
-  "tutor.gender": "ट्यूटर",
-  "tutor.female": "महिला",
-  "tutor.male": "पुरुष",
-  "tutor.save": "ट्यूटर सहेजें",
-  "tutor.saved": "ट्यूटर अपडेट हुआ",
-  "tutor.history": "बातचीत",
-  "tutor.explainRequest": "कृपया इस प्रश्न को चरण-दर-चरण समझाइए।",
-  "tutor.explain": "यह प्रश्न समझाएँ",
-  "tutor.language": "ट्यूटर की भाषा",
-  "nav.greeting": "नमस्ते",
-};
+export function translate(locale: Locale, key: Key, vars?: Vars): string {
+  const dict = DICTIONARIES[locale] ?? EN;
+  const one = vars?.n === 1;
+  // Gendered form, then singular form if this language has one, else its normal form; English fills any gap.
+  const text =
+    (vars?.gender === "male" && dict[`${key}#male`]) || (one && dict[`${key}#one`]) || dict[key] || (one && EN[`${key}#one`]) || EN[key] || key;
+  return vars ? text.replace(/\{(\w+)\}/g, (match, name) => (name in vars ? String(vars[name]) : match)) : text;
+}
 
-const ta: Partial<Record<Key, string>> = {
-  "nav.dashboard": "டாஷ்போர்டு",
-  "nav.practice": "பயிற்சி",
-  "nav.tests": "தேர்வுகள்",
-  "nav.tutor": "ஆசிரியர்",
-  "nav.profile": "சுயவிவரம்",
-  "nav.signOut": "வெளியேறு",
-  "dash.greeting": "மீண்டும் வருக",
-  "dash.level": "நிலை",
-  "dash.streak": "தொடர் நாட்கள்",
-  "dash.accuracy": "துல்லியம்",
-  "dash.speed": "ஒரு கேள்விக்கு சராசரி நேரம்",
-  "dash.goal": "இன்றைய இலக்கு",
-  "dash.goalStart": "இப்போது பயிற்சி செய்",
-  "dash.mastery": "பாட தேர்ச்சி",
-  "dash.weak": "கவனம் தேவை",
-  "dash.badges": "பதக்கங்கள்",
-  "dash.history": "கற்றல் வரலாறு",
-  "dash.trend": "கடந்த 7 நாட்கள்",
-  "practice.title": "தகவமைப்பு பயிற்சி",
-  "practice.all": "அனைத்து பாடங்கள்",
-  "practice.submit": "விடையை சரிபார்",
-  "practice.skip": "எனக்குத் தெரியாது",
-  "practice.next": "அடுத்த கேள்வி",
-  "practice.retest": "இதுபோன்ற கேள்வியை முயற்சி செய்",
-  "practice.askTutor": "ஆசிரியரிடம் கேள்",
-  "practice.correct": "சரி!",
-  "practice.incorrect": "சற்று தவறு",
-  "practice.explanation": "படிப்படியான தீர்வு",
-  "practice.lesson": "இந்த கருத்து பற்றிய சிறு பாடம்",
-  "tests.title": "வினாடி வினா & மாதிரித் தேர்வு",
-  "tests.quiz": "சிறு வினாடி வினா",
-  "tests.mock": "முழு மாதிரித் தேர்வு",
-  "tests.start": "தொடங்கு",
-  "tests.submit": "தேர்வைச் சமர்ப்பி",
-  "tests.review": "விடை மதிப்பாய்வு",
-  "tutor.title": "AI ஆசிரியர்",
-  "tutor.placeholder": "உங்கள் சந்தேகத்தைக் கேளுங்கள்…",
-  "tutor.send": "அனுப்பு",
-  "tutor.newChat": "புதிய உரையாடல்",
-  "tutor.photo": "கேள்வியின் புகைப்படம்",
-  "tutor.speak": "பதில்களை வாசித்துக் காட்டு",
-  "tutor.listening": "கேட்கிறேன்…",
-  "tutor.listeningFemale": "கேட்கிறேன்…",
-  "profile.title": "சுயவிவரம்",
-  "profile.name": "காட்சிப் பெயர்",
-  "profile.language": "மொழி",
-  "profile.save": "மாற்றங்களைச் சேமி",
-  "profile.saved": "சேமிக்கப்பட்டது",
-  "tutor.customise": "ஆசிரியரை மாற்று",
-  "tutor.yourTutor": "உங்கள் ஆசிரியர்",
-  "tutor.name": "ஆசிரியர் பெயர்",
-  "tutor.gender": "ஆசிரியர்",
-  "tutor.female": "பெண்",
-  "tutor.male": "ஆண்",
-  "tutor.save": "ஆசிரியரைச் சேமி",
-  "tutor.saved": "ஆசிரியர் புதுப்பிக்கப்பட்டது",
-  "tutor.history": "உரையாடல்கள்",
-  "tutor.explainRequest": "இந்தக் கேள்வியைப் படிப்படியாக விளக்குங்கள்.",
-  "tutor.explain": "இந்தக் கேள்வியை விளக்கு",
-  "tutor.language": "ஆசிரியர் மொழி",
-  "nav.greeting": "வணக்கம்",
-};
+/* Guests (landing page, sign-in) pick a language before they have an account. */
+const GUEST_KEY = "aptitude.locale";
+const guestListeners = new Set<() => void>();
 
-const te: Partial<Record<Key, string>> = {
-  "nav.dashboard": "డాష్‌బోర్డ్",
-  "nav.practice": "అభ్యాసం",
-  "nav.tests": "పరీక్షలు",
-  "nav.tutor": "ట్యూటర్",
-  "nav.profile": "ప్రొఫైల్",
-  "nav.signOut": "సైన్ అవుట్",
-  "dash.greeting": "తిరిగి స్వాగతం",
-  "dash.level": "స్థాయి",
-  "dash.streak": "రోజుల వరుస",
-  "dash.accuracy": "ఖచ్చితత్వం",
-  "dash.speed": "ఒక్కో ప్రశ్నకు సగటు సమయం",
-  "dash.goal": "నేటి లక్ష్యం",
-  "dash.goalStart": "ఇప్పుడే అభ్యాసం చేయండి",
-  "dash.mastery": "విషయ ప్రావీణ్యం",
-  "dash.weak": "శ్రద్ధ అవసరం",
-  "dash.badges": "బ్యాడ్జ్‌లు",
-  "dash.history": "నేర్చుకున్న చరిత్ర",
-  "dash.trend": "గత 7 రోజులు",
-  "practice.title": "అనుకూల అభ్యాసం",
-  "practice.all": "అన్ని విషయాలు",
-  "practice.submit": "సమాధానం తనిఖీ చేయండి",
-  "practice.skip": "నాకు తెలియదు",
-  "practice.next": "తదుపరి ప్రశ్న",
-  "practice.retest": "ఇలాంటి ప్రశ్న ప్రయత్నించండి",
-  "practice.askTutor": "ట్యూటర్‌ను అడగండి",
-  "practice.correct": "సరైనది!",
-  "practice.incorrect": "కొంచెం తప్పింది",
-  "practice.explanation": "దశలవారీ పరిష్కారం",
-  "practice.lesson": "ఈ భావనపై చిన్న పాఠం",
-  "tests.title": "క్విజ్‌లు & మాక్ టెస్ట్‌లు",
-  "tests.quiz": "చిన్న క్విజ్",
-  "tests.mock": "పూర్తి మాక్ టెస్ట్",
-  "tests.start": "ప్రారంభించండి",
-  "tests.submit": "పరీక్ష సమర్పించండి",
-  "tests.review": "సమాధానాల సమీక్ష",
-  "tutor.title": "AI ట్యూటర్",
-  "tutor.placeholder": "మీ సందేహం అడగండి లేదా ప్రశ్నను అతికించండి…",
-  "tutor.send": "పంపండి",
-  "tutor.newChat": "కొత్త సంభాషణ",
-  "tutor.photo": "ప్రశ్న ఫోటో",
-  "tutor.speak": "సమాధానాలు చదివి వినిపించు",
-  "tutor.listening": "వింటున్నాను…",
-  "tutor.listeningFemale": "వింటున్నాను…",
-  "profile.title": "ప్రొఫైల్",
-  "profile.name": "ప్రదర్శన పేరు",
-  "profile.language": "భాష",
-  "profile.save": "మార్పులు సేవ్ చేయండి",
-  "profile.saved": "సేవ్ అయింది",
-  "tutor.customise": "ట్యూటర్‌ను మార్చండి",
-  "tutor.yourTutor": "మీ ట్యూటర్",
-  "tutor.name": "ట్యూటర్ పేరు",
-  "tutor.gender": "ట్యూటర్",
-  "tutor.female": "మహిళ",
-  "tutor.male": "పురుషుడు",
-  "tutor.save": "ట్యూటర్‌ను సేవ్ చేయండి",
-  "tutor.saved": "ట్యూటర్ నవీకరించబడింది",
-  "tutor.history": "సంభాషణలు",
-  "tutor.explainRequest": "దయచేసి ఈ ప్రశ్నను దశలవారీగా వివరించండి.",
-  "tutor.explain": "ఈ ప్రశ్నను వివరించు",
-  "tutor.language": "ట్యూటర్ భాష",
-  "nav.greeting": "నమస్కారం",
-};
+function readGuestLocale(): Locale {
+  try {
+    const stored = localStorage.getItem(GUEST_KEY);
+    return LANGUAGES.some((l) => l.code === stored) ? (stored as Locale) : "en";
+  } catch {
+    return "en";
+  }
+}
 
-const dictionaries: Record<Locale, Partial<Record<Key, string>>> = { en, hi, ta, te };
+export function setGuestLocale(locale: Locale) {
+  try {
+    localStorage.setItem(GUEST_KEY, locale);
+  } catch {}
+  guestListeners.forEach((listener) => listener());
+}
 
-export function useT() {
-  const { user } = useAuth();
-  const locale = user?.locale ?? "en";
+function subscribeGuest(listener: () => void) {
+  guestListeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    guestListeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
+function helpersFor(locale: Locale) {
+  const language = LANGUAGES.find((l) => l.code === locale) ?? LANGUAGES[0];
+  const t = (key: Key, vars?: Vars) => translate(locale, key, vars);
   return {
     locale,
-    speechLang: LANGUAGES.find((l) => l.code === locale)?.speech ?? "en-IN",
-    language: LANGUAGES.find((l) => l.code === locale) ?? LANGUAGES[0],
-    t: (key: Key) => dictionaries[locale]?.[key] ?? en[key],
+    language,
+    speechLang: language.speech,
+    /** BCP 47 tag for dates and numbers, e.g. "ta-IN". */
+    dateLocale: language.speech,
+    t,
+    /** Topic, subtopic, skill and badge names from the API, in the learner's language. */
+    tn: (name: string, fallback: string = name) => NAMES[locale]?.[name] ?? fallback,
+    /** A friendly, translated message for anything thrown by `api()`. */
+    errorText: (error: unknown, fallback: Key = "error.generic") => {
+      if (error instanceof ApiError) {
+        if (error.kind === "offline") return t("error.offline");
+        if (error.kind === "timeout") return t("error.timeout");
+        if (error.kind === "server") return t("error.server");
+        if (error.kind === "rate") return t("error.rate");
+        if (error.message) return error.message;
+      }
+      return t(fallback);
+    },
   };
+}
+
+const HELPERS = Object.fromEntries(LANGUAGES.map((l) => [l.code, helpersFor(l.code)])) as Record<Locale, ReturnType<typeof helpersFor>>;
+
+/** Translation helpers for the current learner (or guest). Stable per language, so safe in effect deps. */
+export function useT() {
+  const { user } = useAuth();
+  const guest = useSyncExternalStore(subscribeGuest, readGuestLocale, () => "en" as Locale);
+  return HELPERS[user?.locale ?? guest] ?? HELPERS.en;
 }

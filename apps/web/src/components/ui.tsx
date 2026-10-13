@@ -11,6 +11,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { Key, useT } from "@/lib/i18n";
 
 /* ---------------- Buttons ---------------- */
 
@@ -40,7 +41,7 @@ export function Button({ variant = "primary", className = "", ...props }: Button
 
 export function Card({ children, className = "", hover = false, style }: { children: ReactNode; className?: string; hover?: boolean; style?: CSSProperties }) {
   return (
-    <div style={style} className={`rounded-3xl bg-surface p-6 shadow-[var(--shadow-md)] ring-1 ring-black/[0.03] ${hover ? "lift" : ""} ${className}`}>
+    <div style={style} className={`rounded-3xl bg-surface p-6 shadow-[var(--shadow-md)] ring-1 ring-hairline ${hover ? "lift" : ""} ${className}`}>
       {children}
     </div>
   );
@@ -89,7 +90,7 @@ export function SpotlightCard({
       onMouseMove={onMove}
       onMouseLeave={onLeave}
       style={{ rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
-      className={`group relative overflow-hidden rounded-3xl bg-surface shadow-[var(--shadow-md)] ring-1 ring-black/[0.03] transition-shadow duration-500 hover:shadow-[var(--shadow-lg)] ${className}`}
+      className={`group relative overflow-hidden rounded-3xl bg-surface shadow-[var(--shadow-md)] ring-1 ring-hairline transition-shadow duration-500 hover:shadow-[var(--shadow-lg)] ${className}`}
     >
       <motion.div aria-hidden className="pointer-events-none absolute inset-0 z-10" style={{ background }} />
       {children}
@@ -110,10 +111,10 @@ export function SparkGlow({ active, level = 1, className = "", children }: { act
 export function Blobs({ className = "" }: { className?: string }) {
   return (
     <div aria-hidden className={`blobs ${className}`}>
-      <span className="blob" style={{ width: "42vmax", height: "42vmax", left: "-12%", top: "-18%", background: "#c3c2ff" }} />
-      <span className="blob" style={{ width: "36vmax", height: "36vmax", right: "-10%", top: "-6%", background: "#ffc9c0", animationDelay: "-6s" }} />
-      <span className="blob" style={{ width: "30vmax", height: "30vmax", left: "30%", top: "34%", background: "#b0eeee", animationDelay: "-11s", opacity: 0.4 }} />
-      <span className="blob" style={{ width: "24vmax", height: "24vmax", right: "16%", bottom: "-12%", background: "#ffe5a3", animationDelay: "-3s", opacity: 0.45 }} />
+      <span className="blob" style={{ width: "42vmax", height: "42vmax", left: "-12%", top: "-18%", background: "var(--blob-1)" }} />
+      <span className="blob" style={{ width: "36vmax", height: "36vmax", right: "-10%", top: "-6%", background: "var(--blob-2)", animationDelay: "-6s" }} />
+      <span className="blob" style={{ width: "30vmax", height: "30vmax", left: "30%", top: "34%", background: "var(--blob-3)", animationDelay: "-11s", opacity: "calc(var(--blob-opacity) * 0.75)" }} />
+      <span className="blob" style={{ width: "24vmax", height: "24vmax", right: "16%", bottom: "-12%", background: "var(--blob-4)", animationDelay: "-3s", opacity: "calc(var(--blob-opacity) * 0.8)" }} />
     </div>
   );
 }
@@ -130,7 +131,7 @@ const TILE_TONES = {
   sun: "bg-sun-soft text-sun-600",
   coral: "bg-coral-soft text-coral-600",
   lagoon: "bg-lagoon-soft text-lagoon-600",
-  violet: "bg-[#f3ecfe] text-violet",
+  violet: "bg-violet-soft text-violet",
   good: "bg-success-soft text-success",
 };
 
@@ -232,10 +233,14 @@ const TONE_FILL = {
 };
 export type Tone = keyof typeof TONE_FILL;
 
-export function ProgressBar({ value, tone = "iris", thick = false }: { value: number; tone?: Tone; thick?: boolean }) {
+/** With a `label` it is announced as a progress bar; without one it is decorative (the number is shown beside it). */
+export function ProgressBar({ value, tone = "iris", thick = false, label }: { value: number; tone?: Tone; thick?: boolean; label?: string }) {
   const pct = Math.max(0, Math.min(100, value));
+  const a11y = label
+    ? ({ role: "progressbar", "aria-label": label, "aria-valuenow": Math.round(pct), "aria-valuemin": 0, "aria-valuemax": 100 } as const)
+    : ({ "aria-hidden": true } as const);
   return (
-    <div className={`overflow-hidden rounded-full bg-surface-2 ${thick ? "h-3" : "h-2"}`} role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+    <div className={`overflow-hidden rounded-full bg-surface-2 ${thick ? "h-3" : "h-2"}`} {...a11y}>
       <div className="grow-x h-full rounded-full" style={{ width: `${pct}%`, background: TONE_FILL[tone] }} />
     </div>
   );
@@ -251,15 +256,25 @@ export function Ring({ value, size = 88, stroke = 10, tone = "iris", children }:
     const id = requestAnimationFrame(() => setDrawn(pct));
     return () => cancelAnimationFrame(id);
   }, [pct]);
-  const trackTint = { iris: "#eeeefe", accent: "#eeeefe", coral: "#ffede9", lagoon: "#e1f7f7", sun: "#fff5d9", marker: "#fff5d9", bad: "#fdeced", good: "#e2f6ee", spark: "#f3effd" }[tone];
+  const trackTint = {
+    iris: "var(--iris-soft)",
+    accent: "var(--iris-soft)",
+    coral: "var(--coral-soft)",
+    lagoon: "var(--lagoon-soft)",
+    sun: "var(--sun-soft)",
+    marker: "var(--sun-soft)",
+    bad: "var(--danger-soft)",
+    good: "var(--success-soft)",
+    spark: "var(--violet-soft)",
+  }[tone];
   return (
     <div className="relative inline-grid shrink-0 place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#5b5bf5" />
-            <stop offset="50%" stopColor="#9b5cf6" />
-            <stop offset="100%" stopColor="#ff6b5c" />
+            <stop offset="0%" style={{ stopColor: "var(--iris)" }} />
+            <stop offset="50%" style={{ stopColor: "var(--violet)" }} />
+            <stop offset="100%" style={{ stopColor: "var(--coral)" }} />
           </linearGradient>
         </defs>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={trackTint} strokeWidth={stroke} />
@@ -372,9 +387,9 @@ export function Pill({ children, tone = "neutral" }: { children: ReactNode; tone
     bad: "bg-danger-soft text-danger",
     marker: "bg-sun-soft text-sun-600",
     sun: "bg-sun-soft text-sun-600",
-    accent: "bg-iris-soft text-iris",
-    iris: "bg-iris-soft text-iris",
-    violet: "bg-[#f3ecfe] text-violet",
+    accent: "bg-iris-soft text-iris-600",
+    iris: "bg-iris-soft text-iris-600",
+    violet: "bg-violet-soft text-violet",
     coral: "bg-coral-soft text-coral-600",
     lagoon: "bg-lagoon-soft text-lagoon-600",
   };
@@ -388,6 +403,50 @@ export function ErrorNote({ message }: { message: string | null }) {
       <Icon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
       {message}
     </p>
+  );
+}
+
+/** Full-card failure state with a way out: used when a page's main content couldn't load. */
+export function ErrorState({ message, onRetry, className = "" }: { message: string; onRetry?: () => void | Promise<void>; className?: string }) {
+  const { t } = useT();
+  const [retrying, setRetrying] = useState(false);
+  return (
+    <motion.div
+      role="alert"
+      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 260, damping: 24 }}
+      className={`flex flex-col items-center gap-4 rounded-[32px] bg-surface px-6 py-12 text-center shadow-[var(--shadow-md)] ring-1 ring-hairline ${className}`}
+    >
+      <motion.span
+        animate={{ rotate: [0, -6, 6, 0] }}
+        transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.5 }}
+        className="grid h-14 w-14 place-items-center rounded-3xl bg-coral-soft text-coral-600"
+      >
+        <Icon name="cloudOff" className="h-7 w-7" />
+      </motion.span>
+      <div className="max-w-md">
+        <p className="font-display text-2xl">{t("error.title")}</p>
+        <p className="mt-1 text-ink-soft">{message}</p>
+      </div>
+      {onRetry && (
+        <Button
+          variant="secondary"
+          disabled={retrying}
+          onClick={async () => {
+            setRetrying(true);
+            try {
+              await onRetry();
+            } finally {
+              setRetrying(false);
+            }
+          }}
+        >
+          <Icon name="refresh" className={`h-4 w-4 ${retrying ? "animate-spin" : ""}`} />
+          {retrying ? t("error.retrying") : t("error.retry")}
+        </Button>
+      )}
+    </motion.div>
   );
 }
 
@@ -502,6 +561,32 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   star: <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" />,
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </>
+  ),
+  moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,
+  monitor: (
+    <>
+      <rect x="3" y="4" width="18" height="12" rx="2" />
+      <path d="M8 20h8M12 16v4" />
+    </>
+  ),
+  cloudOff: (
+    <>
+      <path d="M7 18h10.5a4 4 0 0 0 1.2-7.8A6 6 0 0 0 8.4 7.6M5.3 9.4A4.5 4.5 0 0 0 7 18" />
+      <path d="M3 3l18 18" />
+    </>
+  ),
+  wifiOff: (
+    <>
+      <path d="M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5a15 15 0 0 1 11.3 3.8M5 12.6a10 10 0 0 1 4-2.3M15.5 10.9A10 10 0 0 1 19 12.6M8.5 16.4a5 5 0 0 1 7 0M12 20h.01" />
+      <path d="M3 3l18 18" />
+    </>
+  ),
+  language: <path d="M4 5h9M8.5 3v2M6 5c.6 3 2.6 5.6 5.5 7M11 5c-.7 3.6-3.2 6.6-7 8M13 21l4.5-10L22 21M14.5 17.5h6" />,
 };
 
 export function Icon({ name, className = "h-5 w-5" }: { name: keyof typeof ICONS | string; className?: string }) {
@@ -512,11 +597,11 @@ export function Icon({ name, className = "h-5 w-5" }: { name: keyof typeof ICONS
   );
 }
 
-export const MISCONCEPTION_LABEL: Record<string, { title: string; hint: string }> = {
-  careless_slip: { title: "Careless slip", hint: "Your method looks right — slow down, re-check each step and read the options carefully." },
-  conceptual_gap: { title: "Concept gap", hint: "The underlying idea needs another look. A short lesson is below." },
-  partial_method: { title: "Almost there", hint: "Right approach, but one step went off track." },
-  no_attempt: { title: "Guess or skip", hint: "Take a moment to set up the problem before choosing." },
-};
+export const MISCONCEPTION_KEYS = {
+  careless_slip: { title: "mis.careless.title", hint: "mis.careless.hint" },
+  conceptual_gap: { title: "mis.gap.title", hint: "mis.gap.hint" },
+  partial_method: { title: "mis.partial.title", hint: "mis.partial.hint" },
+  no_attempt: { title: "mis.guess.title", hint: "mis.guess.hint" },
+} as const satisfies Record<string, { title: Key; hint: Key }>;
 
-export const DIFFICULTY = ["", "Easy", "Easy+", "Medium", "Hard", "Expert"];
+export const DIFFICULTY_KEYS = ["difficulty.1", "difficulty.1", "difficulty.2", "difficulty.3", "difficulty.4", "difficulty.5"] as const satisfies readonly Key[];

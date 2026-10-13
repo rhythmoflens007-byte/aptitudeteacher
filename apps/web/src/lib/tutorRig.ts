@@ -124,7 +124,8 @@ const COUNT_HANDS: HandShape[] = ["point", "point", "two", "three", "four", "ope
 
 const G = {
   rest: still(pose(REST, REST)),
-  present: still(pose(arm(18, 0.85, 112, -10, "open"), arm(18, 0.85, 112, -10, "open"), { lean: 1 })),
+  // Open palms angled up and out, as if offering an idea (not crossed at the waist).
+  present: still(pose(REST, arm(26, 0.8, -146, -6, "open"), { lean: 1, tilt: 2 })),
   pointUp: still(pose(REST, arm(22, 0.8, 150, 0, "point"), { tilt: -2, lookUp: 1 })),
   palmRaise: still(pose(arm(20, 0.8, -150, 0, "open"), REST, { tilt: 3, turn: -2 })),
   chest: still(pose(arm(-8, 0.7, 125, 10, "open"), arm(24, 0.9, 70, -25, "open"), { tilt: 2 })),
@@ -134,17 +135,20 @@ const G = {
       pose(REST, arm(35, 0.75, -145 + Math.sin(t * 6) * 3, 0, COUNT_HANDS[Math.max(1, Math.min(5, n))]), { tilt: 3, lookUp: 1 }),
   clap: ((t) => {
     const beat = Math.sin(t * 16) * 9;
-    return pose(arm(10, 0.8, 116 + beat, 0, "open"), arm(10, 0.8, 116 + beat, 0, "open"), { lean: 1.5 });
+    // Hands meet in front of the chest, where a clap reads clearly.
+    return pose(arm(-4, 0.62, 128 + beat, 5, "open"), arm(-4, 0.62, 128 + beat, 5, "open"), { lean: 1.5 });
   }) as Gesture,
   fistPump: ((t) => pose(REST, arm(35, 0.75, -150 + Math.abs(Math.sin(t * 8)) * 25, 0, "fist"), { tilt: 4, lookUp: 2 })) as Gesture,
   jazzHands: ((t) =>
     pose(arm(20, 0.8, -150, Math.sin(t * 18) * 14, "open"), arm(35, 0.75, -145, Math.sin(t * 18 + 1) * 14, "open"), { lookUp: 2, shrug: 0.4 })) as Gesture,
-  thumbs: still(pose(REST, arm(28, 0.7, 160, 10, "thumb"), { tilt: 3 })),
-  ok: still(pose(REST, arm(28, 0.7, 160, 10, "ok"), { tilt: 3 })),
+  // Raised beside the shoulder, like counting, so the thumb and the OK sign are actually visible.
+  thumbs: still(pose(REST, arm(30, 0.75, -142, -4, "thumb"), { tilt: 3 })),
+  ok: still(pose(REST, arm(30, 0.75, -142, 0, "ok"), { tilt: 3 })),
   templeTap: ((t) => pose(REST, arm(-10, 0.35, 165 + Math.abs(Math.sin(t * 7)) * 6, 25, "point"), { tilt: -4 })) as Gesture,
   fingerWag: ((t) => pose(REST, arm(22, 0.8, 150, Math.sin(t * 11) * 18, "point"), { tilt: -3 })) as Gesture,
   weigh: ((t) =>
-    pose(arm(35, 0.85, 60 + Math.sin(t * 3.5) * 12, -40, "open"), arm(35, 0.85, 60 - Math.sin(t * 3.5) * 12, -40, "open"), { tilt: Math.sin(t * 3.5) * 3 })) as Gesture,
+    // "On one hand… on the other": both palms up, bobbing in turn.
+    pose(arm(22, 0.8, -138 + Math.sin(t * 3.5) * 12, -8, "open"), arm(30, 0.78, -138 - Math.sin(t * 3.5) * 12, -8, "open"), { tilt: Math.sin(t * 3.5) * 3 })) as Gesture,
   together: still(pose(arm(8, 0.8, 115, 0, "fist"), arm(8, 0.8, 115, 0, "fist"), { lean: 1.5 })),
   shrug: still(pose(arm(40, 0.9, 55, -45, "open"), arm(40, 0.9, 55, -45, "open"), { tilt: 5, shrug: 1.6 })),
   listen: still(pose(arm(-4, 0.9, 60, 10, "fist"), arm(-4, 0.9, 60, 10, "fist"), { tilt: 5, lean: 1.5 })),

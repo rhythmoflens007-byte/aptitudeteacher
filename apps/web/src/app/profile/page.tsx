@@ -4,11 +4,12 @@ import { motion } from "motion/react";
 import { FormEvent, ReactNode, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { FadeIn } from "@/components/motion";
+import { ThemePicker } from "@/components/ThemeToggle";
 import TutorCustomizer from "@/components/TutorCustomizer";
 import { Button, ErrorNote, Icon, PageHeader } from "@/components/ui";
 import type { Locale } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { LANGUAGES, useT } from "@/lib/i18n";
+import { LANGUAGES, setGuestLocale, useT } from "@/lib/i18n";
 
 export default function ProfilePage() {
   return (
@@ -21,8 +22,8 @@ export default function ProfilePage() {
 function Group({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
   return (
     <FadeIn className="flex flex-col gap-2">
-      <p className="px-4 text-sm font-semibold text-ink-soft">{title}</p>
-      <div className="overflow-hidden rounded-[28px] bg-surface shadow-[var(--shadow-md)]">{children}</div>
+      <h2 className="px-4 text-sm font-semibold text-ink-soft">{title}</h2>
+      <div className="overflow-hidden rounded-[28px] bg-surface shadow-[var(--shadow-md)] ring-1 ring-hairline">{children}</div>
       {note && <p className="px-4 text-xs text-ink-soft">{note}</p>}
     </FadeIn>
   );
@@ -30,21 +31,26 @@ function Group({ title, note, children }: { title: string; note?: string; childr
 
 function Profile() {
   const { user, updateProfile, logout } = useAuth();
-  const { t } = useT();
+  const { t, errorText } = useT();
   const [name, setName] = useState(user?.display_name ?? "");
   const [locale, setLocale] = useState<Locale>(user?.locale ?? "en");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSaved(false);
+    setBusy(true);
     try {
       await updateProfile({ display_name: name, locale });
+      setGuestLocale(locale);
       setSaved(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't save.");
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -53,13 +59,14 @@ function Profile() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        eyebrow="Settings"
+        eyebrow={t("profile.eyebrow")}
         title={
           <span className="flex items-center gap-4">
             <motion.span
               initial={{ scale: 0.6, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 260, damping: 14 }}
+              aria-hidden
               className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-spark text-2xl font-bold text-white shadow-[var(--shadow-md)]"
             >
               {(user?.display_name.trim().charAt(0) || "?").toUpperCase()}
@@ -70,45 +77,51 @@ function Profile() {
         description={user?.email}
       />
 
-      <Group title={t("tutor.yourTutor")} note="Your tutor's name and voice carry through practice, lessons and chat.">
+      <Group title={t("tutor.yourTutor")} note={t("profile.tutorNote")}>
         <div className="p-6">
           <TutorCustomizer />
         </div>
+      </Group>
+
+      <Group title={t("theme.title")} note={t("theme.note")}>
+        <ThemePicker />
       </Group>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-8">
         <Group title={t("profile.title")}>
           <label className="flex items-center gap-4 px-6 py-4">
             <span className="w-32 shrink-0 text-sm font-semibold">{t("profile.name")}</span>
-            <input id="profile-name" className="min-w-0 flex-1 bg-transparent text-right text-[16px] outline-none" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} />
+            <input id="profile-name" className="min-w-0 flex-1 rounded-lg bg-transparent text-right text-[16px] outline-none focus-visible:ring-2 focus-visible:ring-iris" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} />
           </label>
           <div className="mx-6 h-px bg-line" />
           <div className="flex items-center gap-4 px-6 py-4">
-            <span className="w-32 shrink-0 text-sm font-semibold">Email</span>
+            <span className="w-32 shrink-0 text-sm font-semibold">{t("auth.email")}</span>
             <span className="min-w-0 flex-1 truncate text-right text-ink-soft">{user?.email}</span>
           </div>
         </Group>
 
-        <Group title={t("profile.language")} note="Your tutor replies, explains and listens in this language. Menus are translated too.">
-          <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
+        <Group title={t("profile.language")} note={t("profile.languageNote")}>
+          <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4" role="radiogroup" aria-label={t("profile.language")}>
             {LANGUAGES.map((l, i) => {
               const on = locale === l.code;
               return (
                 <motion.button
                   key={l.code}
                   type="button"
+                  role="radio"
+                  aria-checked={on}
+                  lang={l.code}
                   whileHover={{ y: -3 }}
                   whileTap={{ scale: 0.95 }}
-                  aria-pressed={on}
                   onClick={() => setLocale(l.code)}
-                  className={`relative overflow-hidden rounded-3xl p-4 text-left transition-colors duration-300 ${on ? `${tones[i]} text-white shadow-[var(--shadow-md)]` : "bg-surface-2 text-ink"}`}
+                  className={`relative overflow-hidden rounded-3xl p-4 text-left transition-colors duration-300 ${on ? `${tones[i]} ${i >= 2 ? "text-coal" : "text-white"} shadow-[var(--shadow-md)]` : "bg-surface-2 text-ink"}`}
                 >
-                  <span className="block font-display text-2xl" dir="auto">
-                    {l.label}
+                  <span className="block font-display text-2xl">{l.label}</span>
+                  <span lang="en" className={`block text-xs ${on ? "opacity-80" : "text-ink-soft"}`}>
+                    {l.english}
                   </span>
-                  <span className={`block text-xs ${on ? "text-white/80" : "text-ink-soft"}`}>{l.english}</span>
                   {on && (
-                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-white/25">
+                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-white/30">
                       <Icon name="check" className="h-3.5 w-3.5" />
                     </motion.span>
                   )}
@@ -120,8 +133,8 @@ function Profile() {
 
         <ErrorNote message={error} />
         <div className="flex items-center gap-3">
-          <Button type="submit" variant="spark" className="px-6 py-3">
-            {t("profile.save")}
+          <Button type="submit" variant="spark" className="px-6 py-3" disabled={busy}>
+            {busy ? t("common.saving") : t("profile.save")}
           </Button>
           {saved && (
             <span className="pop flex items-center gap-1 text-sm font-semibold text-success" role="status">
@@ -131,7 +144,7 @@ function Profile() {
         </div>
       </form>
 
-      <Group title="Account">
+      <Group title={t("profile.account")}>
         <button onClick={logout} className="flex w-full items-center gap-3 px-6 py-4 text-left font-semibold text-danger transition-colors hover:bg-danger-soft">
           <Icon name="logout" className="h-5 w-5" /> {t("nav.signOut")}
         </button>

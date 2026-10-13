@@ -37,6 +37,18 @@
   --danger: #f0525a;
   --danger-soft: #fdeced;
 
+  --violet-soft: #f3ecfe;
+  --hairline: rgb(23 23 31 / 0.05);
+  --scrim: rgb(23 23 31 / 0.28);
+
+  --blob-1: #c3c2ff;
+  --blob-2: #ffc9c0;
+  --blob-3: #b0eeee;
+  --blob-4: #ffe5a3;
+  --blob-opacity: 0.55;
+  --stage-glow: rgb(91 91 245 / 0.14);
+  --stage-shadow: rgb(23 23 31 / 0.12);
+
   --spark: linear-gradient(100deg, #5b5bf5 0%, #9b5cf6 35%, #ff6b5c 70%, #ffc53d 100%);
   --shadow-xs: 0 1px 2px rgb(23 23 31 / 0.05);
   --shadow-sm: 0 1px 2px rgb(23 23 31 / 0.04), 0 4px 12px -4px rgb(23 23 31 / 0.06);
@@ -46,6 +58,62 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   color-scheme: light;
+}
+
+/*
+ * "Spark Night": the same four hues, lifted for dark surfaces. Fills stay vivid, text tints are
+ * lighter so they keep AA contrast, and "soft" backgrounds become deep, low-chroma tints.
+ * Surfaces step up in lightness instead of relying on shadows, which barely show on dark.
+ */
+:root[data-theme="dark"] {
+  --canvas: #0c0c11;
+  --surface: #15151c;
+  --surface-2: #1d1d26;
+  --surface-3: #262631;
+  --glass: rgb(21 21 28 / 0.72);
+  --ink: #f2f1f7;
+  --ink-soft: #a6a6b6;
+  --ink-faint: #70707f;
+  --line: #24242e;
+  --line-strong: #34343f;
+
+  --iris: #7373fc;
+  --iris-600: #8a8aff;
+  --iris-soft: #22224a;
+  --violet: #b08aff;
+  --violet-soft: #2a2146;
+  --coral: #ff7a6c;
+  --coral-600: #ff9e94;
+  --coral-soft: #3a1f1c;
+  --lagoon: #1fc7c7;
+  --lagoon-600: #52dede;
+  --lagoon-soft: #0e3133;
+  --sun: #ffc94d;
+  --sun-600: #ffd36e;
+  --sun-soft: #382d10;
+  --success: #34d39e;
+  --success-soft: #10302a;
+  --danger: #ff6b74;
+  --danger-soft: #3a1b20;
+
+  --hairline: rgb(255 255 255 / 0.07);
+  --scrim: rgb(0 0 0 / 0.55);
+
+  --blob-1: #3b3bb5;
+  --blob-2: #a8453b;
+  --blob-3: #157575;
+  --blob-4: #8f6a14;
+  --blob-opacity: 0.32;
+  --stage-glow: rgb(115 115 252 / 0.22);
+  --stage-shadow: rgb(0 0 0 / 0.55);
+
+  --spark: linear-gradient(100deg, #7373fc 0%, #a874ff 35%, #ff7a6c 70%, #ffc94d 100%);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35), 0 4px 12px -4px rgb(0 0 0 / 0.45);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -12px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.3), 0 32px 72px -24px rgb(0 0 0 / 0.75);
+  --shadow-iris: 0 10px 30px -10px rgb(115 115 252 / 0.5);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -78,6 +146,11 @@
   --color-success-soft: var(--success-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-violet-soft: var(--violet-soft);
+  --color-hairline: var(--hairline);
+  --color-scrim: var(--scrim);
+  /* Fixed text colour for white chips and buttons that stay white in both themes. */
+  --color-coal: #17171f;
 
   /* Semantic aliases used by shared components. */
   --color-accent: var(--iris);
@@ -94,8 +167,8 @@
   --color-bad: var(--danger);
   --color-bad-soft: var(--danger-soft);
 
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --font-display: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-sans: var(--font-inter), var(--font-devanagari), var(--font-tamil), var(--font-telugu), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-display: var(--font-inter), var(--font-devanagari), var(--font-tamil), var(--font-telugu), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   --radius-md: 0.625rem;
@@ -116,6 +189,13 @@ body {
   font-feature-settings: "cv11", "ss01", "ss03";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Long single words (common in Tamil and Telugu) wrap instead of running off narrow screens. */
+h1,
+h2,
+h3 {
+  overflow-wrap: break-word;
 }
 
 /* Big, tight, confident headlines. */
@@ -139,7 +219,39 @@ body {
 }
 
 ::selection {
-  background: rgb(91 91 245 / 0.22);
+  background: rgb(115 115 252 / 0.28);
+}
+
+/*
+ * Theme switch: the new theme spreads out in a circle from the toggle that was pressed.
+ * Elements with their own view-transition names would otherwise snap, so they join the root
+ * snapshot for this one transition.
+ */
+html.theme-reveal * {
+  view-transition-name: none !important;
+}
+html.theme-reveal::view-transition-old(root) {
+  animation: none;
+}
+html.theme-reveal::view-transition-new(root) {
+  animation: theme-reveal 0.7s var(--ease-out) both;
+}
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--reveal-x, 50%) var(--reveal-y, 0%));
+  }
+  to {
+    clip-path: circle(var(--reveal-r, 150vmax) at var(--reveal-x, 50%) var(--reveal-y, 0%));
+  }
+}
+/* Browsers without view transitions get a quick cross-fade of colours instead. */
+html.theme-fade,
+html.theme-fade * {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    fill 0.35s ease !important;
 }
 
 .tabular {
@@ -261,7 +373,7 @@ body {
   position: absolute;
   border-radius: 9999px;
   filter: blur(70px);
-  opacity: 0.55;
+  opacity: var(--blob-opacity);
   animation: blob-drift 18s ease-in-out infinite alternate;
 }
 
@@ -390,7 +502,7 @@ html.lenis body {
   position: absolute;
   inset: 16% 14% 0;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(91 91 245 / 0.14), transparent 75%);
+  background: radial-gradient(closest-side, var(--stage-glow), transparent 75%);
 }
 .tutor-stage-ring {
   position: absolute;
@@ -400,7 +512,7 @@ html.lenis body {
   aspect-ratio: 5 / 1;
   translate: -50% 0;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(23 23 31 / 0.12), transparent);
+  background: radial-gradient(closest-side, var(--stage-shadow), transparent);
 }
 .tutor-stage-ring--live {
   animation: ring 1.1s ease-in-out infinite;
