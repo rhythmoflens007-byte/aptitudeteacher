@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=API_DIR / ".env", extra="ignore")
 
     environment: str = "development"
-    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    # Comma-separated web addresses allowed to call the API (add the live site's address when hosting).
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     database_url: str = f"sqlite:///{(API_DIR / 'aptitude.db').as_posix()}"
 
@@ -34,6 +35,9 @@ class Settings(BaseSettings):
     google_tts_api_key: str = ""
     # Where spoken sentences are kept so they still play when the voice service is down; "off" disables.
     voice_cache_dir: str = ""
+
+    def allowed_origins(self) -> list[str]:
+        return [origin.strip().rstrip("/") for origin in self.cors_origins.split(",") if origin.strip()]
 
     def gemini_models(self) -> list[str]:
         fallbacks = [name.strip() for name in self.gemini_fallback_models.split(",") if name.strip()]
