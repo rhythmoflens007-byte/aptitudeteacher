@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
 from types import SimpleNamespace
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -22,6 +22,9 @@ from app.schemas import (
 )
 
 router = APIRouter(tags=["practice"])
+
+# How long a student waits for the AI after answering; past this they get the instant offline feedback.
+AI_WAIT_SECONDS = 6
 
 
 @router.get("/topics")
@@ -109,22 +112,35 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     # A ready-made translation is used as is; otherwise the AI translates the explanation alongside the
     # diagnosis (which doesn't depend on it).
     shown = localize(question, user.locale)
-    pool = ThreadPoolExecutor(max_workers=1)
+    pool = ThreadPoolExecutor(max_workers=2)
     if shown or run:
         # Lessons keep a quick rhythm: no AI round-trips between questions.
         text = shown["explanation"] if shown else question.explanation
         explanation = pool.submit(lambda: text)
     else:
         explanation = pool.submit(ai.explain, snapshot, learner)
-    pool.shutdown(wait=False)
+
+    def solution() -> str:
+        return explanation.result() if explanation.done() else snapshot.explanation
+
     misconception, lesson = (None, None)
+    diagnosis = None
     if not is_correct and run:
         misconception = ai.heuristic_misconception(body.chosen_answer, body.time_taken_ms)
     elif not is_correct:
         skill_name = question.skills[0].name if question.skills else ""
-        misconception, lesson = ai.diagnose(
-            question, body.chosen_answer, body.time_taken_ms, skill_name, learner, solution=explanation.result
+        diagnosis = pool.submit(
+            ai.diagnose, snapshot, body.chosen_answer, body.time_taken_ms, skill_name, learner, solution
         )
+    pool.shutdown(wait=False)
+    # The explanation and diagnosis run side by side; a slow or busy AI never keeps the student waiting.
+    wait([f for f in (explanation, diagnosis) if f], timeout=AI_WAIT_SECONDS)
+    explanation_text = solution()
+    if diagnosis is not None:
+        if diagnosis.done():
+            misconception, lesson = diagnosis.result()
+        else:
+            misconception, lesson = ai.offline_diagnosis(body.chosen_answer, body.time_taken_ms, learner, explanation_text)
 
     attempt = Attempt(
         user_id=user.id,
@@ -163,7 +179,7 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     return AttemptOut(
         is_correct=is_correct,
         correct_option=question.correct_option,
-        explanation=explanation.result(),
+        explanation=explanation_text,
         misconception_type=misconception,
         micro_lesson=micro_lesson,
         retest_question_id=retest_id,

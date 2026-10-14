@@ -27,6 +27,7 @@ _emails = itertools.count()
 def fresh_model_quota():
     """Models rested after a quota error in one test must not stay rested in the next."""
     ai._resting_until.clear()
+    ai._busy_until.clear()
 
 
 @pytest.fixture(scope="session")

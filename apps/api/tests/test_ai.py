@@ -348,3 +348,55 @@ def test_database_stays_writable_while_the_tutor_waits_for_the_ai(client, user, 
     fake_ai["responses"]["Content"] = slow_ai
     reply = client.post(f"/tutor/sessions/{session['id']}/messages", headers=user, json={"content": "help"})
     assert reply.status_code == 200 and reply.json()["content"] == "Compare parts to the whole."
+
+
+def test_slow_ai_never_keeps_a_wrong_answer_waiting(client, user, fake_ai, monkeypatch):
+    import threading
+    import time
+
+    from app.routes import practice
+
+    release = threading.Event()
+    fake_ai["responses"]["Classify"] = lambda _: (release.wait(5), json.dumps({"type": "conceptual_gap", "lesson": "late"}))[1]
+    monkeypatch.setattr(practice, "AI_WAIT_SECONDS", 0.3)
+    q = client.get("/questions/next", headers=user).json()["question"]
+    started = time.monotonic()
+    res = answer_wrong(client, user, q)
+    release.set()
+    assert res.status_code == 200
+    assert time.monotonic() - started < 3
+    assert res.json()["misconception_type"] == "conceptual_gap"  # the offline guess for a slow, wrong answer
+
+
+def test_an_overloaded_model_is_tried_last_on_the_next_request(monkeypatch):
+    class Busy(Exception):
+        code = 503
+
+    used = []
+
+    def main_busy(model, **_):
+        used.append(model)
+        if model == "gemini-3.6-flash":
+            raise Busy("503 UNAVAILABLE")
+        return SimpleNamespace(text=f"answered by {model}")
+
+    monkeypatch.setattr(ai, "enabled", lambda: True)
+    monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=main_busy)))
+    assert ai._generate("hello") == "answered by gemini-3.8-flash"
+    used.clear()
+    assert ai._generate("again") == "answered by gemini-3.8-flash"
+    assert used == ["gemini-3.8-flash"]
+
+
+def test_a_timed_out_model_hands_over_to_the_next(monkeypatch):
+    class ReadTimeout(Exception):
+        pass
+
+    def slow_main(model, **_):
+        if model == "gemini-3.6-flash":
+            raise ReadTimeout("The read operation timed out")
+        return SimpleNamespace(text=f"answered by {model}")
+
+    monkeypatch.setattr(ai, "enabled", lambda: True)
+    monkeypatch.setattr(ai, "_client", lambda: SimpleNamespace(models=SimpleNamespace(generate_content=slow_main)))
+    assert ai._generate("hello") == "answered by gemini-3.8-flash"

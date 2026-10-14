@@ -22,11 +22,18 @@ LANGUAGES = {
     "te": "Telugu",
 }
 MISCONCEPTIONS = ("careless_slip", "conceptual_gap", "partial_method", "no_attempt")
-RETRY_PAUSES = (1.5,)
+# Retrying an overloaded model rarely helps within seconds; the next model usually answers at once.
+RETRY_PAUSES: tuple[float, ...] = ()
+# A model that just said "busy" goes to the back of the queue for a while, so later requests start
+# with one that is answering instead of waiting on the same overloaded model every time.
+BUSY_REST_SECONDS = 3 * 60
+# No single request may hang the student: give up on a model after this and try the next.
+REQUEST_TIMEOUT_MS = 20_000
 # A daily free-tier limit resets once a day; checking back hourly costs one request.
 QUOTA_REST_SECONDS = 60 * 60
 MINUTE_REST_SECONDS = 60
 _resting_until: dict[str, float] = {}
+_busy_until: dict[str, float] = {}
 
 
 class Learner(Protocol):
@@ -62,7 +69,22 @@ def enabled() -> bool:
 
 @lru_cache
 def _client() -> genai.Client:
-    return genai.Client(api_key=get_settings().gemini_api_key)
+    return genai.Client(
+        api_key=get_settings().gemini_api_key, http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_MS)
+    )
+
+
+def _models() -> list[str]:
+    """Models with quota left, the recently overloaded ones last."""
+    now = time.monotonic()
+    usable = [m for m in get_settings().gemini_models() if _resting_until.get(m, 0) <= now]
+    if not usable:
+        raise AIUnavailable("Every Gemini model is out of free quota for now")
+    return sorted(usable, key=lambda m: _busy_until.get(m, 0) > now)
+
+
+def _mark_busy(model: str) -> None:
+    _busy_until[model] = time.monotonic() + BUSY_REST_SECONDS
 
 
 def _generate(contents, system: str | None = None, as_json: bool = False) -> str:
@@ -75,10 +97,7 @@ def _generate(contents, system: str | None = None, as_json: bool = False) -> str
     )
     # The free tier sometimes answers "busy" (503): retry briefly, then hand over to the next model.
     # A 429 means that model's quota is used up, so retrying is pointless: rest it and move on.
-    now = time.monotonic()
-    models = [m for m in get_settings().gemini_models() if _resting_until.get(m, 0) <= now]
-    if not models:
-        raise AIUnavailable("Every Gemini model is out of free quota for now")
+    models = _models()
     response = None
     last_error: Exception | None = None
     for model in models:
@@ -94,15 +113,17 @@ def _generate(contents, system: str | None = None, as_json: bool = False) -> str
                     _resting_until[model] = time.monotonic() + rest
                     log.info("%s is out of quota, resting it for %ds", model, rest)
                     break
-                if not (code in (500, 503) or "UNAVAILABLE" in str(exc)):
+                if not _transient(exc):
                     log.warning("Gemini call failed: %s", exc)
                     raise AIUnavailable(str(exc)) from exc
                 if pause is None:
+                    _mark_busy(model)
                     log.info("%s is busy, trying the next model", model)
                     break
                 log.info("%s is busy, retrying in %.1fs", model, pause)
                 time.sleep(pause)
         if response is not None:
+            _busy_until.pop(model, None)
             break
     if response is None:
         log.warning("Gemini call failed on every model: %s", last_error)
@@ -114,7 +135,8 @@ def _generate(contents, system: str | None = None, as_json: bool = False) -> str
 
 def _transient(exc: Exception) -> bool:
     code = getattr(exc, "code", None)
-    return code in (500, 503) or "UNAVAILABLE" in str(exc)
+    timed_out = "timeout" in type(exc).__name__.lower() or "timed out" in str(exc).lower()
+    return code in (500, 503) or "UNAVAILABLE" in str(exc) or timed_out
 
 
 def _rest_if_out_of_quota(model: str, exc: Exception) -> bool:
@@ -132,10 +154,7 @@ def _generate_stream(contents, system: str | None = None) -> Iterator[str]:
     if not enabled():
         raise AIUnavailable("GEMINI_API_KEY is not set")
     config = types.GenerateContentConfig(system_instruction=system, temperature=0.4)
-    now = time.monotonic()
-    models = [m for m in get_settings().gemini_models() if _resting_until.get(m, 0) <= now]
-    if not models:
-        raise AIUnavailable("Every Gemini model is out of free quota for now")
+    models = _models()
     last_error: Exception | None = None
     for model in models:
         started = False
@@ -146,6 +165,7 @@ def _generate_stream(contents, system: str | None = None) -> Iterator[str]:
                     started = True
                     yield text
             if started:
+                _busy_until.pop(model, None)
                 return
             last_error = AIUnavailable("Empty response from Gemini")
         except Exception as exc:
@@ -154,6 +174,8 @@ def _generate_stream(contents, system: str | None = None) -> Iterator[str]:
                 raise AIUnavailable(str(exc)) from exc
             last_error = exc
             if _rest_if_out_of_quota(model, exc) or _transient(exc):
+                if _transient(exc):
+                    _mark_busy(model)
                 log.info("%s unavailable for streaming, trying the next model", model)
                 continue
             log.warning("Gemini stream failed: %s", exc)
@@ -299,8 +321,17 @@ def diagnose(
             return label, lesson or fallback_lesson()
     except (AIUnavailable, ValueError, AttributeError):
         pass
+    return offline_diagnosis(chosen, time_taken_ms, learner, solution() if solution else q.explanation)
+
+
+def offline_diagnosis(chosen: str | None, time_taken_ms: int | None, learner: Learner, solution: str) -> tuple[str, str | None]:
+    """The instant, no-AI diagnosis: used when the AI is unavailable or too slow to wait for."""
+    if not chosen:
+        return "no_attempt", None
     label = heuristic_misconception(chosen, time_taken_ms)
-    return label, fallback_lesson() if label in RETEACH else None
+    if label not in RETEACH:
+        return label, None
+    return label, FALLBACK_LESSON.get(learner.locale, FALLBACK_LESSON["en"]).format(solution=solution)
 
 
 BUSY_REPLY = {
