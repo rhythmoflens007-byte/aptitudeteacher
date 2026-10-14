@@ -4,6 +4,8 @@ services:
     name: aptitude-teacher-api
     runtime: python
     plan: free
+    # Same region as the Neon database, close to students in India.
+    region: singapore
     rootDir: apps/api
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
