@@ -28,7 +28,7 @@ RETRY_PAUSES: tuple[float, ...] = ()
 # with one that is answering instead of waiting on the same overloaded model every time.
 BUSY_REST_SECONDS = 3 * 60
 # No single request may hang the student: give up on a model after this and try the next.
-REQUEST_TIMEOUT_MS = 20_000
+REQUEST_TIMEOUT_MS = 10_000
 # A daily free-tier limit resets once a day; checking back hourly costs one request.
 QUOTA_REST_SECONDS = 60 * 60
 MINUTE_REST_SECONDS = 60

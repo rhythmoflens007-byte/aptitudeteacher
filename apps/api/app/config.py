@@ -18,11 +18,13 @@ class Settings(BaseSettings):
     jwt_expiry_hours: int = 24 * 7
 
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-3.6-flash"
+    # The lite models answer in 1-2 seconds even when the bigger free models are overloaded, so a chat
+    # reply never waits on a busy model first.
+    gemini_model: str = "gemini-3.5-flash-lite"
     # Comma-separated, tried in order when the main model is overloaded or out of quota. The free tier
     # allows only ~20 requests a day per model, so a chain of models keeps the tutor working all day.
     # Empty disables the fallback.
-    gemini_fallback_models: str = "gemini-3.8-flash,gemini-flash-latest,gemini-3.5-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    gemini_fallback_models: str = "gemini-3.1-flash-lite,gemini-3.6-flash,gemini-3.8-flash,gemini-flash-latest,gemini-3.5-flash"
 
     # Voices for the tutor, tried in order. "edge" needs no key; "azure" and "google" are the official,
     # key-based services with free monthly allowances. See .env.example.
