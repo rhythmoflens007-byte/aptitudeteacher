@@ -51,6 +51,7 @@ export type AttemptResult = {
   new_badges: Badge[];
   daily_goal_completed: number;
   daily_goal_target: number;
+  hearts?: number;
 };
 
 export type Misconception = "careless_slip" | "conceptual_gap" | "partial_method" | "no_attempt";

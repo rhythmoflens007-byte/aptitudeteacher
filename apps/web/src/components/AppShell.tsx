@@ -9,16 +9,21 @@ import { useT } from "@/lib/i18n";
 import { useTutor } from "@/lib/tutor";
 import Logo from "./Logo";
 import PageTransition from "./PageTransition";
+import StatusChips from "./StatusChips";
 import { ThemeToggle } from "./ThemeToggle";
 import { Blobs, Icon, Skeleton } from "./ui";
 
 const NAV = [
-  { href: "/dashboard", key: "nav.dashboard", icon: "home", tint: "text-iris" },
-  { href: "/practice", key: "nav.practice", icon: "target", tint: "text-coral" },
-  { href: "/tests", key: "nav.tests", icon: "clipboard", tint: "text-lagoon-600" },
-  { href: "/tutor", key: "nav.tutor", icon: "chat", tint: "text-violet" },
-  { href: "/profile", key: "nav.profile", icon: "user", tint: "text-sun-600" },
+  { href: "/dashboard", key: "nav.dashboard", icon: "home", tint: "text-iris", tab: true },
+  { href: "/learn", key: "nav.learn", icon: "map", tint: "text-lagoon-600", tab: true },
+  { href: "/practice", key: "nav.practice", icon: "target", tint: "text-coral", tab: true },
+  { href: "/tests", key: "nav.tests", icon: "clipboard", tint: "text-lagoon-600", tab: false },
+  { href: "/leagues", key: "nav.leagues", icon: "trophy", tint: "text-sun-600", tab: true },
+  { href: "/tutor", key: "nav.tutor", icon: "chat", tint: "text-violet", tab: true },
+  { href: "/profile", key: "nav.profile", icon: "user", tint: "text-sun-600", tab: false },
 ] as const;
+
+const TUTOR_INDEX = NAV.findIndex((item) => item.href === "/tutor");
 
 const SPRING = { type: "spring", stiffness: 420, damping: 36 } as const;
 
@@ -70,7 +75,9 @@ export default function AppShell({ children, wide = false }: { children: React.R
             <ThemeToggle />
           </div>
 
-          <nav className="mt-8 flex flex-col gap-1" aria-label={t("nav.main")}>
+          <StatusChips className="mt-5" />
+
+          <nav className="mt-4 flex flex-col gap-1" aria-label={t("nav.main")}>
             {NAV.map((item, index) => {
               const active = index === currentIndex;
               return (
@@ -96,7 +103,7 @@ export default function AppShell({ children, wide = false }: { children: React.R
           <div className="mt-auto flex flex-col gap-2">
             <Link
               href="/tutor"
-              transitionTypes={currentIndex === 3 ? undefined : direction(3)}
+              transitionTypes={currentIndex === TUTOR_INDEX ? undefined : direction(TUTOR_INDEX)}
               className="press group relative overflow-hidden rounded-3xl bg-spark p-[1.5px]"
             >
               <span className="flex items-center gap-3 rounded-[22px] bg-surface/95 p-3">
@@ -129,29 +136,9 @@ export default function AppShell({ children, wide = false }: { children: React.R
       <header style={{ viewTransitionName: "app-topbar" }} className="glass sticky top-0 z-30 border-b border-hairline lg:hidden">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <Logo href="/dashboard" compact />
-          <nav className="ml-4 hidden flex-1 items-center gap-1 md:flex" aria-label={t("nav.main")}>
-            {NAV.map((item, index) => {
-              const active = index === currentIndex;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  transitionTypes={active ? undefined : direction(index)}
-                  aria-current={active ? "page" : undefined}
-                  className={`relative rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${active ? "text-ink" : "text-ink-soft hover:text-ink"}`}
-                >
-                  {active && <motion.span layoutId="topbar-active" transition={SPRING} className="absolute inset-0 rounded-full bg-surface shadow-[var(--shadow-sm)]" />}
-                  <span className="relative">{t(item.key)}</span>
-                </Link>
-              );
-            })}
-          </nav>
-          <div className="ml-auto flex items-center gap-2">
+          <StatusChips className="ml-auto" compact />
+          <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href="/tutor" className="press flex items-center gap-2 rounded-full bg-surface py-1 pl-1 pr-3 text-sm font-medium shadow-[var(--shadow-sm)] md:hidden">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-spark text-xs font-bold text-white">{tutor.name.charAt(0).toUpperCase()}</span>
-              <span className="max-w-24 truncate">{tutor.name}</span>
-            </Link>
             <Link href="/profile" aria-label={t("nav.profile")} className="press grid h-8 w-8 place-items-center rounded-full bg-ink text-xs font-semibold text-canvas">
               {initial}
             </Link>
@@ -159,12 +146,13 @@ export default function AppShell({ children, wide = false }: { children: React.R
         </div>
       </header>
 
-      <main className={`mx-auto w-full flex-1 px-4 pb-32 pt-6 sm:px-6 md:pb-14 lg:px-10 lg:pt-12 ${container}`}>{children}</main>
+      <main className={`mx-auto w-full flex-1 px-4 pb-32 pt-6 sm:px-6 lg:px-10 lg:pb-14 lg:pt-12 ${container}`}>{children}</main>
 
       {/* Phone tab bar: a floating glass pill */}
-      <nav style={{ viewTransitionName: "app-tabbar" }} className="pb-safe fixed inset-x-3 bottom-3 z-30 md:hidden" aria-label={t("nav.main")}>
+      <nav style={{ viewTransitionName: "app-tabbar" }} className="pb-safe fixed inset-x-3 bottom-3 z-30 lg:hidden" aria-label={t("nav.main")}>
         <ul className="glass mx-auto grid max-w-md grid-cols-5 rounded-[26px] p-1.5 shadow-[var(--shadow-lg)] ring-1 ring-hairline">
           {NAV.map((item, index) => {
+            if (!item.tab) return null;
             const active = index === currentIndex;
             return (
               <li key={item.href}>

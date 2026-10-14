@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import Badge, Question, Skill, Subtopic, Topic
 from app.db.session import Base, SessionLocal, engine
+from app.engine.game import ensure_friend_codes
 from app.engine.gamification import BADGES
 from app.question_templates import TEMPLATES
 from app.schemas import Locale
@@ -141,6 +142,7 @@ def init_db() -> None:
     with SessionLocal() as db:
         seed(db)
         link_templates(db)
+        ensure_friend_codes(db)
 
 
 if __name__ == "__main__":

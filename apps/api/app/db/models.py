@@ -34,6 +34,8 @@ class User(Base):
     locale: Mapped[str] = mapped_column(String(10), default="en")
     tutor_name: Mapped[str] = mapped_column(String(30), default="Asha", server_default="Asha")
     tutor_gender: Mapped[str] = mapped_column(String(10), default="female", server_default="female")
+    # Short code a friend types to follow you; filled in for older accounts at startup.
+    friend_code: Mapped[str | None] = mapped_column(String(8), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 
@@ -97,6 +99,8 @@ class Attempt(Base):
     time_taken_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     misconception_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
     hint_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Set when the answer was given inside a lesson on the course path.
+    lesson_run_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     question: Mapped[Question] = relationship()
 
@@ -161,6 +165,10 @@ class Gamification(Base):
     current_streak_days: Mapped[int] = mapped_column(Integer, default=0)
     longest_streak_days: Mapped[int] = mapped_column(Integer, default=0)
     last_active_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    hearts: Mapped[int] = mapped_column(Integer, default=5, server_default="5")
+    # When the next heart starts refilling from (one heart every few hours, up to the maximum).
+    hearts_refill_from: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    league_tier: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
 class Badge(Base):
@@ -177,3 +185,62 @@ class UserBadge(Base):
     badge_id: Mapped[str] = mapped_column(ForeignKey("badges.id", ondelete="CASCADE"), primary_key=True)
     earned_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     badge: Mapped[Badge] = relationship()
+
+
+class XpEvent(Base):
+    """Every XP gain with its time, so weekly leagues and daily quests can be counted."""
+
+    __tablename__ = "xp_events"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    amount: Mapped[int] = mapped_column(Integer)
+    source: Mapped[str] = mapped_column(String(20), default="practice")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, index=True)
+
+
+class LessonRun(Base):
+    """One go at a lesson on the course path."""
+
+    __tablename__ = "lesson_runs"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    lesson_key: Mapped[str] = mapped_column(String(80))
+    question_ids: Mapped[list[str]] = mapped_column(JSON)
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    correct: Mapped[int] = mapped_column(Integer, default=0)
+    stars: Mapped[int] = mapped_column(Integer, default=0)
+    xp: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class LessonProgress(Base):
+    __tablename__ = "lesson_progress"
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    lesson_key: Mapped[str] = mapped_column(String(80), primary_key=True)
+    stars: Mapped[int] = mapped_column(Integer, default=0)
+    completions: Mapped[int] = mapped_column(Integer, default=0)
+    completed_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class Follow(Base):
+    __tablename__ = "follows"
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    friend_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class QuestClaim(Base):
+    __tablename__ = "quest_claims"
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    date: Mapped[date] = mapped_column(Date, primary_key=True)
+    quest: Mapped[str] = mapped_column(String(20), primary_key=True)
+    claimed_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class LeagueState(Base):
+    """The week the leagues were last settled for (a single row)."""
+
+    __tablename__ = "league_state"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    week_start: Mapped[date] = mapped_column(Date)

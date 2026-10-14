@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.auth import create_token, current_user, hash_password, verify_password
 from app.db.models import User
 from app.db.session import get_db
-from app.engine import gamification
+from app.engine import game, gamification
 from app.schemas import AuthOut, LoginIn, ProfileIn, RegisterIn, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -21,6 +21,7 @@ def register(body: RegisterIn, db: Session = Depends(get_db)):
         password_hash=hash_password(body.password),
         display_name=body.display_name.strip(),
         locale=body.locale,
+        friend_code=game.new_friend_code(db),
     )
     db.add(user)
     db.flush()

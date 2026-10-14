@@ -110,6 +110,8 @@ class AttemptIn(BaseModel):
     chosen_answer: str | None = None
     time_taken_ms: int | None = Field(default=None, ge=0)
     hint_used: bool = False
+    # Set when answering inside a lesson on the course path: wrong answers there cost a heart.
+    lesson_run_id: str | None = None
 
 
 class SkillScore(BaseModel):
@@ -135,6 +137,7 @@ class AttemptOut(BaseModel):
     new_badges: list[BadgeOut]
     daily_goal_completed: int
     daily_goal_target: int
+    hearts: int = 5
 
 
 class GenerateIn(BaseModel):

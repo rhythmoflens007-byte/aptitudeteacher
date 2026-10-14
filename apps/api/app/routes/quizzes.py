@@ -114,7 +114,7 @@ def submit_quiz(quiz_id: str, body: QuizSubmitIn, db: Session = Depends(get_db),
         )
         db.add(attempt)
         mastery.apply_attempt(db, attempt, question)
-        gamification.award_xp(db, user.id, is_correct, question.difficulty)
+        gamification.award_xp(db, user.id, is_correct, question.difficulty, "test")
         goal.completed_questions += 1
 
     quiz.score = score

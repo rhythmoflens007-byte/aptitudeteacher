@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 from app import ai
 from app.auth import current_user
 from app.content_i18n import localize
-from app.db.models import Attempt, Question, Skill, SkillMastery, Topic, User
+from app.db.models import Attempt, LessonRun, Question, Skill, SkillMastery, Topic, User
 from app.db.session import get_db
-from app.engine import gamification, mastery
+from app.engine import game, gamification, mastery
 from app.schemas import (
     AttemptIn,
     AttemptOut,
@@ -91,6 +91,14 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found.")
 
+    run = None
+    if body.lesson_run_id:
+        run = db.get(LessonRun, body.lesson_run_id)
+        if run is None or run.user_id != user.id or run.finished_at is not None or question.id not in run.question_ids:
+            raise HTTPException(status.HTTP_409_CONFLICT, "This lesson has already ended.")
+        if game.hearts(db, user.id).hearts <= 0:
+            raise HTTPException(status.HTTP_409_CONFLICT, "You're out of hearts. Practise to earn one back, or wait for a refill.")
+
     goal = mastery.daily_goal(db, user.id)
     is_correct = body.chosen_answer == question.correct_option
     # A plain snapshot, so the AI calls below never touch the database session from another thread.
@@ -102,10 +110,17 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     # diagnosis (which doesn't depend on it).
     shown = localize(question, user.locale)
     pool = ThreadPoolExecutor(max_workers=1)
-    explanation = pool.submit(lambda: shown["explanation"]) if shown else pool.submit(ai.explain, snapshot, learner)
+    if shown or run:
+        # Lessons keep a quick rhythm: no AI round-trips between questions.
+        text = shown["explanation"] if shown else question.explanation
+        explanation = pool.submit(lambda: text)
+    else:
+        explanation = pool.submit(ai.explain, snapshot, learner)
     pool.shutdown(wait=False)
     misconception, lesson = (None, None)
-    if not is_correct:
+    if not is_correct and run:
+        misconception = ai.heuristic_misconception(body.chosen_answer, body.time_taken_ms)
+    elif not is_correct:
         skill_name = question.skills[0].name if question.skills else ""
         misconception, lesson = ai.diagnose(
             question, body.chosen_answer, body.time_taken_ms, skill_name, learner, solution=explanation.result
@@ -119,18 +134,26 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
         time_taken_ms=body.time_taken_ms,
         misconception_type=misconception,
         hint_used=body.hint_used,
+        lesson_run_id=run.id if run else None,
     )
     db.add(attempt)
     db.flush()
 
     scores = mastery.apply_attempt(db, attempt, question)
-    xp = gamification.award_xp(db, user.id, is_correct, question.difficulty)
+    xp = gamification.award_xp(db, user.id, is_correct, question.difficulty, "lesson" if run else "practice")
+    # Wrong answers in a lesson cost a heart; right answers in free practice earn one back.
+    if run and not is_correct:
+        hearts = game.lose_heart(db, user.id)
+    elif not run and is_correct:
+        hearts = game.gain_heart(db, user.id)
+    else:
+        hearts = game.hearts(db, user.id)
     goal.completed_questions += 1
     goal_just_completed = goal.completed_questions == goal.target_questions
 
     micro_lesson = None
     retest_id = None
-    if misconception in mastery.NEEDS_RETEST and question.skills:
+    if misconception in mastery.NEEDS_RETEST and question.skills and not run:
         micro_lesson = lesson
         retest_id = mastery.question_for_skill(db, user.id, question.skills[0], exclude_id=question.id).id
 
@@ -149,4 +172,5 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
         new_badges=[BadgeOut(code=b.code, name=b.name, description=b.description) for b in badges],
         daily_goal_completed=goal.completed_questions,
         daily_goal_target=goal.target_questions,
+        hearts=hearts.hearts,
     )

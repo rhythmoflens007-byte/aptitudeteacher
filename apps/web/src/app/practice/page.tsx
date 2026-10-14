@@ -7,6 +7,7 @@ import AppShell from "@/components/AppShell";
 import { useToast } from "@/components/Toast";
 import TutorAvatar from "@/components/TutorAvatar";
 import { Button, Confetti, DIFFICULTY_KEYS, ErrorNote, ErrorState, Icon, MISCONCEPTION_KEYS, PageHeader, Pill, ProgressBar, Segmented, Skeleton, SparkGlow } from "@/components/ui";
+import { patchGame, refreshGame } from "@/lib/game";
 import { api, AttemptResult, optionLabel, Question, Topic, TutorSession } from "@/lib/api";
 import { Key, useT } from "@/lib/i18n";
 import { useTutor } from "@/lib/tutor";
@@ -133,6 +134,8 @@ function Practice() {
           json: { question_id: question.id, chosen_answer: answer, time_taken_ms: Date.now() - startedAt.current },
         });
         setSelected(answer);
+        if (typeof res.hearts === "number") patchGame({ hearts: res.hearts });
+        void refreshGame();
         setResult(res);
         if (res.is_correct) setConfetti((n) => n + 1);
         if (res.xp_gained) toast({ title: t("practice.xp", { n: res.xp_gained }), detail: res.is_correct ? t("practice.niceDone") : t("practice.everyTry"), icon: "bolt", tone: "sun" });

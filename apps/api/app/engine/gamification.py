@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db.models import Attempt, Badge, Gamification, SkillMastery, UserBadge
+from app.db.models import Attempt, Badge, Gamification, SkillMastery, UserBadge, XpEvent
 
 XP_PER_LEVEL = 250
 
@@ -16,23 +16,28 @@ BADGES = [
     ("hundred_attempts", "Centurion", "Answered 100 questions."),
     ("goal_getter", "Goal Getter", "Completed a daily goal."),
     ("mock_finisher", "Mock Finisher", "Completed a full mock test."),
+    ("first_lesson", "Path Finder", "Finished your first lesson on the course path."),
+    ("perfect_lesson", "Flawless", "Finished a lesson with three stars."),
+    ("unit_cleared", "Unit Cleared", "Passed a unit checkpoint."),
+    ("league_up", "Rising Star", "Moved up to a higher league."),
 ]
 
 
 def profile(db: Session, user_id: str) -> Gamification:
     row = db.get(Gamification, user_id)
     if row is None:
-        row = Gamification(user_id=user_id, xp=0, level=1, current_streak_days=0, longest_streak_days=0)
+        row = Gamification(user_id=user_id, xp=0, level=1, current_streak_days=0, longest_streak_days=0, hearts=5, league_tier=0)
         db.add(row)
         db.flush()
     return row
 
 
-def award_xp(db: Session, user_id: str, correct: bool, difficulty: int) -> int:
+def award_xp(db: Session, user_id: str, correct: bool, difficulty: int, source: str = "practice") -> int:
     row = profile(db, user_id)
     gained = 10 * difficulty if correct else 2
     row.xp += gained
     row.level = 1 + row.xp // XP_PER_LEVEL
+    db.add(XpEvent(user_id=user_id, amount=gained, source=source))
 
     today = date.today()
     if row.last_active_date != today:
