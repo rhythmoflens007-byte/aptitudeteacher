@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   title: "Aptitude Teacher — Learn what you don't know",
   description: "A playful AI tutor that finds your gaps, teaches them, and tests you again, in English, Hindi, Tamil and Telugu.",
   applicationName: "Aptitude Teacher",
+  appleWebApp: { capable: true, title: "Aptitude", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
@@ -27,6 +29,8 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "#0c0c11" },
   ],
   colorScheme: "light dark",
+  // Lets the tab bar sit above the iPhone home indicator (see .pb-safe).
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

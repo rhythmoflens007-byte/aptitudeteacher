@@ -123,5 +123,16 @@ def dashboard(db: Session = Depends(get_db), user: User = Depends(current_user))
     }
 
 
+@router.get("/plan")
+def plan(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """A 7-day revision plan built from the learner's weak and unstarted skills."""
+    topic_names = {t.id: t.name for t in db.scalars(select(Topic)).all()}
+    goal = mastery.daily_goal(db, user.id)
+    return {
+        "days": mastery.revision_plan(db, user.id, topic_names),
+        "today_done": min(goal.completed_questions, goal.target_questions),
+    }
+
+
 def _local_date(dt: datetime) -> date:
     return dt.astimezone().date()

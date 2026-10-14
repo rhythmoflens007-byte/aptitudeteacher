@@ -298,7 +298,7 @@ function Tutor() {
   );
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
       <aside className="flex flex-col gap-5 xl:sticky xl:top-8 xl:self-start" aria-label={t("tutor.title")}>
         <SparkGlow active={glowing} className="rounded-[32px]">
           <div className="overflow-hidden rounded-[32px] bg-surface shadow-[var(--shadow-md)]">

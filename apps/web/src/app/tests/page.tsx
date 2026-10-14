@@ -5,8 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
 import Modal from "@/components/Modal";
 import { FadeIn } from "@/components/motion";
+import ShareScore from "@/components/ShareScore";
 import { Button, Confetti, ErrorNote, Icon, IconTile, PageHeader, Pill, ProgressBar, Ring, Segmented, Skeleton, SpotlightCard } from "@/components/ui";
-import { api, Quiz, QuizReport, Topic } from "@/lib/api";
+import { api, optionLabel, Quiz, QuizReport, Topic } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 
 type HistoryItem = { id: string; kind: "quiz" | "mock"; score: number; total: number; submitted_at: string };
@@ -89,7 +91,7 @@ function Setup({ onStart, onOpenReport }: { onStart: (q: Quiz) => void; onOpenRe
     <div className="flex flex-col gap-6">
       <PageHeader eyebrow={t("tests.eyebrow")} title={t("tests.title")} />
       <ErrorNote message={error} />
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-2">
         <FadeIn>
           <SpotlightCard tint="lagoon" className="flex h-full flex-col gap-6 p-7">
             <div>
@@ -297,7 +299,7 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
       </div>
       <ErrorNote message={error} />
 
-      <div className="grid gap-5 md:grid-cols-[1fr_240px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[minmax(0,1fr)_240px]">
         <AnimatePresence mode="wait">
           <motion.div key={q.id} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={SPRING} className="rounded-[32px] bg-surface p-6 shadow-[var(--shadow-md)] sm:p-8">
             <div className="flex flex-wrap items-center gap-2">
@@ -327,7 +329,7 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
                       <span aria-hidden className={`grid h-9 w-9 shrink-0 place-items-center rounded-2xl text-sm font-bold ${chosen ? "bg-iris text-white" : "bg-surface text-ink-soft"}`}>
                         {String.fromCharCode(65 + i)}
                       </span>
-                      {option}
+                      {optionLabel(q, option)}
                     </motion.button>
                   </motion.li>
                 );
@@ -407,6 +409,7 @@ function Runner({ quiz, onSubmitted }: { quiz: Quiz; onSubmitted: (r: QuizReport
 
 function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) {
   const { t, tn } = useT();
+  const { user } = useAuth();
   const [burst] = useState(() => (report.accuracy >= 60 ? 1 : 0));
   const tone = report.accuracy >= 60 ? "spark" : report.accuracy >= 35 ? "sun" : "coral";
   const verdict = report.accuracy >= 80 ? t("report.outstanding") : report.accuracy >= 60 ? t("report.solid") : report.accuracy >= 35 ? t("report.getting") : t("report.learn");
@@ -418,14 +421,32 @@ function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) 
         eyebrow={report.kind === "mock" ? t("report.mockTitle") : t("report.quizTitle")}
         title={verdict}
         actions={
-          <Button variant="secondary" onClick={onDone}>
-            ← {t("report.back")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <ShareScore
+              label={t("share.result")}
+              filename={`aptitude-${report.kind}-${report.score}-of-${report.total}.png`}
+              card={() => ({
+                eyebrow: report.kind === "mock" ? t("report.mockTitle") : t("report.quizTitle"),
+                name: user?.display_name ?? "",
+                headline: `${report.score} / ${report.total}`,
+                caption: t("share.accuracy", { n: report.accuracy }),
+                stats: [
+                  { label: t("report.timeUsed"), value: clock(report.time_used_ms / 1000) },
+                  { label: t("report.perQuestion"), value: `${report.total ? Math.round(report.time_used_ms / report.total / 1000) : 0}s` },
+                ],
+                bars: report.sections.map((s) => ({ label: tn(s.topic), value: s.total ? (100 * s.correct) / s.total : 0 })),
+                footer: t("share.footer"),
+              })}
+            />
+            <Button variant="secondary" onClick={onDone}>
+              ← {t("report.back")}
+            </Button>
+          </div>
         }
       />
 
       <FadeIn>
-        <div className="grid items-center gap-8 rounded-[32px] bg-surface p-7 shadow-[var(--shadow-md)] sm:grid-cols-[auto_1fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-8 rounded-[32px] bg-surface p-7 shadow-[var(--shadow-md)] sm:grid-cols-[auto_minmax(0,1fr)]">
           <motion.div initial={{ scale: 0.6, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 180, damping: 14 }} className="mx-auto">
             <Ring value={report.accuracy} size={170} stroke={18} tone={tone}>
               <div>
@@ -452,7 +473,7 @@ function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) 
         </div>
       </FadeIn>
 
-      <div className="grid gap-5 md:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <FadeIn>
           <div className="h-full rounded-[32px] bg-surface p-7 shadow-[var(--shadow-md)]">
             <h2 className="font-display text-2xl">{t("report.bySection")}</h2>
@@ -518,11 +539,11 @@ function Report({ report, onDone }: { report: QuizReport; onDone: () => void }) 
                   <div className="flex flex-col gap-2 px-3 pb-4 pl-14 text-sm">
                     {!item.is_correct && (
                       <p>
-                        {t("report.yourAnswer")} <span className="font-semibold text-danger">{item.chosen_answer ?? t("report.skipped")}</span>
+                        {t("report.yourAnswer")} <span className="font-semibold text-danger">{item.chosen_answer ? optionLabel(item.question, item.chosen_answer) : t("report.skipped")}</span>
                       </p>
                     )}
                     <p>
-                      {t("report.correctAnswer")} <span className="font-semibold text-success">{item.correct_option}</span>
+                      {t("report.correctAnswer")} <span className="font-semibold text-success">{optionLabel(item.question, item.correct_option)}</span>
                     </p>
                     <p className="whitespace-pre-line rounded-2xl bg-surface p-4 leading-relaxed">{item.explanation}</p>
                   </div>

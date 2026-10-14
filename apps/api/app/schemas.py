@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from app.content_i18n import localize
 from app.db.models import Question, User
 
 Locale = Literal["en", "hi", "ta", "te"]
@@ -80,12 +81,16 @@ class QuestionOut(BaseModel):
     subtopic: str
     skills: list[str]
     source: str
+    # Options are always sent (and answered) in English; labels say how to show each one.
+    labels: dict[str, str] = {}
 
     @classmethod
-    def of(cls, q: Question) -> "QuestionOut":
+    def of(cls, q: Question, locale: str = "en") -> "QuestionOut":
+        shown = localize(q, locale)
         return cls(
             id=q.id,
-            body=q.body,
+            body=shown["body"] if shown else q.body,
+            labels=shown["labels"] if shown else {},
             options=random.sample(q.options, len(q.options)),
             difficulty=q.difficulty,
             topic=q.subtopic.topic.name,
@@ -97,7 +102,7 @@ class QuestionOut(BaseModel):
 
 class NextQuestionOut(BaseModel):
     question: QuestionOut
-    reason: Literal["retest", "weakest_skill", "new_skill"]
+    reason: Literal["retest", "weakest_skill", "new_skill", "plan"]
 
 
 class AttemptIn(BaseModel):

@@ -78,6 +78,9 @@ class Question(Base):
     correct_option: Mapped[str] = mapped_column(Text)
     explanation: Mapped[str] = mapped_column(Text)
     source: Mapped[str] = mapped_column(String(20), default="seed")
+    # Template questions can be re-created, in any language, from the template's name and the seed.
+    template: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    variant: Mapped[str | None] = mapped_column(String(40), nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     subtopic: Mapped[Subtopic] = relationship()
     skills: Mapped[list[Skill]] = relationship(secondary="question_skills")

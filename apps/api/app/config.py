@@ -24,6 +24,15 @@ class Settings(BaseSettings):
     # Empty disables the fallback.
     gemini_fallback_models: str = "gemini-3.8-flash,gemini-flash-latest,gemini-3.5-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite"
 
+    # Voices for the tutor, tried in order. "edge" needs no key; "azure" and "google" are the official,
+    # key-based services with free monthly allowances. See .env.example.
+    tts_providers: str = "edge"
+    azure_speech_key: str = ""
+    azure_speech_region: str = ""
+    google_tts_api_key: str = ""
+    # Where spoken sentences are kept so they still play when the voice service is down; "off" disables.
+    voice_cache_dir: str = ""
+
     def gemini_models(self) -> list[str]:
         fallbacks = [name.strip() for name in self.gemini_fallback_models.split(",") if name.strip()]
         return list(dict.fromkeys([self.gemini_model, *fallbacks]))

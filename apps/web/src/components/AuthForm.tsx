@@ -102,7 +102,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
         <Orb className="h-full w-full" />
       </div>
 
-      <div className="relative flex items-center justify-between gap-2 px-5 py-5 sm:px-8">
+      <header className="relative flex items-center justify-between gap-2 px-5 py-5 sm:px-8">
         <Logo />
         <div className="flex items-center gap-1">
           <LanguageMenu />
@@ -111,7 +111,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
             ← {t("auth.home")}
           </Link>
         </div>
-      </div>
+      </header>
 
       <main className="relative flex flex-1 items-center justify-center px-4 pb-10 pt-16">
         <motion.div

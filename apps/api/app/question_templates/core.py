@@ -3,6 +3,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from fractions import Fraction
 
+from app.content_i18n import L, T, current
+
+__all__ = ["L", "T"]
+
 MakeFn = Callable[[random.Random], dict]
 
 
@@ -40,7 +44,12 @@ def dec(x) -> str:
     return f"{round(float(x), 4):.4f}".rstrip("0").rstrip(".")
 
 
+ORDINAL = {"hi": "{n}वें", "ta": "{n}-ஆவது", "te": "{n}వ"}
+
+
 def ordinal(n: int) -> str:
+    if current() in ORDINAL:
+        return ORDINAL[current()].format(n=n)
     suffix = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
     return f"{n}{suffix}"
 
@@ -66,6 +75,7 @@ def mcq(
     fallback: Callable[[int], str] | None = None,
 ) -> dict:
     """Four distinct options: the answer plus the first three usable mistakes, padded by `fallback`."""
+    correct, wrongs = L(correct), [L(w) for w in wrongs]
     options = [correct]
     for w in wrongs:
         if w not in options:
@@ -76,7 +86,7 @@ def mcq(
     while len(options) < 4:
         if fallback is None or step > 60:
             raise ValueError(f"not enough distinct options for: {body}")
-        candidate = fallback(step)
+        candidate = L(fallback(step))
         if candidate not in options:
             options.append(candidate)
         step += 1

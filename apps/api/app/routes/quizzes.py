@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app import ai
 from app.auth import current_user
+from app.content_i18n import localize
 from app.db.models import Attempt, Question, Quiz, Subtopic, Topic, User, utcnow
 from app.db.session import get_db
 from app.engine import gamification, mastery
@@ -29,13 +30,13 @@ def _questions(db: Session, quiz: Quiz) -> list[Question]:
     return [by_id[qid] for qid in quiz.question_ids if qid in by_id]
 
 
-def _out(db: Session, quiz: Quiz) -> QuizOut:
+def _out(db: Session, quiz: Quiz, locale: str) -> QuizOut:
     return QuizOut(
         id=quiz.id,
         kind=quiz.kind,
         duration_seconds=quiz.duration_seconds,
         started_at=quiz.started_at,
-        questions=[QuestionOut.of(q) for q in _questions(db, quiz)],
+        questions=[QuestionOut.of(q, locale) for q in _questions(db, quiz)],
     )
 
 
@@ -66,7 +67,7 @@ def create_quiz(body: QuizIn, db: Session = Depends(get_db), user: User = Depend
     )
     db.add(quiz)
     db.commit()
-    return _out(db, quiz)
+    return _out(db, quiz, user.locale)
 
 
 @router.get("")
@@ -145,14 +146,16 @@ def report(quiz_id: str, db: Session = Depends(get_db), user: User = Depends(cur
         section["time_ms"] += (attempt.time_taken_ms or 0) if attempt else 0
         if not (attempt and attempt.is_correct):
             weak.update(s.name for s in question.skills)
+        shown = QuestionOut.of(question, user.locale)
+        localized = localize(question, user.locale)
         detail.append(
             {
-                "question": QuestionOut.of(question).model_dump(),
+                "question": shown.model_dump(),
                 "chosen_answer": attempt.chosen_answer if attempt else None,
                 "correct_option": question.correct_option,
                 "is_correct": bool(attempt and attempt.is_correct),
                 "time_taken_ms": attempt.time_taken_ms if attempt else None,
-                "explanation": question.explanation,
+                "explanation": localized["explanation"] if localized else question.explanation,
             }
         )
 

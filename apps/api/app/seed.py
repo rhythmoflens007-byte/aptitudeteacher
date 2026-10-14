@@ -68,10 +68,10 @@ def seed_templates(db: Session, skills_by_name: dict[tuple[str, str], Skill], ex
         skill = skills_by_name[(tpl.subtopic, tpl.skill)]
         rng = random.Random(tpl.name)
         batch: set[str] = set()
-        for _ in range(PER_TEMPLATE * 10):
+        for k in range(PER_TEMPLATE * 10):
             if len(batch) == PER_TEMPLATE:
                 break
-            made = tpl.make(rng)
+            made = {**tpl.make(rng), "template": tpl.name, "variant": f"s{k}"}
             if made["body"] in batch:
                 continue
             batch.add(made["body"])
@@ -83,6 +83,24 @@ def seed_templates(db: Session, skills_by_name: dict[tuple[str, str], Skill], ex
             existing.add(made["body"])
             added += 1
     return added
+
+
+def link_templates(db: Session) -> int:
+    """Questions seeded before templates were recorded get their template and seed back, by re-running
+    the seeding sequence and matching the text, so they can be translated too."""
+    unlinked = {q.body: q for q in db.scalars(select(Question).where(Question.source == "template", Question.template.is_(None)))}
+    if not unlinked:
+        return 0
+    linked = 0
+    for tpl in TEMPLATES:
+        rng = random.Random(tpl.name)
+        for k in range(PER_TEMPLATE * 10):
+            question = unlinked.get(tpl.make(rng)["body"])
+            if question is not None and question.template is None:
+                question.template, question.variant = tpl.name, f"s{k}"
+                linked += 1
+    db.commit()
+    return linked
 
 
 def add_missing_columns() -> None:
@@ -122,6 +140,7 @@ def init_db() -> None:
     retire_unsupported_locales()
     with SessionLocal() as db:
         seed(db)
+        link_templates(db)
 
 
 if __name__ == "__main__":

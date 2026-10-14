@@ -3,13 +3,16 @@
 import { motion } from "motion/react";
 import { FormEvent, ReactNode, useState } from "react";
 import AppShell from "@/components/AppShell";
+import DailyReminder from "@/components/DailyReminder";
 import { FadeIn } from "@/components/motion";
 import { ThemePicker } from "@/components/ThemeToggle";
 import TutorCustomizer from "@/components/TutorCustomizer";
 import { Button, ErrorNote, Icon, PageHeader } from "@/components/ui";
 import type { Locale } from "@/lib/api";
+import { useToast } from "@/components/Toast";
 import { useAuth } from "@/lib/auth";
 import { LANGUAGES, setGuestLocale, useT } from "@/lib/i18n";
+import { useInstall } from "@/lib/install";
 
 export default function ProfilePage() {
   return (
@@ -26,6 +29,33 @@ function Group({ title, note, children }: { title: string; note?: string; childr
       <div className="overflow-hidden rounded-[28px] bg-surface shadow-[var(--shadow-md)] ring-1 ring-hairline">{children}</div>
       {note && <p className="px-4 text-xs text-ink-soft">{note}</p>}
     </FadeIn>
+  );
+}
+
+function InstallApp() {
+  const { t } = useT();
+  const { state, install } = useInstall();
+  const toast = useToast();
+  if (state === "unsupported") return null;
+  return (
+    <Group title={t("install.title")} note={t("install.note")}>
+      <div className="flex items-center gap-4 px-6 py-4">
+        <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-iris-soft text-iris-600">
+          <Icon name={state === "ios" ? "share" : "phone"} className="h-5 w-5" />
+        </span>
+        <p className="min-w-0 flex-1 text-sm">
+          {state === "installed" ? t("install.installed") : state === "ios" ? t("install.ios") : t("install.ready")}
+        </p>
+        {state === "installed" && <Icon name="check" className="h-5 w-5 shrink-0 text-success" />}
+        {state === "ready" && (
+          <Button variant="primary" className="shrink-0" onClick={async () => {
+              if (await install()) toast({ title: t("install.done"), icon: "phone", tone: "lagoon" });
+            }}>
+            {t("install.button")}
+          </Button>
+        )}
+      </div>
+    </Group>
   );
 }
 
@@ -85,6 +115,12 @@ function Profile() {
 
       <Group title={t("theme.title")} note={t("theme.note")}>
         <ThemePicker />
+      </Group>
+
+      <InstallApp />
+
+      <Group title={t("reminder.title")} note={t("reminder.note")}>
+        <DailyReminder />
       </Group>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-8">

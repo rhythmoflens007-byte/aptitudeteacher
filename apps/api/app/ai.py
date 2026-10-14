@@ -9,6 +9,7 @@ from typing import Protocol
 from google import genai
 from google.genai import types
 
+from app import offline_tutor
 from app.config import get_settings
 from app.db.models import Question
 
@@ -321,14 +322,6 @@ def split_emotions(text: str) -> tuple[str, list[str]]:
     return clean, emotions
 
 
-def _offline_reply(learner: Learner, worked_solution: str | None) -> str:
-    base = (
-        f"I'm {learner.tutor_name or 'Asha'}, running in offline mode right now, so I can't hold a full "
-        "conversation yet. Add a free Gemini API key to apps/api/.env to switch me on."
-    )
-    return f"{base}\n\nHere's the worked solution meanwhile:\n{worked_solution}" if worked_solution else base
-
-
 def _tutor_prompt(history: list[tuple[str, str]], context: str | None, learner: Learner):
     while history and history[0][0] != "student":
         history = history[1:]
@@ -351,11 +344,12 @@ def _tutor_prompt(history: list[tuple[str, str]], context: str | None, learner: 
 
 
 def tutor_reply(
-    history: list[tuple[str, str]], context: str | None, learner: Learner, worked_solution: str | None = None
+    history: list[tuple[str, str]], context: str | None, learner: Learner, offline: offline_tutor.Help | None = None
 ) -> tuple[str, list[str]]:
-    """Returns the tutor's reply and one emotion per sentence, which drives the avatar's body language."""
+    """Returns the tutor's reply and one emotion per sentence, which drives the avatar's body language.
+    Without the AI, the offline tutor teaches from `offline` (the question's translated solution)."""
     if not enabled():
-        return _offline_reply(learner, worked_solution), []
+        return split_emotions(offline_tutor.reply(learner, history, offline))
     contents, system = _tutor_prompt(history, context, learner)
     try:
         return split_emotions(_generate(contents, system=system))
@@ -364,14 +358,14 @@ def tutor_reply(
 
 
 def tutor_reply_stream(
-    history: list[tuple[str, str]], context: str | None, learner: Learner, worked_solution: str | None = None
+    history: list[tuple[str, str]], context: str | None, learner: Learner, offline: offline_tutor.Help | None = None
 ) -> Iterator[tuple[str, str | None]]:
     """Yields (sentence, emotion) as soon as each sentence is written, so the tutor can start
     talking within a second or two instead of after the whole reply."""
     splitter = SentenceSplitter()
     if not enabled():
-        for piece in splitter.feed(_offline_reply(learner, worked_solution)) + splitter.flush():
-            yield piece, None
+        for piece in splitter.feed(offline_tutor.reply(learner, history, offline)) + splitter.flush():
+            yield _tagged(piece)
         return
     contents, system = _tutor_prompt(history, context, learner)
     sent_any = False

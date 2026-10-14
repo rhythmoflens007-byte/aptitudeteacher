@@ -7,19 +7,20 @@ import AppShell from "@/components/AppShell";
 import { useToast } from "@/components/Toast";
 import TutorAvatar from "@/components/TutorAvatar";
 import { Button, Confetti, DIFFICULTY_KEYS, ErrorNote, ErrorState, Icon, MISCONCEPTION_KEYS, PageHeader, Pill, ProgressBar, Segmented, Skeleton, SparkGlow } from "@/components/ui";
-import { api, AttemptResult, Question, Topic, TutorSession } from "@/lib/api";
+import { api, AttemptResult, optionLabel, Question, Topic, TutorSession } from "@/lib/api";
 import { Key, useT } from "@/lib/i18n";
 import { useTutor } from "@/lib/tutor";
 import type { Mood } from "@/lib/tutorRig";
 import { useMedia } from "@/lib/useMedia";
 import { useTutorVoice } from "@/lib/useTutorVoice";
 
-type Reason = "retest" | "weakest_skill" | "new_skill";
+type Reason = "retest" | "weakest_skill" | "new_skill" | "plan";
 
 const REASON: Record<Reason, { text: Key; icon: string; tone: "sun" | "coral" | "lagoon" }> = {
   retest: { text: "practice.reason.retest", icon: "refresh", tone: "sun" },
   weakest_skill: { text: "practice.reason.weakest", icon: "target", tone: "coral" },
   new_skill: { text: "practice.reason.new", icon: "sparkles", tone: "lagoon" },
+  plan: { text: "practice.reason.plan", icon: "layers", tone: "lagoon" },
 };
 
 const OPTION_TINTS = ["bg-iris", "bg-coral", "bg-lagoon", "bg-sun"];
@@ -70,10 +71,16 @@ function Practice() {
     [stopVoice],
   );
 
+  // A skill from the revision plan (/practice?skill=…) keeps every question on that skill until cleared.
+  const [planSkill, setPlanSkill] = useState<string | null>(null);
+  const planSkillRef = useRef<string | null>(null);
+
   const fetchNext = useCallback(
     async (topic: string | null) => {
       try {
-        const res = await api<{ question: Question; reason: Reason }>(`/questions/next${topic ? `?topic_id=${topic}` : ""}`);
+        const skill = planSkillRef.current;
+        const query = skill ? `?skill_id=${encodeURIComponent(skill)}` : topic ? `?topic_id=${topic}` : "";
+        const res = await api<{ question: Question; reason: Reason }>(`/questions/next${query}`);
         show(res.question, res.reason);
       } catch (e) {
         setError(errorText(e));
@@ -89,10 +96,22 @@ function Practice() {
     void fetchNext(topic);
   }
 
+  function leavePlan() {
+    planSkillRef.current = null;
+    setPlanSkill(null);
+    window.history.replaceState(null, "", "/practice");
+    loadNext(topicId);
+  }
+
   useEffect(() => {
     api<Topic[]>("/topics").then(setTopics).catch(() => {});
-    api<{ question: Question; reason: Reason }>("/questions/next")
-      .then((res) => show(res.question, res.reason))
+    const skill = new URLSearchParams(window.location.search).get("skill");
+    planSkillRef.current = skill;
+    api<{ question: Question; reason: Reason }>(skill ? `/questions/next?skill_id=${encodeURIComponent(skill)}` : "/questions/next")
+      .then((res) => {
+        if (skill) setPlanSkill(res.question.skills[0] ?? null);
+        show(res.question, res.reason);
+      })
       .catch((e) => setError(errorText(e)))
       .finally(() => setBusy(false));
   }, [show, errorText]);
@@ -203,6 +222,8 @@ function Practice() {
               value={topicId}
               options={[{ value: null, label: t("practice.all") }, ...topics.map((tp) => ({ value: tp.id as string | null, label: tn(tp.name) }))]}
               onChange={(id) => {
+                planSkillRef.current = null;
+                setPlanSkill(null);
                 setTopicId(id);
                 loadNext(id);
               }}
@@ -210,6 +231,16 @@ function Practice() {
           </div>
         }
       />
+
+      {planSkill && (
+        <div className="flex flex-wrap items-center gap-3 rounded-3xl bg-lagoon-soft px-5 py-3 text-sm" role="status">
+          <Icon name="layers" className="h-4 w-4 shrink-0 text-lagoon-600" />
+          <span className="min-w-0 flex-1">{t("plan.practising", { skill: tn(planSkill) })}</span>
+          <button onClick={leavePlan} className="press rounded-full bg-surface px-3 py-1.5 text-xs font-semibold ring-1 ring-hairline">
+            {t("plan.leave")}
+          </button>
+        </div>
+      )}
 
       {question && <ErrorNote message={error} />}
 
@@ -295,8 +326,8 @@ function Practice() {
                           >
                             {isCorrect ? <Icon name="check" className="h-4 w-4" /> : isWrongPick ? <Icon name="x" className="h-4 w-4" /> : String.fromCharCode(65 + i)}
                           </span>
-                          {option}
-                          {isCorrect && <span className="sr-only">({t("practice.correctAnswer")})</span>}
+                          {optionLabel(question, option)}
+                          {isCorrect &&<span className="sr-only">({t("practice.correctAnswer")})</span>}
                           {isWrongPick && <span className="sr-only">({t("practice.yourWrongAnswer")})</span>}
                         </motion.button>
                       </motion.li>

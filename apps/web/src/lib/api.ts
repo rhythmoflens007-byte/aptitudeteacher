@@ -21,7 +21,14 @@ export type Question = {
   subtopic: string;
   skills: string[];
   source: string;
+  /** How to show each option in the learner's language; answers are always sent in English. */
+  labels?: Record<string, string>;
 };
+
+/** An option (or a correct answer) as the learner should see it. */
+export function optionLabel(question: Pick<Question, "labels">, option: string): string {
+  return question.labels?.[option] ?? option;
+}
 
 export type Topic = {
   id: string;

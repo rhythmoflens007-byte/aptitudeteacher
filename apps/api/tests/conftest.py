@@ -10,6 +10,8 @@ _db_dir = tempfile.mkdtemp(prefix="aptitude-tests-")
 os.environ["DATABASE_URL"] = f"sqlite:///{Path(_db_dir, 'test.db').as_posix()}"
 os.environ["GEMINI_API_KEY"] = ""
 os.environ["JWT_SECRET"] = "test-secret"
+os.environ["VOICE_CACHE_DIR"] = str(Path(_db_dir, "voices"))
+os.environ["TTS_PROVIDERS"] = "edge"
 os.environ["GEMINI_MODEL"] = "gemini-3.6-flash"
 os.environ["GEMINI_FALLBACK_MODELS"] = "gemini-3.8-flash,gemini-3.5-flash"
 

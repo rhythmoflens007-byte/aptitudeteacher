@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import { FadeIn } from "@/components/motion";
+import RevisionPlan from "@/components/RevisionPlan";
+import ShareScore from "@/components/ShareScore";
+import StreakNudge from "@/components/StreakNudge";
 import TutorAvatar from "@/components/TutorAvatar";
 import { ActivityRings, buttonClass, CountUp, ErrorState, Icon, IconTile, MISCONCEPTION_KEYS, Pill, ProgressBar, Ring, Skeleton, SpotlightCard } from "@/components/ui";
 import { api, Dashboard } from "@/lib/api";
@@ -52,7 +55,7 @@ function DashboardView() {
     return (
       <div className="flex flex-col gap-5" aria-busy aria-label={t("common.loading")}>
         <Skeleton className="h-20 w-2/3" />
-        <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
           <Skeleton className="h-56" />
           <Skeleton className="h-56" />
         </div>
@@ -117,6 +120,26 @@ function DashboardView() {
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
+          {stats.attempts > 0 && (
+            <ShareScore
+              label={t("share.progress")}
+              filename="aptitude-progress.png"
+              card={() => ({
+                eyebrow: t("share.myProgress"),
+                name: data.user.display_name,
+                headline: `${t("dash.level")} ${g.level}`,
+                caption: t("dash.xpTotal", { n: g.xp }),
+                stats: [
+                  { label: t("dash.streak"), value: `${g.streak_days}` },
+                  { label: t("dash.accuracy"), value: stats.accuracy === null ? "—" : `${stats.accuracy}%` },
+                  { label: t("share.answered"), value: `${stats.attempts}` },
+                  { label: t("dash.badges"), value: `${data.badges.filter((b) => b.earned_at).length}/${data.badges.length}` },
+                ],
+                bars: data.topics.map((tp) => ({ label: tn(tp.name), value: tp.mastery })),
+                footer: t("share.footer"),
+              })}
+            />
+          )}
           <Link href="/tests" transitionTypes={["nav-forward"]} className={buttonClass("secondary")}>
             <Icon name="clipboard" className="h-4 w-4" /> {t("dash.mockTest")}
           </Link>
@@ -126,7 +149,9 @@ function DashboardView() {
         </div>
       </FadeIn>
 
-      <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
+      <StreakNudge streak={g.streak_days} today={stats.today} attempts={stats.attempts} />
+
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <FadeIn delay={0.05}>
           <div className="relative flex h-full items-end overflow-hidden rounded-[32px] bg-gradient-to-br from-iris via-violet to-coral p-1 shadow-[var(--shadow-lg)]">
             <div className="relative flex h-full w-full items-center gap-4 overflow-hidden rounded-[29px] bg-gradient-to-br from-[#5b5bf5] to-[#8a55ef] text-white">
@@ -195,7 +220,11 @@ function DashboardView() {
         ))}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
+      <FadeIn>
+        <RevisionPlan />
+      </FadeIn>
+
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <FadeIn>
           <div className="rounded-[32px] bg-surface p-2 shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between px-5 pb-2 pt-4">
@@ -254,7 +283,7 @@ function DashboardView() {
           </div>
         </FadeIn>
 
-        <div className="grid gap-5 md:grid-cols-2 xl:flex xl:flex-col">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-2 xl:flex xl:flex-col">
           <FadeIn>
             <div className="rounded-[32px] bg-surface p-6 shadow-[var(--shadow-md)]">
               <div className="flex items-center justify-between">

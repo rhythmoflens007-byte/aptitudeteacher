@@ -2,7 +2,7 @@ import random
 from fractions import Fraction
 from math import comb, factorial, gcd, lcm, perm
 
-from app.question_templates.core import dec, frac, mcq, names, near, num, ordinal, pct, rupees, template
+from app.question_templates.core import T, dec, frac, mcq, names, near, num, ordinal, pct, rupees, template
 
 SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
 
@@ -12,31 +12,31 @@ def power(base, exp) -> str:
 
 
 def days(v) -> str:
-    return f"{num(v)} days"
+    return T("{v} days", v=num(v))
 
 
 def hours(v) -> str:
-    return f"{num(v)} hours"
+    return T("{v} hours", v=num(v))
 
 
 def seconds(v) -> str:
-    return f"{num(v)} seconds"
+    return T("{v} seconds", v=num(v))
 
 
 def kmh(v) -> str:
-    return f"{num(v)} km/h"
+    return T("{v} km/h", v=num(v))
 
 
 def change(v) -> str:
     if abs(v) < 1e-9:
-        return "No change"
-    return f"{num(abs(v))}% {'increase' if v > 0 else 'decrease'}"
+        return T("No change")
+    return f"{num(abs(v))}% {T("increase") if v > 0 else T("decrease")}"
 
 
 def gain(v) -> str:
     if abs(v) < 1e-9:
-        return "No profit, no loss"
-    return f"{num(abs(v))}% {'profit' if v > 0 else 'loss'}"
+        return T("No profit, no loss")
+    return f"{num(abs(v))}% {T("profit") if v > 0 else T("loss")}"
 
 
 def ratio(a: int, b: int) -> str:
@@ -59,10 +59,10 @@ def percent_of(rng):
     ans = p * n // 100
     return mcq(
         rng,
-        f"What is {p}% of {num(n)}?",
+        T("What is {p}% of {n}?", p=p, n=num(n)),
         num(ans),
         [num(ans * 10), num(n - ans), num(ans + p)],
-        f"1. {p}% means {p}/100.\n2. {p}/100 × {num(n)} = {num(ans)}.",
+        T("1. {p}% means {p}/100.\n2. {p}/100 × {n} = {ans}.", p=p, n=num(n), ans=num(ans)),
         near(ans),
     )
 
@@ -72,22 +72,22 @@ def percentage_change(rng):
     p = rng.choice([5, 10, 15, 20, 25, 30, 40, 50, 60, 75])
     up = rng.random() < 0.6
     what, money = rng.choice([
-        ("The price of a bag", True), ("A worker's monthly salary", True), ("The price of a phone", True),
-        ("A town's population", False), ("The number of students in a school", False), ("A website's daily visitors", False),
+        (T("The price of a bag"), True), (T("A worker's monthly salary"), True), (T("The price of a phone"), True),
+        (T("A town's population"), False), (T("The number of students in a school"), False), (T("A website's daily visitors"), False),
     ])
     fmt = rupees if money else num
     base = multiple(rng, 100 // gcd(p, 100) * (10 if money else 1), 200, 60000 if money else 20000)
     delta = base * p // 100
     new = base + delta if up else base - delta
-    word = "increase" if up else "decrease"
+    word = T("increase") if up else T("decrease")
     return mcq(
         rng,
-        f"{what} {'rises' if up else 'falls'} from {fmt(base)} to {fmt(new)}. What is the percentage {word}?",
+        T("{what} {x1} from {x2} to {x3}. What is the percentage {word}?", what=what, x1=T("rises") if up else T("falls"), x2=fmt(base), x3=fmt(new), word=word),
         pct(p),
         [pct(delta / new * 100), pct(p * 2), pct(100 - p)],
-        f"1. Change = {fmt(max(base, new))} - {fmt(min(base, new))} = {fmt(delta)}.\n"
-        f"2. Percentage {word} = change ÷ original × 100 = {num(delta)} ÷ {num(base)} × 100 = {p}%.\n"
-        f"Tip: always divide by the ORIGINAL value ({fmt(base)}), not the new one.",
+        T("1. Change = {x1} - {x2} = {x3}.\n"
+            "2. Percentage {word} = change ÷ original × 100 = {delta} ÷ {base} × 100 = {p}%.\n"
+            "Tip: always divide by the ORIGINAL value ({x4}), not the new one.", x1=fmt(max(base, new)), x2=fmt(min(base, new)), x3=fmt(delta), word=word, delta=num(delta), base=num(base), p=p, x4=fmt(base)),
         near(p, pct, 5),
     )
 
@@ -99,10 +99,10 @@ def what_percent(rng):
     part = whole * p // 100
     return mcq(
         rng,
-        f"{num(part)} is what percent of {num(whole)}?",
+        T("{part} is what percent of {whole}?", part=num(part), whole=num(whole)),
         pct(p),
         [pct(whole / part * 100), pct(abs(100 - p)), pct(p / 10)],
-        f"1. Percent = part ÷ whole × 100.\n2. {num(part)} ÷ {num(whole)} × 100 = {p}%.",
+        T("1. Percent = part ÷ whole × 100.\n2. {part} ÷ {whole} × 100 = {p}%.", part=num(part), whole=num(whole), p=p),
         near(p, pct, 5),
     )
 
@@ -113,16 +113,17 @@ def undo_a_change(rng):
     down = rng.random() < 0.6
     after = 100 - x if down else 100 + x
     ans = Fraction(x * 100, after)
-    first, back = ("decreased", "increased") if down else ("increased", "decreased")
+    first, back = (T("decreased"), T("increased")) if down else (T("increased"), T("decreased"))
     other = Fraction(x * 100, 100 + x if down else 100 - x)
     return mcq(
         rng,
-        f"A number is {first} by {x}%. By what percent must the result be {back} to get back the original number?",
+        T("A number is {first} by {x}%. By what percent must the result be {back} to get back the original number?", first=first, x=x, back=back),
         pct(ans),
         [pct(x), pct(other), pct(x * 2)],
-        f"1. Take the number as 100. After a {x}% {'decrease' if down else 'increase'} it becomes {after}.\n"
-        f"2. To get back to 100 we need a change of {x} on a base of {after}.\n"
-        f"3. {x} ÷ {after} × 100 = {pct(ans)}.\nThe base has changed, so the answer is not simply {x}%.",
+        T("1. Take the number as 100. After a {x}% {x1} it becomes {after}.\n"
+            "2. To get back to 100 we need a change of {x} on a base of {after}.\n"
+            "3. {x} ÷ {after} × 100 = {ans}.\n"
+            "The base has changed, so the answer is not simply {x}%.", x=x, x1=T("decrease") if down else T("increase"), after=after, ans=pct(ans)),
         near(float(ans), pct, 5),
     )
 
@@ -134,17 +135,17 @@ def up_then_down(rng):
     rise_first = rng.random() < 0.5
     x, y = (a, -b) if rise_first else (-a, b)
     net = x + y + x * y / 100
-    thing = rng.choice(["The price of a TV", "A shop's rent", "The price of petrol", "A company's sales"])
-    steps = f"increased by {a}% and then decreased by {b}%" if rise_first else f"decreased by {a}% and then increased by {b}%"
+    thing = rng.choice([T("The price of a TV"), T("A shop's rent"), T("The price of petrol"), T("A company's sales")])
+    steps = T("increased by {a}% and then decreased by {b}%", a=a, b=b) if rise_first else T("decreased by {a}% and then increased by {b}%", a=a, b=b)
     f1, f2 = 1 + x / 100, 1 + y / 100
     return mcq(
         rng,
-        f"{thing} is {steps}. What is the net change?",
+        T("{thing} is {steps}. What is the net change?", thing=thing, steps=steps),
         change(net),
         [change(x + y), change(x + y - x * y / 100), change(-net)],
-        f"1. Multiply the factors: {dec(f1)} × {dec(f2)} = {dec(f1 * f2)}.\n"
-        f"2. {dec(f1 * f2)} means {num(f1 * f2 * 100)}% of the original, so the result is: {change(net)}.\n"
-        f"Shortcut: net % = x + y + xy/100 = {x} + ({y}) + ({x} × {y})/100 = {num(net)}%.",
+        T("1. Multiply the factors: {f1} × {f2} = {x1}.\n"
+            "2. {x2} means {x3}% of the original, so the result is: {net}.\n"
+            "Shortcut: net % = x + y + xy/100 = {x} + ({y}) + ({x} × {y})/100 = {net2}%.", f1=dec(f1), f2=dec(f2), x1=dec(f1 * f2), x2=dec(f1 * f2), x3=num(f1 * f2 * 100), net=change(net), x=x, y=y, net2=num(net)),
         near(net, change, 1),
     )
 
@@ -156,12 +157,12 @@ def two_discounts(rng):
     factor = (100 - d1) * (100 - d2) / 10000
     return mcq(
         rng,
-        f"Two successive discounts of {d1}% and {d2}% are equivalent to a single discount of:",
+        T("Two successive discounts of {d1}% and {d2}% are equivalent to a single discount of:", d1=d1, d2=d2),
         pct(single),
         [pct(d1 + d2), pct(d1 + d2 + d1 * d2 / 100), pct(max(d1, d2) + min(d1, d2) / 2)],
-        f"1. Price factor = {dec((100 - d1) / 100)} × {dec((100 - d2) / 100)} = {dec(factor)}.\n"
-        f"2. The customer pays {num(factor * 100)}%, so the single discount is 100 - {num(factor * 100)} = {pct(single)}.\n"
-        "Discounts never simply add up: the second one applies to an already reduced price.",
+        T("1. Price factor = {x1} × {x2} = {factor}.\n"
+            "2. The customer pays {x3}%, so the single discount is 100 - {x4} = {single}.\n"
+            "Discounts never simply add up: the second one applies to an already reduced price.", x1=dec((100 - d1) / 100), x2=dec((100 - d2) / 100), factor=dec(factor), x3=num(factor * 100), x4=num(factor * 100), single=pct(single)),
         near(single, pct, 2),
     )
 
@@ -174,13 +175,13 @@ def population_two_years_ago(rng):
     factor = (100 + r1) * (100 + r2) / 10000
     return mcq(
         rng,
-        f"A town's population grows by {r1}% in the first year and {r2}% in the second. "
-        f"If it is now {num(now)}, what was it two years ago?",
+        T("A town's population grows by {r1}% in the first year and {r2}% in the second. If it is now {now}, what was it two years ago?", r1=r1, r2=r2, now=num(now)),
         num(start),
         [num(round(now * (100 - r1 - r2) / 100)), num(round(now / (1 + (r1 + r2) / 100))), num(start * (100 + r1) // 100)],
-        f"1. Growth factor over two years = {dec(1 + r1 / 100)} × {dec(1 + r2 / 100)} = {dec(factor)}.\n"
-        f"2. Original × {dec(factor)} = {num(now)}.\n3. Original = {num(now)} ÷ {dec(factor)} = {num(start)}.\n"
-        f"Subtracting {r1 + r2}% from today's figure is the trap: the growth was on a smaller base.",
+        T("1. Growth factor over two years = {x1} × {x2} = {factor}.\n"
+            "2. Original × {factor} = {now}.\n"
+            "3. Original = {now} ÷ {factor} = {start}.\n"
+            "Subtracting {x3}% from today's figure is the trap: the growth was on a smaller base.", x1=dec(1 + r1 / 100), x2=dec(1 + r2 / 100), factor=dec(factor), now=num(now), start=num(start), x3=r1 + r2),
         near(start, gap=500),
     )
 
@@ -200,12 +201,13 @@ def together(rng):
     x, y = names(rng, 2)
     return mcq(
         rng,
-        f"{x} can finish a piece of work in {a} days and {y} in {b} days. Working together, how many days will they take?",
+        T("{x} can finish a piece of work in {a} days and {y} in {b} days. Working together, how many days will they take?", x=x, a=a, y=y, b=b),
         days(t),
         [days((a + b) / 2), days(a + b), days(abs(b - a))],
-        f"1. {x}'s rate = 1/{a} of the work per day; {y}'s rate = 1/{b}.\n"
-        f"2. Together = 1/{a} + 1/{b} = {a + b}/{a * b} = 1/{t}.\n3. They finish in {t} days.\n"
-        f"Shortcut: ({a} × {b}) ÷ ({a} + {b}) = {a * b} ÷ {a + b} = {t}.",
+        T("1. {x}'s rate = 1/{a} of the work per day; {y}'s rate = 1/{b}.\n"
+            "2. Together = 1/{a} + 1/{b} = {x1}/{x2} = 1/{t}.\n"
+            "3. They finish in {t} days.\n"
+            "Shortcut: ({a} × {b}) ÷ ({a} + {b}) = {x3} ÷ {x4} = {t}.", x=x, a=a, y=y, b=b, x1=a + b, x2=a * b, t=t, x3=a * b, x4=a + b),
         near(t, days),
     )
 
@@ -219,11 +221,12 @@ def alone_from_together(rng):
     x, y = names(rng, 2)
     return mcq(
         rng,
-        f"{x} and {y} together can do a job in {t} days. {x} alone can do it in {a} days. How many days will {y} alone take?",
+        T("{x} and {y} together can do a job in {t} days. {x} alone can do it in {a} days. How many days will {y} alone take?", x=x, y=y, t=t, a=a),
         days(b),
         [days(a - t), days(a + t), days(2 * t)],
-        f"1. Combined rate = 1/{t}; {x}'s rate = 1/{a}.\n"
-        f"2. {y}'s rate = 1/{t} - 1/{a} = {a - t}/{a * t} = 1/{b}.\n3. {y} alone takes {b} days.",
+        T("1. Combined rate = 1/{t}; {x}'s rate = 1/{a}.\n"
+            "2. {y}'s rate = 1/{t} - 1/{a} = {x1}/{x2} = 1/{b}.\n"
+            "3. {y} alone takes {b} days.", t=t, x=x, a=a, y=y, x1=a - t, x2=a * t, b=b),
         near(b, days),
     )
 
@@ -240,13 +243,12 @@ def one_leaves(rng):
     rate = Fraction(1, a) + Fraction(1, b)
     return mcq(
         rng,
-        f"{x} can do a job in {a} days and {y} in {b} days. They work together for {k} days, then {x} leaves. "
-        f"How many more days will {y} take to finish the job?",
+        T("{x} can do a job in {a} days and {y} in {b} days. They work together for {k} days, then {x} leaves. How many more days will {y} take to finish the job?", x=x, a=a, y=y, b=b, k=k),
         days(ans),
         [days(b - k), days(ans + k), days(b)],
-        f"1. Combined rate = 1/{a} + 1/{b} = {frac(rate)} of the job per day.\n"
-        f"2. In {k} days they finish {k} × {frac(rate)} = {frac(k * rate)} of the job.\n"
-        f"3. Remaining = {frac(rest)}. {y}'s rate is 1/{b}, so {y} needs {frac(rest)} × {b} = {num(ans)} days.",
+        T("1. Combined rate = 1/{a} + 1/{b} = {rate} of the job per day.\n"
+            "2. In {k} days they finish {k} × {rate} = {x1} of the job.\n"
+            "3. Remaining = {rest}. {y}'s rate is 1/{b}, so {y} needs {rest} × {b} = {ans} days.", a=a, b=b, rate=frac(rate), k=k, x1=frac(k * rate), rest=frac(rest), y=y, ans=num(ans)),
         near(float(ans), days),
     )
 
@@ -257,13 +259,13 @@ def fill_and_empty(rng):
     t = f * e // (e - f)
     return mcq(
         rng,
-        f"One pipe fills a tank in {f} hours and another empties it in {e} hours. "
-        "If both are opened on an empty tank, how long will it take to fill?",
+        T("One pipe fills a tank in {f} hours and another empties it in {e} hours. If both are opened on an empty tank, how long will it take to fill?", f=f, e=e),
         hours(t),
         [hours(f * e / (f + e)), hours(e - f), hours(e + f)],
-        f"1. Filling rate = 1/{f} per hour; emptying rate = 1/{e} per hour.\n"
-        f"2. Net rate = 1/{f} - 1/{e} = {e - f}/{f * e} = 1/{t}.\n3. The tank fills in {t} hours.\n"
-        "An emptying pipe is negative work: subtract its rate.",
+        T("1. Filling rate = 1/{f} per hour; emptying rate = 1/{e} per hour.\n"
+            "2. Net rate = 1/{f} - 1/{e} = {x1}/{x2} = 1/{t}.\n"
+            "3. The tank fills in {t} hours.\n"
+            "An emptying pipe is negative work: subtract its rate.", f=f, e=e, x1=e - f, x2=f * e, t=t),
         near(t, hours),
     )
 
@@ -275,15 +277,15 @@ def men_and_days(rng):
         if m1 != m2 and (m1 * d1) % m2 == 0:
             break
     d2 = m1 * d1 // m2
-    crew = rng.choice(["workers", "men", "labourers", "painters"])
+    crew, one = rng.choice([(T("workers"), T("worker")), (T("men"), T("man")), (T("labourers"), T("labourer")), (T("painters"), T("painter"))])
     return mcq(
         rng,
-        f"{m1} {crew} can finish a job in {d1} days. How many days will {m2} {crew} take to finish the same job?",
+        T("{m1} {crew} can finish a job in {d1} days. How many days will {m2} {crew} take to finish the same job?", m1=m1, crew=crew, d1=d1, m2=m2),
         days(d2),
         [days(d1 * m2 / m1), days(abs(d1 + m1 - m2)), days(d2 + d1)],
-        f"1. Total work = {crew} × days = {m1} × {d1} = {m1 * d1} {crew[:-1]}-days.\n"
-        f"2. With {m2} {crew}: {m1 * d1} ÷ {m2} = {d2} days.\n"
-        f"{'Fewer' if m2 < m1 else 'More'} {crew} means {'more' if m2 < m1 else 'fewer'} days: they are inversely proportional.",
+        T("1. Total work = {crew} × days = {m1} × {d1} = {x1} {x2}-days.\n"
+            "2. With {m2} {crew}: {x3} ÷ {m2} = {d2} days.\n"
+            "{x4} {crew} means {x5} days: they are inversely proportional.", crew=crew, m1=m1, d1=d1, x1=m1 * d1, x2=one, m2=m2, x3=m1 * d1, d2=d2, x4=T("Fewer") if m2 < m1 else T("More"), x5=T("more") if m2 < m1 else T("fewer")),
         near(d2, days),
     )
 
@@ -299,12 +301,12 @@ def men_days_hours(rng):
     d2 = total // (m2 * h2)
     return mcq(
         rng,
-        f"{m1} men working {h1} hours a day finish a job in {d1} days. "
-        f"How many days will {m2} men take, working {h2} hours a day?",
+        T("{m1} men working {h1} hours a day finish a job in {d1} days. How many days will {m2} men take, working {h2} hours a day?", m1=m1, h1=h1, d1=d1, m2=m2, h2=h2),
         days(d2),
         [days(m1 * d1 / m2), days(d1 * m2 * h2 / (m1 * h1)), days(d2 + 2)],
-        f"1. Total work = men × hours × days = {m1} × {h1} × {d1} = {total} man-hours.\n"
-        f"2. Each day {m2} men do {m2} × {h2} = {m2 * h2} man-hours.\n3. Days = {total} ÷ {m2 * h2} = {d2}.",
+        T("1. Total work = men × hours × days = {m1} × {h1} × {d1} = {total} man-hours.\n"
+            "2. Each day {m2} men do {m2} × {h2} = {x1} man-hours.\n"
+            "3. Days = {total} ÷ {x2} = {d2}.", m1=m1, h1=h1, d1=d1, total=total, m2=m2, h2=h2, x1=m2 * h2, x2=m2 * h2, d2=d2),
         near(d2, days),
     )
 
@@ -318,13 +320,12 @@ def more_men_join(rng):
     ans = m * (d - k) // (m + extra)
     return mcq(
         rng,
-        f"{m} men can build a wall in {d} days. After {k} days, {extra} more men join them. "
-        "How many more days are needed to finish the wall?",
+        T("{m} men can build a wall in {d} days. After {k} days, {extra} more men join them. How many more days are needed to finish the wall?", m=m, d=d, k=k, extra=extra),
         days(ans),
         [days(d - k), days(m * d / (m + extra)), days(m * (d - k) / extra)],
-        f"1. Total work = {m} × {d} = {m * d} man-days.\n"
-        f"2. In {k} days, {m} men do {m * k} man-days, leaving {m * (d - k)}.\n"
-        f"3. Now {m + extra} men work: {m * (d - k)} ÷ {m + extra} = {ans} days.",
+        T("1. Total work = {m} × {d} = {x1} man-days.\n"
+            "2. In {k} days, {m} men do {x2} man-days, leaving {x3}.\n"
+            "3. Now {x4} men work: {x5} ÷ {x6} = {ans} days.", m=m, d=d, x1=m * d, k=k, x2=m * k, x3=m * (d - k), x4=m + extra, x5=m * (d - k), x6=m + extra, ans=ans),
         near(ans, days),
     )
 
@@ -343,11 +344,12 @@ def pass_a_pole(rng):
     length = int(v * t)
     return mcq(
         rng,
-        f"A train {length} m long runs at {speed} km/h. How long will it take to pass a pole?",
+        T("A train {length} m long runs at {speed} km/h. How long will it take to pass a pole?", length=length, speed=speed),
         seconds(t),
         [seconds(length / speed), seconds(length / (speed * 18 / 5)), seconds(t * 2)],
-        f"1. Convert the speed: {speed} × 5/18 = {num(v)} m/s.\n"
-        f"2. To pass a pole the train covers its own length, {length} m.\n3. Time = {length} ÷ {num(v)} = {t} seconds.",
+        T("1. Convert the speed: {speed} × 5/18 = {v} m/s.\n"
+            "2. To pass a pole the train covers its own length, {length} m.\n"
+            "3. Time = {length} ÷ {v} = {t} seconds.", speed=speed, v=num(v), length=length, t=t),
         near(t, seconds),
     )
 
@@ -363,12 +365,13 @@ def cross_a_platform(rng):
             break
     return mcq(
         rng,
-        f"A train {length} m long, running at {speed} km/h, crosses a platform in {t} seconds. How long is the platform?",
-        f"{platform} m",
-        [f"{v * t} m", f"{length} m" if length != platform else f"{platform + 50} m", f"{speed * t - length} m"],
-        f"1. Convert the speed: {speed} × 5/18 = {v} m/s.\n2. Distance covered in {t} s = {v} × {t} = {v * t} m.\n"
-        f"3. That distance is train + platform, so platform = {v * t} - {length} = {platform} m.",
-        near(platform, lambda x: f"{num(x)} m", 20),
+        T("A train {length} m long, running at {speed} km/h, crosses a platform in {t} seconds. How long is the platform?", length=length, speed=speed, t=t),
+        T("{v} m", v=platform),
+        [T("{v} m", v=v * t), T("{v} m", v=length) if length != platform else T("{v} m", v=platform + 50), T("{v} m", v=speed * t - length)],
+        T("1. Convert the speed: {speed} × 5/18 = {v} m/s.\n"
+            "2. Distance covered in {t} s = {v} × {t} = {x1} m.\n"
+            "3. That distance is train + platform, so platform = {x2} - {length} = {platform} m.", speed=speed, v=v, t=t, x1=v * t, x2=v * t, length=length, platform=platform),
+        near(platform, lambda x: T("{v} m", v=num(x)), 20),
     )
 
 
@@ -385,13 +388,13 @@ def opposite_directions(rng):
     l2 = v * t - l1
     return mcq(
         rng,
-        f"Two trains, {l1} m and {l2} m long, run in opposite directions at {s1} km/h and {s2} km/h. "
-        "How long do they take to cross each other?",
+        T("Two trains, {l1} m and {l2} m long, run in opposite directions at {s1} km/h and {s2} km/h. How long do they take to cross each other?", l1=l1, l2=l2, s1=s1, s2=s2),
         seconds(t),
         [seconds((l1 + l2) / float(mps(abs(s1 - s2)))), seconds(l1 / v), seconds((l1 + l2) / total_speed)],
-        f"1. Opposite directions: add the speeds. {s1} + {s2} = {total_speed} km/h.\n"
-        f"2. Convert: {total_speed} × 5/18 = {v} m/s.\n3. Distance to cross = sum of lengths = {l1 + l2} m.\n"
-        f"4. Time = {l1 + l2} ÷ {v} = {t} seconds.",
+        T("1. Opposite directions: add the speeds. {s1} + {s2} = {total_speed} km/h.\n"
+            "2. Convert: {total_speed} × 5/18 = {v} m/s.\n"
+            "3. Distance to cross = sum of lengths = {x1} m.\n"
+            "4. Time = {x2} ÷ {v} = {t} seconds.", s1=s1, s2=s2, total_speed=total_speed, v=v, x1=l1 + l2, x2=l1 + l2, t=t),
         near(t, seconds),
     )
 
@@ -407,13 +410,13 @@ def same_direction(rng):
     l2 = v * t - l1
     return mcq(
         rng,
-        f"A {l1} m long train running at {fast} km/h overtakes a {l2} m long train running at {slow} km/h "
-        "in the same direction. How long does it take to pass it completely?",
+        T("A {l1} m long train running at {fast} km/h overtakes a {l2} m long train running at {slow} km/h in the same direction. How long does it take to pass it completely?", l1=l1, fast=fast, l2=l2, slow=slow),
         seconds(t),
         [seconds((l1 + l2) / float(mps(fast + slow))), seconds(l1 / v), seconds(t * 2)],
-        f"1. Same direction: subtract the speeds. {fast} - {slow} = {diff} km/h.\n"
-        f"2. Convert: {diff} × 5/18 = {v} m/s.\n3. To pass completely it covers both lengths: {l1} + {l2} = {l1 + l2} m.\n"
-        f"4. Time = {l1 + l2} ÷ {v} = {t} seconds.",
+        T("1. Same direction: subtract the speeds. {fast} - {slow} = {diff} km/h.\n"
+            "2. Convert: {diff} × 5/18 = {v} m/s.\n"
+            "3. To pass completely it covers both lengths: {l1} + {l2} = {x1} m.\n"
+            "4. Time = {x2} ÷ {v} = {t} seconds.", fast=fast, slow=slow, diff=diff, v=v, l1=l1, l2=l2, x1=l1 + l2, x2=l1 + l2, t=t),
         near(t, seconds),
     )
 
@@ -430,15 +433,14 @@ def average_speed(rng):
             break
     time = h + m / 60
     dist = int(speed * time)
-    who = rng.choice(["A cyclist", "A bus", "A runner", "A car"])
-    span = f"{h} hours {m} minutes" if m else f"{h} hours"
+    who = rng.choice([T("A cyclist"), T("A bus"), T("A runner"), T("A car")])
+    span = T("{h} hours {m} minutes", h=h, m=m) if m else T("{h} hours", h=h)
     return mcq(
         rng,
-        f"{who} covers {dist} km in {span}. What is the average speed?",
+        T("{who} covers {dist} km in {span}. What is the average speed?", who=who, dist=dist, span=span),
         kmh(speed),
         [kmh(dist / (h + m / 100)), kmh(dist / h) if m else kmh(dist / (h + 1)), kmh(speed + 4)],
-        f"1. {span} = {num(time)} hours" + (f" ({m} minutes = {num(m / 60)} hour)" if m else "") + ".\n"
-        f"2. Speed = distance ÷ time = {dist} ÷ {num(time)} = {speed} km/h.",
+        T("1. {span} = {time} hours", span=span, time=num(time)) + (T(" ({m} minutes = {x1} hour)", m=m, x1=num(m / 60)) if m else "") + T(".\n2. Speed = distance ÷ time = {dist} ÷ {time} = {speed} km/h.", dist=dist, time=num(time), speed=speed),
         near(speed, kmh, 2),
     )
 
@@ -447,15 +449,15 @@ def average_speed(rng):
 def there_and_back(rng):
     x, y = rng.choice(ROUND_TRIPS)
     ans = 2 * x * y // (x + y)
-    a, b = rng.sample(["A", "P", "the city", "the village", "home", "the office"], 2)
+    a, b = rng.sample(["A", "P", T("the city"), T("the village"), T("home"), T("the office")], 2)
     return mcq(
         rng,
-        f"A car travels from {a} to {b} at {x} km/h and returns at {y} km/h. What is its average speed for the whole journey?",
+        T("A car travels from {a} to {b} at {x} km/h and returns at {y} km/h. What is its average speed for the whole journey?", a=a, b=b, x=x, y=y),
         kmh(ans),
         [kmh((x + y) / 2), kmh(y - x), kmh(ans + 2)],
-        f"1. For equal distances, average speed = 2xy ÷ (x + y), not (x + y) ÷ 2.\n"
-        f"2. = 2 × {x} × {y} ÷ ({x} + {y}) = {2 * x * y} ÷ {x + y} = {ans} km/h.\n"
-        f"The car spends more time at the slower speed, so the average is below {num((x + y) / 2)}.",
+        T("1. For equal distances, average speed = 2xy ÷ (x + y), not (x + y) ÷ 2.\n"
+            "2. = 2 × {x} × {y} ÷ ({x} + {y}) = {x1} ÷ {x2} = {ans} km/h.\n"
+            "The car spends more time at the slower speed, so the average is below {x3}.", x=x, y=y, x1=2 * x * y, x2=x + y, ans=ans, x3=num((x + y) / 2)),
         near(ans, kmh, 2),
     )
 
@@ -467,25 +469,25 @@ def late_or_early(rng):
     slower = rng.random() < 0.6
     if slower:
         usual = m * p // (q - p)
-        body = f"Walking at {p}/{q} of her usual speed, a woman reaches her office {m} minutes late. What is her usual time for the journey?"
+        body = T("Walking at {p}/{q} of her usual speed, a woman reaches her office {m} minutes late. What is her usual time for the journey?", p=p, q=q, m=m)
         steps = (
-            f"1. Speed and time are inversely proportional, so at {p}/{q} speed she takes {q}/{p} of her usual time.\n"
-            f"2. The extra time is {q}/{p} - 1 = {q - p}/{p} of her usual time.\n"
-            f"3. {q - p}/{p} of usual time = {m} minutes, so usual time = {m} × {p}{f'/{q - p}' if q - p > 1 else ''} = {usual} minutes."
+            T("1. Speed and time are inversely proportional, so at {p}/{q} speed she takes {q}/{p} of her usual time.\n"
+                "2. The extra time is {q}/{p} - 1 = {x1}/{p} of her usual time.\n"
+                "3. {x2}/{p} of usual time = {m} minutes, so usual time = {m} × {p}{x3} = {usual} minutes.", p=p, q=q, x1=q - p, x2=q - p, m=m, x3=f'/{q - p}' if q - p > 1 else '', usual=usual)
         )
         trap = m * q // (q - p)
     else:
         usual = m * q // (q - p)
-        body = f"Driving at {q}/{p} of his usual speed, a man reaches {m} minutes early. What is his usual time for the journey?"
+        body = T("Driving at {q}/{p} of his usual speed, a man reaches {m} minutes early. What is his usual time for the journey?", q=q, p=p, m=m)
         steps = (
-            f"1. At {q}/{p} speed he takes {p}/{q} of his usual time.\n"
-            f"2. The time saved is 1 - {p}/{q} = {q - p}/{q} of his usual time.\n"
-            f"3. {q - p}/{q} of usual time = {m} minutes, so usual time = {m} × {q}{f'/{q - p}' if q - p > 1 else ''} = {usual} minutes."
+            T("1. At {q}/{p} speed he takes {p}/{q} of his usual time.\n"
+                "2. The time saved is 1 - {p}/{q} = {x1}/{q} of his usual time.\n"
+                "3. {x2}/{q} of usual time = {m} minutes, so usual time = {m} × {q}{x3} = {usual} minutes.", q=q, p=p, x1=q - p, x2=q - p, m=m, x3=f'/{q - p}' if q - p > 1 else '', usual=usual)
         )
         trap = m * p // (q - p)
     return mcq(
-        rng, body, f"{usual} minutes", [f"{trap} minutes", f"{m * q} minutes", f"{usual + m} minutes"], steps,
-        near(usual, lambda v: f"{num(v)} minutes", 5),
+        rng, body, T("{usual} minutes", usual=usual), [T("{trap} minutes", trap=trap), T("{x1} minutes", x1=m * q), T("{x1} minutes", x1=usual + m)], steps,
+        near(usual, lambda v: T("{v} minutes", v=num(v)), 5),
     )
 
 
@@ -498,14 +500,14 @@ def profit_percent(rng):
     profit = rng.random() < 0.6
     delta = cp * p // 100
     sp = cp + delta if profit else cp - delta
-    word = "profit" if profit else "loss"
+    word = T("profit") if profit else T("loss")
     return mcq(
         rng,
-        f"An article bought for {rupees(cp)} is sold for {rupees(sp)}. What is the {word} percent?",
+        T("An article bought for {cp} is sold for {sp}. What is the {word} percent?", cp=rupees(cp), sp=rupees(sp), word=word),
         pct(p),
         [pct(delta / sp * 100), pct(p + 5), pct(delta) if delta != p else pct(p * 2)],
-        f"1. {word.capitalize()} = {rupees(max(cp, sp))} - {rupees(min(cp, sp))} = {rupees(delta)}.\n"
-        f"2. {word.capitalize()} % is always on cost price: {num(delta)} ÷ {num(cp)} × 100 = {p}%.",
+        T("1. {x1} = {x2} - {x3} = {delta}.\n"
+            "2. {x4} % is always on cost price: {delta2} ÷ {cp} × 100 = {p}%.", x1=word.capitalize(), x2=rupees(max(cp, sp)), x3=rupees(min(cp, sp)), delta=rupees(delta), x4=word.capitalize(), delta2=num(delta), cp=num(cp), p=p),
         near(p, pct, 5),
     )
 
@@ -515,14 +517,15 @@ def price_after_discount(rng):
     d = rng.choice([5, 10, 15, 20, 25, 30, 40])
     mp = multiple(rng, 100, 300, 9000)
     sp = mp * (100 - d) // 100
-    item = rng.choice(["shirt", "pair of shoes", "school bag", "mixer grinder", "bicycle", "watch"])
+    item = rng.choice([T("shirt"), T("pair of shoes"), T("school bag"), T("mixer grinder"), T("bicycle"), T("watch")])
     return mcq(
         rng,
-        f"A {item} marked at {rupees(mp)} is sold at a {d}% discount. What is the selling price?",
+        T("A {item} marked at {mp} is sold at a {d}% discount. What is the selling price?", item=item, mp=rupees(mp), d=d),
         rupees(sp),
         [rupees(mp * d // 100), rupees(mp - d), rupees(mp * (100 + d) // 100)],
-        f"1. Discount = {d}% of {rupees(mp)} = {rupees(mp * d // 100)}.\n2. Selling price = {rupees(mp)} - {rupees(mp * d // 100)} = {rupees(sp)}.\n"
-        f"Shortcut: {rupees(mp)} × {num((100 - d) / 100)} = {rupees(sp)}.",
+        T("1. Discount = {d}% of {mp} = {x1}.\n"
+            "2. Selling price = {mp} - {x2} = {sp}.\n"
+            "Shortcut: {mp} × {x3} = {sp}.", d=d, mp=rupees(mp), x1=rupees(mp * d // 100), x2=rupees(mp * d // 100), sp=rupees(sp), x3=num((100 - d) / 100)),
         near(sp, rupees),
     )
 
@@ -535,12 +538,12 @@ def loss_to_gain(rng):
     ans = cp * (100 + want) // 100
     return mcq(
         rng,
-        f"By selling an article for {rupees(sp1)}, a shopkeeper loses {loss}%. At what price should it be sold to gain {want}%?",
+        T("By selling an article for {sp1}, a shopkeeper loses {loss}%. At what price should it be sold to gain {want}%?", sp1=rupees(sp1), loss=loss, want=want),
         rupees(ans),
         [rupees(round(sp1 * (100 + want) / 100)), rupees(round(sp1 * (100 + loss + want) / 100)), rupees(cp)],
-        f"1. A {loss}% loss means SP = {100 - loss}% of CP, so CP = {num(sp1)} ÷ {num((100 - loss) / 100)} = {rupees(cp)}.\n"
-        f"2. For a {want}% gain, SP = {num(cp)} × {num((100 + want) / 100)} = {rupees(ans)}.\n"
-        "The percentages are always on cost price, never on the old selling price.",
+        T("1. A {loss}% loss means SP = {x1}% of CP, so CP = {sp1} ÷ {x2} = {cp}.\n"
+            "2. For a {want}% gain, SP = {cp2} × {x3} = {ans}.\n"
+            "The percentages are always on cost price, never on the old selling price.", loss=loss, x1=100 - loss, sp1=num(sp1), x2=num((100 - loss) / 100), cp=rupees(cp), want=want, cp2=num(cp), x3=num((100 + want) / 100), ans=rupees(ans)),
         near(ans, rupees),
     )
 
@@ -551,11 +554,13 @@ def mark_up_then_discount(rng):
     sp = (100 + m) * (100 - d) / 100
     return mcq(
         rng,
-        f"A shopkeeper marks goods {m}% above cost price and then gives a {d}% discount. What is his profit or loss percent?",
+        T("A shopkeeper marks goods {m}% above cost price and then gives a {d}% discount. What is his profit or loss percent?", m=m, d=d),
         gain(sp - 100),
         [gain(m - d), gain(m * d / 100), gain(m + d)],
-        f"1. Take CP = 100. Marked price = {100 + m}.\n2. After a {d}% discount, SP = {100 + m} × {num((100 - d) / 100)} = {num(sp)}.\n"
-        f"3. On a cost of 100, that is {gain(sp - 100)}.\nThe discount is on the marked price, so you can't just subtract {d} from {m}.",
+        T("1. Take CP = 100. Marked price = {x1}.\n"
+            "2. After a {d}% discount, SP = {x2} × {x3} = {sp}.\n"
+            "3. On a cost of 100, that is {x4}.\n"
+            "The discount is on the marked price, so you can't just subtract {d} from {m}.", x1=100 + m, d=d, x2=100 + m, x3=num((100 - d) / 100), sp=num(sp), x4=gain(sp - 100), m=m),
         near(sp - 100, gain, 2),
     )
 
@@ -566,11 +571,12 @@ def false_weight(rng):
     ans = (1000 - w) / w * 100
     return mcq(
         rng,
-        f"A shopkeeper sells goods at cost price but uses {'an' if w in (800, 875) else 'a'} {w} g weight in place of 1 kg. What is his profit percent?",
+        T("A shopkeeper sells goods at cost price but uses {x1} {w} g weight in place of 1 kg. What is his profit percent?", x1='an' if w in (800, 875) else 'a', w=w),
         pct(ans),
         [pct((1000 - w) / 10), pct((1000 - w) / 1000 * 100 + 1), pct(ans * 2)],
-        f"1. He charges for 1000 g but gives only {w} g, so he gains {1000 - w} g on every {w} g he hands over.\n"
-        f"2. Profit % = {1000 - w} ÷ {w} × 100 = {pct(ans)}.\nThe gain is measured on what he really gives ({w} g), not on 1000 g.",
+        T("1. He charges for 1000 g but gives only {w} g, so he gains {x1} g on every {w} g he hands over.\n"
+            "2. Profit % = {x2} ÷ {w} × 100 = {ans}.\n"
+            "The gain is measured on what he really gives ({w} g), not on 1000 g.", w=w, x1=1000 - w, x2=1000 - w, ans=pct(ans)),
         near(ans, pct, 1),
     )
 
@@ -590,11 +596,12 @@ def share_of_two(rng):
     share = (b if ask_second else a) * unit
     return mcq(
         rng,
-        f"Divide {rupees(total)} between {x} and {y} in the ratio {a}:{b}. What is {y if ask_second else x}'s share?",
+        T("Divide {total} between {x} and {y} in the ratio {a}:{b}. What is {x1}'s share?", total=rupees(total), x=x, y=y, a=a, b=b, x1=y if ask_second else x),
         rupees(share),
         [rupees((a if ask_second else b) * unit), rupees(total // (b if ask_second else a)), rupees(share + unit)],
-        f"1. Total parts = {a} + {b} = {a + b}.\n2. One part = {num(total)} ÷ {a + b} = {rupees(unit)}.\n"
-        f"3. {y if ask_second else x}'s share = {b if ask_second else a} × {num(unit)} = {rupees(share)}.",
+        T("1. Total parts = {a} + {b} = {x1}.\n"
+            "2. One part = {total} ÷ {x2} = {unit}.\n"
+            "3. {x3}'s share = {x4} × {unit2} = {share}.", a=a, b=b, x1=a + b, total=num(total), x2=a + b, unit=rupees(unit), x3=y if ask_second else x, x4=b if ask_second else a, unit2=num(unit), share=rupees(share)),
         near(share, rupees, unit),
     )
 
@@ -610,11 +617,12 @@ def share_of_three(rng):
     x, y, z = names(rng, 3)
     return mcq(
         rng,
-        f"A prize of {rupees(total)} is shared among {x}, {y} and {z} in the ratio {a}:{b}:{c}. How much does {z} get?",
+        T("A prize of {total} is shared among {x}, {y} and {z} in the ratio {a}:{b}:{c}. How much does {z} get?", total=rupees(total), x=x, y=y, z=z, a=a, b=b, c=c),
         rupees(c * unit),
         [rupees(a * unit), rupees(b * unit), rupees(total // c) if total % c == 0 else rupees(c * unit + unit)],
-        f"1. Total parts = {a} + {b} + {c} = {a + b + c}.\n2. One part = {num(total)} ÷ {a + b + c} = {rupees(unit)}.\n"
-        f"3. {z} gets {c} parts = {c} × {num(unit)} = {rupees(c * unit)}.",
+        T("1. Total parts = {a} + {b} + {c} = {x1}.\n"
+            "2. One part = {total} ÷ {x2} = {unit}.\n"
+            "3. {z} gets {c} parts = {c} × {unit2} = {x3}.", a=a, b=b, c=c, x1=a + b + c, total=num(total), x2=a + b + c, unit=rupees(unit), z=z, unit2=num(unit), x3=rupees(c * unit)),
         near(c * unit, rupees, unit),
     )
 
@@ -626,12 +634,12 @@ def total_from_difference(rng):
     diff = (a - b) * k
     return mcq(
         rng,
-        f"The ratio of boys to girls in a school club is {a}:{b}. There are {diff} more boys than girls. How many members are there in total?",
+        T("The ratio of boys to girls in a school club is {a}:{b}. There are {diff} more boys than girls. How many members are there in total?", a=a, b=b, diff=diff),
         num((a + b) * k),
         [num(diff * (a + b)), num(a * k), num((a + b) * k + diff)],
-        f"1. The difference between boys and girls is {a} - {b} = {a - b} part{'s' if a - b > 1 else ''}.\n"
-        + (f"2. 1 part = {diff} members.\n" if a - b == 1 else f"2. {a - b} parts = {diff} members, so 1 part = {k}.\n")
-        + f"3. Total = {a + b} parts = {a + b} × {k} = {(a + b) * k}.",
+        T("1. The difference between boys and girls is {a} - {b} = {x1} part{x2}.\n", a=a, b=b, x1=a - b, x2='s' if a - b > 1 else '')
+        + (T("2. 1 part = {diff} members.\n", diff=diff) if a - b == 1 else T("2. {x1} parts = {diff} members, so 1 part = {k}.\n", x1=a - b, diff=diff, k=k))
+        + T("3. Total = {x1} parts = {x2} × {k} = {x3}.", x1=a + b, x2=a + b, k=k, x3=(a + b) * k),
         near((a + b) * k),
     )
 
@@ -646,12 +654,12 @@ def chain_ratios(rng):
     m = lcm(b, c)
     return mcq(
         rng,
-        f"If A:B = {a}:{b} and B:C = {c}:{d}, what is A:C?",
+        T("If A:B = {a}:{b} and B:C = {c}:{d}, what is A:C?", a=a, b=b, c=c, d=d),
         ratio(a * c, b * d),
         [f"{a}:{d}", ratio(a * d, b * c), f"{c}:{b}"],
-        f"1. Make B equal in both ratios. The LCM of {b} and {c} is {m}.\n"
-        f"2. A:B = {a * m // b}:{m} and B:C = {m}:{d * m // c}.\n"
-        f"3. So A:B:C = {a * m // b}:{m}:{d * m // c}, and A:C = {ratio(a * c, b * d)}.",
+        T("1. Make B equal in both ratios. The LCM of {b} and {c} is {m}.\n"
+            "2. A:B = {x1}:{m} and B:C = {m}:{x2}.\n"
+            "3. So A:B:C = {x3}:{m}:{x4}, and A:C = {x5}.", b=b, c=c, m=m, x1=a * m // b, x2=d * m // c, x3=a * m // b, x4=d * m // c, x5=ratio(a * c, b * d)),
         lambda s: f"{a + s}:{d + s}",
     )
 
@@ -667,11 +675,13 @@ def add_to_both(rng):
     n1, n2 = a * x, b * x
     return mcq(
         rng,
-        f"Two numbers are in the ratio {a}:{b}. If {k} is added to each, the ratio becomes {new}. What are the numbers?",
-        f"{n1} and {n2}",
-        [f"{a * (x + 1)} and {b * (x + 1)}", f"{a * (x - 1)} and {b * (x - 1)}" if x > 2 else f"{a * (x + 2)} and {b * (x + 2)}", f"{n1 + k} and {n2 + k}"],
-        f"1. Let the numbers be {a}x and {b}x.\n2. ({a}x + {k}) ÷ ({b}x + {k}) = {new.replace(':', '/')}.\n"
-        f"3. Solving gives x = {x}, so the numbers are {n1} and {n2}.\nCheck: {n1 + k}:{n2 + k} = {new}.",
+        T("Two numbers are in the ratio {a}:{b}. If {k} is added to each, the ratio becomes {new}. What are the numbers?", a=a, b=b, k=k, new=new),
+        T("{n1} and {n2}", n1=n1, n2=n2),
+        [T("{x1} and {x2}", x1=a * (x + 1), x2=b * (x + 1)), T("{x1} and {x2}", x1=a * (x - 1), x2=b * (x - 1)) if x > 2 else T("{x1} and {x2}", x1=a * (x + 2), x2=b * (x + 2)), T("{x1} and {x2}", x1=n1 + k, x2=n2 + k)],
+        T("1. Let the numbers be {a}x and {b}x.\n"
+            "2. ({a}x + {k}) ÷ ({b}x + {k}) = {x1}.\n"
+            "3. Solving gives x = {x}, so the numbers are {n1} and {n2}.\n"
+            "Check: {x2}:{x3} = {new}.", a=a, b=b, k=k, x1=new.replace(':', '/'), x=x, n1=n1, n2=n2, x2=n1 + k, x3=n2 + k, new=new),
     )
 
 
@@ -684,10 +694,10 @@ def simple_interest(rng):
     si = p * r * t // 100
     return mcq(
         rng,
-        f"What is the simple interest on {rupees(p)} at {r}% per annum for {t} years?",
+        T("What is the simple interest on {p} at {r}% per annum for {t} years?", p=rupees(p), r=r, t=t),
         rupees(si),
         [rupees(p + si), rupees(p * r // 100), rupees(si * 2)],
-        f"1. Simple interest = P × R × T ÷ 100.\n2. = {num(p)} × {r} × {t} ÷ 100 = {rupees(si)}.",
+        T("1. Simple interest = P × R × T ÷ 100.\n2. = {p} × {r} × {t} ÷ 100 = {si}.", p=num(p), r=r, t=t, si=rupees(si)),
         near(si, rupees),
     )
 
@@ -699,11 +709,12 @@ def simple_amount(rng):
     si = p * r * t / 100
     return mcq(
         rng,
-        f"{rupees(p)} is lent at {r}% simple interest per annum. What is the total amount after {num(t)} years?",
+        T("{p} is lent at {r}% simple interest per annum. What is the total amount after {t} years?", p=rupees(p), r=r, t=num(t)),
         rupees(p + si),
         [rupees(si), rupees(round(p * (1 + r / 100) ** t)), rupees(p + p * r / 100)],
-        f"1. Interest = {num(p)} × {r} × {num(t)} ÷ 100 = {rupees(si)}.\n"
-        f"2. Amount = principal + interest = {num(p)} + {num(si)} = {rupees(p + si)}.\n{rupees(si)} is only the interest, not the amount.",
+        T("1. Interest = {p} × {r} × {t} ÷ 100 = {si}.\n"
+            "2. Amount = principal + interest = {p} + {si2} = {x1}.\n"
+            "{si} is only the interest, not the amount.", p=num(p), r=r, t=num(t), si=rupees(si), si2=num(si), x1=rupees(p + si)),
         near(p + si, rupees, 100),
     )
 
@@ -715,11 +726,12 @@ def principal_from_amount(rng):
     total = p * (100 + r * t) // 100
     return mcq(
         rng,
-        f"A sum becomes {rupees(total)} in {t} years at {r}% simple interest per annum. What is the sum?",
+        T("A sum becomes {total} in {t} years at {r}% simple interest per annum. What is the sum?", total=rupees(total), t=t, r=r),
         rupees(p),
         [rupees(round(total * (100 - r * t) / 100)), rupees(round(total / (1 + r / 100))), rupees(p + 500)],
-        f"1. Interest for {t} years at {r}% = {r * t}% of the principal.\n2. So amount = {100 + r * t}% of principal = {num(total)}.\n"
-        f"3. Principal = {num(total)} ÷ {num((100 + r * t) / 100)} = {rupees(p)}.",
+        T("1. Interest for {t} years at {r}% = {x1}% of the principal.\n"
+            "2. So amount = {x2}% of principal = {total}.\n"
+            "3. Principal = {total} ÷ {x3} = {p}.", t=t, r=r, x1=r * t, x2=100 + r * t, total=num(total), x3=num((100 + r * t) / 100), p=rupees(p)),
         near(p, rupees, 250),
     )
 
@@ -729,14 +741,14 @@ def times_itself(rng):
     k = rng.choice([2, 3, 4])
     t = rng.choice([v for v in [4, 5, 8, 10, 12, 15, 16, 20, 25] if ((k - 1) * 100) % v == 0 or ((k - 1) * 100 / v * 2).is_integer()])
     r = (k - 1) * 100 / t
-    word = {2: "double", 3: "triple", 4: "become four times"}[k]
+    word = {2: T("double"), 3: T("triple"), 4: T("become four times")}[k]
     return mcq(
         rng,
-        f"At what rate of simple interest per annum will a sum {word} itself in {t} years?",
+        T("At what rate of simple interest per annum will a sum {word} itself in {t} years?", word=word, t=t),
         pct(r),
         [pct(k * 100 / t), pct(100 / t) if k > 2 else pct(r / 2), pct(r + 2)],
-        f"1. To {word.replace('become ', '')}, the interest must equal {k - 1} × the principal, i.e. {(k - 1) * 100}% of P.\n"
-        f"2. {(k - 1) * 100}% spread over {t} years = {(k - 1) * 100} ÷ {t} = {pct(r)} per year.",
+        T("1. To {x1}, the interest must equal {x2} × the principal, i.e. {x3}% of P.\n"
+            "2. {x4}% spread over {t} years = {x5} ÷ {t} = {r} per year.", x1=word.replace('become ', ''), x2=k - 1, x3=(k - 1) * 100, x4=(k - 1) * 100, t=t, x5=(k - 1) * 100, r=pct(r)),
         near(r, pct, 1),
     )
 
@@ -756,12 +768,13 @@ def compound_two_years(rng):
     after1 = p * (100 + r) // 100
     return mcq(
         rng,
-        f"Find the compound interest on {rupees(p)} at {r}% per annum for 2 years, compounded annually.",
+        T("Find the compound interest on {p} at {r}% per annum for 2 years, compounded annually.", p=rupees(p), r=r),
         rupees(ci),
         [rupees(2 * p * r // 100), rupees(int(amount)), rupees(p * r // 100)],
-        f"1. After year 1: {num(p)} × {num(1 + r / 100)} = {num(after1)}.\n2. After year 2: {num(after1)} × {num(1 + r / 100)} = {num(int(amount))}.\n"
-        f"3. Compound interest = {num(int(amount))} - {num(p)} = {rupees(ci)}.\n"
-        f"It is {rupees(ci - 2 * p * r // 100)} more than simple interest because year 2 earns interest on year 1's interest.",
+        T("1. After year 1: {p} × {x1} = {after1}.\n"
+            "2. After year 2: {after1} × {x2} = {x3}.\n"
+            "3. Compound interest = {x4} - {p} = {ci}.\n"
+            "It is {x5} more than simple interest because year 2 earns interest on year 1's interest.", p=num(p), x1=num(1 + r / 100), after1=num(after1), x2=num(1 + r / 100), x3=num(int(amount)), x4=num(int(amount)), ci=rupees(ci), x5=rupees(ci - 2 * p * r // 100)),
         near(ci, rupees),
     )
 
@@ -776,11 +789,12 @@ def ci_minus_si(rng):
     d = int(diff)
     return mcq(
         rng,
-        f"The difference between compound and simple interest on a sum for 2 years at {r}% per annum is {rupees(d)}. What is the sum?",
+        T("The difference between compound and simple interest on a sum for 2 years at {r}% per annum is {d}. What is the sum?", r=r, d=rupees(d)),
         rupees(p),
         [rupees(d * 100 // r), rupees(p // 2), rupees(p * 2)],
-        f"1. For 2 years, CI - SI = P × (R/100)².\n2. {num(d)} = P × ({r}/100)² = P × {dec(r * r / 10000)}.\n"
-        f"3. P = {num(d)} ÷ {dec(r * r / 10000)} = {rupees(p)}.",
+        T("1. For 2 years, CI - SI = P × (R/100)².\n"
+            "2. {d} = P × ({r}/100)² = P × {x1}.\n"
+            "3. P = {d} ÷ {x2} = {p}.", d=num(d), r=r, x1=dec(r * r / 10000), x2=dec(r * r / 10000), p=rupees(p)),
         near(p, rupees, 1000),
     )
 
@@ -788,18 +802,19 @@ def ci_minus_si(rng):
 @template("Simple and Compound Interest", "Compound interest", 4)
 def compound_multiples(rng):
     k, m, n = rng.choice([2, 3]), rng.choice([2, 3, 4]), rng.randint(3, 10)
-    word = {2: "doubles", 3: "triples"}[k]
+    word = {2: T("doubles"), 3: T("triples")}[k]
     target = k ** m
     simple_trap = (target - 1) // (k - 1) * n
     return mcq(
         rng,
-        f"A sum of money {word} itself in {n} years at compound interest. In how many years will it become {target} times?",
-        f"{m * n} years",
-        [f"{simple_trap} years", f"{target * n} years", f"{(m + 1) * n} years"],
-        f"1. Under compound interest the sum is multiplied by the same factor every {n} years: ×{k}.\n"
-        f"2. {target} = {' × '.join([str(k)] * m)}, which is {m} such steps.\n3. {m} × {n} = {m * n} years.\n"
-        f"{simple_trap} years is the simple-interest trap.",
-        near(m * n, lambda v: f"{num(v)} years", n),
+        T("A sum of money {word} itself in {n} years at compound interest. In how many years will it become {target} times?", word=word, n=n, target=target),
+        T("{x1} years", x1=m * n),
+        [T("{simple_trap} years", simple_trap=simple_trap), T("{x1} years", x1=target * n), T("{x1} years", x1=(m + 1) * n)],
+        T("1. Under compound interest the sum is multiplied by the same factor every {n} years: ×{k}.\n"
+            "2. {target} = {x1}, which is {m} such steps.\n"
+            "3. {m} × {n} = {x2} years.\n"
+            "{simple_trap} years is the simple-interest trap.", n=n, k=k, target=target, x1=' × '.join([str(k)] * m), m=m, x2=m * n, simple_trap=simple_trap),
+        near(m * n, lambda v: T("{v} years", v=num(v)), n),
     )
 
 
@@ -813,10 +828,10 @@ def average_of_numbers(rng):
     avg = sum(values) // k
     return mcq(
         rng,
-        f"The average of {', '.join(map(str, values[:-1]))} and {values[-1]} is:",
+        T("The average of {x1} and {x2} is:", x1=', '.join(map(str, values[:-1])), x2=values[-1]),
         num(avg),
         [num(sum(values)), num(sorted(values)[k // 2]), num(avg + 2)],
-        f"1. Sum = {' + '.join(map(str, values))} = {sum(values)}.\n2. Average = {sum(values)} ÷ {k} = {avg}.",
+        T("1. Sum = {x1} = {x2}.\n2. Average = {x3} ÷ {k} = {avg}.", x1=' + '.join(map(str, values)), x2=sum(values), x3=sum(values), k=k, avg=avg),
         near(avg),
     )
 
@@ -827,15 +842,16 @@ def newcomer_age(rng):
     rise = rng.choice([1, 1, 2])
     b = a + rise
     ans = (n + 1) * b - n * a
-    group, who = rng.choice([("students", "the teacher"), ("players", "the coach"), ("workers", "the manager")])
+    group, who = rng.choice([(T("students"), T("the teacher")), (T("players"), T("the coach")), (T("workers"), T("the manager"))])
     return mcq(
         rng,
-        f"The average age of {n} {group} is {a} years. When {who}'s age is included, the average becomes {b} years. What is {who}'s age?",
-        f"{ans} years",
-        [f"{a + n * rise} years", f"{b} years", f"{ans + rise} years"],
-        f"1. Total age of the {group} = {n} × {a} = {n * a}.\n2. Total with {who} = {n + 1} × {b} = {(n + 1) * b}.\n"
-        f"3. {who.capitalize()}'s age = {(n + 1) * b} - {n * a} = {ans} years.",
-        near(ans, lambda v: f"{num(v)} years", 2),
+        T("The average age of {n} {group} is {a} years. When {who}'s age is included, the average becomes {b} years. What is {who}'s age?", n=n, group=group, a=a, who=who, b=b),
+        T("{ans} years", ans=ans),
+        [T("{x1} years", x1=a + n * rise), T("{b} years", b=b), T("{x1} years", x1=ans + rise)],
+        T("1. Total age of the {group} = {n} × {a} = {x1}.\n"
+            "2. Total with {who} = {x2} × {b} = {x3}.\n"
+            "3. {x4}'s age = {x5} - {x6} = {ans} years.", group=group, n=n, a=a, x1=n * a, who=who, x2=n + 1, b=b, x3=(n + 1) * b, x4=who.capitalize(), x5=(n + 1) * b, x6=n * a, ans=ans),
+        near(ans, lambda v: T("{v} years", v=num(v)), 2),
     )
 
 
@@ -845,12 +861,12 @@ def next_innings(rng):
     ans = (n + 1) * (a + d) - n * a
     return mcq(
         rng,
-        f"A batsman's average after {n} innings is {a}. After his {ordinal(n + 1)} innings, the average rises to {a + d}. "
-        f"How many runs did he score in the {ordinal(n + 1)} innings?",
+        T("A batsman's average after {n} innings is {a}. After his {x1} innings, the average rises to {x2}. How many runs did he score in the {x3} innings?", n=n, a=a, x1=ordinal(n + 1), x2=a + d, x3=ordinal(n + 1)),
         num(ans),
         [num(a + n * d), num(a + d), num(ans + d)],
-        f"1. Runs after {n} innings = {n} × {a} = {n * a}.\n2. Runs after {n + 1} innings = {n + 1} × {a + d} = {(n + 1) * (a + d)}.\n"
-        f"3. Runs in the {ordinal(n + 1)} innings = {(n + 1) * (a + d)} - {n * a} = {ans}.",
+        T("1. Runs after {n} innings = {n} × {a} = {x1}.\n"
+            "2. Runs after {x2} innings = {x3} × {x4} = {x5}.\n"
+            "3. Runs in the {x6} innings = {x7} - {x8} = {ans}.", n=n, a=a, x1=n * a, x2=n + 1, x3=n + 1, x4=a + d, x5=(n + 1) * (a + d), x6=ordinal(n + 1), x7=(n + 1) * (a + d), x8=n * a, ans=ans),
         near(ans, gap=3),
     )
 
@@ -863,14 +879,13 @@ def replace_one(rng):
     ans = w + n * d
     return mcq(
         rng,
-        f"The average weight of {n} people increases by {num(d)} kg when a new person replaces one who weighs {w} kg. "
-        "What is the weight of the new person?",
-        f"{num(ans)} kg",
-        [f"{num(w + d)} kg", f"{num(w - n * d)} kg", f"{num(w + (n + 1) * d)} kg"],
-        f"1. The total weight rises by {n} × {num(d)} = {num(n * d)} kg.\n"
-        f"2. That extra weight comes only from the swap, so the new person is {num(n * d)} kg heavier than {w} kg.\n"
-        f"3. New person = {w} + {num(n * d)} = {num(ans)} kg.",
-        near(ans, lambda v: f"{num(v)} kg", 2),
+        T("The average weight of {n} people increases by {d} kg when a new person replaces one who weighs {w} kg. What is the weight of the new person?", n=n, d=num(d), w=w),
+        T("{ans} kg", ans=num(ans)),
+        [T("{x1} kg", x1=num(w + d)), T("{x1} kg", x1=num(w - n * d)), T("{x1} kg", x1=num(w + (n + 1) * d))],
+        T("1. The total weight rises by {n} × {d} = {x1} kg.\n"
+            "2. That extra weight comes only from the swap, so the new person is {x2} kg heavier than {w} kg.\n"
+            "3. New person = {w} + {x3} = {ans} kg.", n=n, d=num(d), x1=num(n * d), x2=num(n * d), w=w, x3=num(n * d), ans=num(ans)),
+        near(ans, lambda v: T("{v} kg", v=num(v)), 2),
     )
 
 
@@ -885,14 +900,15 @@ def smallest_to_add(rng):
             break
     r = n % d
     add = d - r
-    rule = f"\n(Check: {num(n + add)} = {d} × {num((n + add) // d)}.)"
+    rule = T("\n(Check: {x1} = {d} × {x2}.)", x1=num(n + add), d=d, x2=num((n + add) // d))
     return mcq(
         rng,
-        f"What is the smallest number that must be added to {num(n)} to make it exactly divisible by {d}?",
+        T("What is the smallest number that must be added to {n} to make it exactly divisible by {d}?", n=num(n), d=d),
         str(add),
         [str(r), str(add + 1), str(d)],
-        f"1. {num(n)} ÷ {d} leaves remainder {r}.\n2. To reach the next multiple of {d}, add {d} - {r} = {add}.{rule}\n"
-        f"{r} is the trap: that is what you would subtract, not add.",
+        T("1. {n} ÷ {d} leaves remainder {r}.\n"
+            "2. To reach the next multiple of {d}, add {d} - {r} = {add}.{rule}\n"
+            "{r} is the trap: that is what you would subtract, not add.", n=num(n), d=d, r=r, add=add, rule=rule),
         near(add, str, 1),
     )
 
@@ -912,11 +928,12 @@ def remainder_of_power(rng):
     rng.shuffle(others)
     return mcq(
         rng,
-        f"What is the remainder when {power(a, n)} is divided by {m}?",
+        T("What is the remainder when {a} is divided by {m}?", a=power(a, n), m=m),
         str(ans),
         [str(r) for r in others[:3]],
-        f"1. Remainders of {a}¹, {a}², {a}³… when divided by {m}: {', '.join(map(str, cycle[:length]))}, then they repeat every {length}.\n"
-        f"2. {n} ÷ {length} leaves remainder {n % length}, so take position {pos} in the cycle.\n3. The remainder is {ans}.",
+        T("1. Remainders of {a}¹, {a}², {a}³… when divided by {m}: {x1}, then they repeat every {length}.\n"
+            "2. {n} ÷ {length} leaves remainder {x2}, so take position {pos} in the cycle.\n"
+            "3. The remainder is {ans}.", a=a, m=m, x1=', '.join(map(str, cycle[:length])), length=length, n=n, x2=n % length, pos=pos, ans=ans),
     )
 
 
@@ -934,12 +951,12 @@ def unit_digit(rng):
     preferred = [d for d in cycle if d != ans] + others
     return mcq(
         rng,
-        f"What is the unit digit of {power(base, n)}?",
+        T("What is the unit digit of {base}?", base=power(base, n)),
         str(ans),
         [str(d) for d in dict.fromkeys(preferred)],
-        f"1. Only the last digit of the base matters: {last}.\n"
-        f"2. Unit digits of powers of {last} repeat every {length}: {', '.join(map(str, cycle[:length]))}.\n"
-        f"3. {n} ÷ {length} leaves remainder {n % length}, so take position {pos} in the cycle: {ans}.",
+        T("1. Only the last digit of the base matters: {last}.\n"
+            "2. Unit digits of powers of {last} repeat every {length}: {x1}.\n"
+            "3. {n} ÷ {length} leaves remainder {x2}, so take position {pos} in the cycle: {ans}.", last=last, length=length, x1=', '.join(map(str, cycle[:length])), n=n, x2=n % length, pos=pos, ans=ans),
     )
 
 
@@ -950,11 +967,12 @@ def largest_divisible(rng):
     ans = top - top % d
     return mcq(
         rng,
-        f"What is the largest {k}-digit number exactly divisible by {d}?",
+        T("What is the largest {k}-digit number exactly divisible by {d}?", k=k, d=d),
         num(ans),
         [num(ans - d), num(top - d), num(top - top % d + 1)],
-        f"1. The largest {k}-digit number is {num(top)}.\n2. {num(top)} ÷ {d} leaves remainder {top % d}.\n"
-        f"3. Subtract the remainder: {num(top)} - {top % d} = {num(ans)}.",
+        T("1. The largest {k}-digit number is {top}.\n"
+            "2. {top} ÷ {d} leaves remainder {x1}.\n"
+            "3. Subtract the remainder: {top} - {x2} = {ans}.", k=k, top=num(top), d=d, x1=top % d, x2=top % d, ans=num(ans)),
         lambda s: num(ans - d * (s + 1) - s),
     )
 
@@ -969,11 +987,11 @@ def lcm_of_three(rng):
     g = gcd(*nums)
     return mcq(
         rng,
-        f"What is the LCM of {nums[0]}, {nums[1]} and {nums[2]}?",
+        T("What is the LCM of {x1}, {x2} and {x3}?", x1=nums[0], x2=nums[1], x3=nums[2]),
         str(l),
         [str(l * 2), str(l // 2) if l % 2 == 0 and l // 2 not in nums else str(l + nums[0]), str(nums[0] * nums[1] * nums[2]) if g == 1 else str(g)],
-        f"1. Break each into primes: {', '.join(f'{x} = {factorise(x)}' for x in nums)}.\n"
-        f"2. The LCM takes the highest power of each prime: {factorise(l)} = {l}.",
+        T("1. Break each into primes: {x1}.\n"
+            "2. The LCM takes the highest power of each prime: {x2} = {l}.", x1=', '.join(f'{x} = {factorise(x)}' for x in nums), x2=factorise(l), l=l),
         near(l, gap=nums[0]),
     )
 
@@ -1002,11 +1020,11 @@ def hcf_of_three(rng):
     divisors = [d for d in range(2, g) if g % d == 0]
     return mcq(
         rng,
-        f"What is the HCF of {nums[0]}, {nums[1]} and {nums[2]}?",
+        T("What is the HCF of {x1}, {x2} and {x3}?", x1=nums[0], x2=nums[1], x3=nums[2]),
         str(g),
         [str(g * 2), str(divisors[-1]) if divisors else str(g + 1), str(lcm(*nums)) if lcm(*nums) < 10000 else str(g * 3)],
-        f"1. Break each into primes: {', '.join(f'{x} = {factorise(x)}' for x in nums)}.\n"
-        f"2. The HCF takes the lowest power of the primes common to all three: {factorise(g)} = {g}.",
+        T("1. Break each into primes: {x1}.\n"
+            "2. The HCF takes the lowest power of the primes common to all three: {x2} = {g}.", x1=', '.join(f'{x} = {factorise(x)}' for x in nums), x2=factorise(g), g=g),
         near(g, gap=2),
     )
 
@@ -1020,10 +1038,11 @@ def other_number(rng):
     a, b, l = h * x, h * y, h * x * y
     return mcq(
         rng,
-        f"The HCF of two numbers is {h} and their LCM is {l}. If one number is {a}, what is the other?",
+        T("The HCF of two numbers is {h} and their LCM is {l}. If one number is {a}, what is the other?", h=h, l=l, a=a),
         str(b),
         [str(l // a) if l // a != b else str(b + h), str(l // h), str(a + h)],
-        f"1. For two numbers, HCF × LCM = product of the numbers.\n2. {h} × {l} = {a} × other, so other = {h * l} ÷ {a} = {b}.",
+        T("1. For two numbers, HCF × LCM = product of the numbers.\n"
+            "2. {h} × {l} = {a} × other, so other = {x1} ÷ {a} = {b}.", h=h, l=l, a=a, x1=h * l, b=b),
         near(b, gap=h),
     )
 
@@ -1044,12 +1063,12 @@ def bells_together(rng):
     start = rng.choice(range(7 * 60, 11 * 60 + 1, 30))
     return mcq(
         rng,
-        f"Three bells ring at intervals of {ivs[0]}, {ivs[1]} and {ivs[2]} minutes. If they ring together at {clock_time(start)}, "
-        "when will they next ring together?",
+        T("Three bells ring at intervals of {x1}, {x2} and {x3} minutes. If they ring together at {x4}, when will they next ring together?", x1=ivs[0], x2=ivs[1], x3=ivs[2], x4=clock_time(start)),
         clock_time(start + l),
         [clock_time(start + sum(ivs)), clock_time(start + ivs[2]), clock_time(start + 2 * l)],
-        f"1. They ring together again after the LCM of {ivs[0]}, {ivs[1]} and {ivs[2]}.\n"
-        f"2. LCM = {factorise(l)} = {l} minutes.\n3. {clock_time(start)} + {l} minutes = {clock_time(start + l)}.",
+        T("1. They ring together again after the LCM of {x1}, {x2} and {x3}.\n"
+            "2. LCM = {x4} = {l} minutes.\n"
+            "3. {x5} + {l} minutes = {x6}.", x1=ivs[0], x2=ivs[1], x3=ivs[2], x4=factorise(l), l=l, x5=clock_time(start), x6=clock_time(start + l)),
         lambda s: clock_time(start + l + 15 * s),
     )
 
@@ -1064,14 +1083,14 @@ def alligation_ratio(rng):
         m = rng.randrange(c + 5, d, 5)
         if ratio(d - m, m - c) != ratio(m - c, d - m):
             break
-    goods = rng.choice(["rice", "sugar", "tea", "pulses", "wheat"])
+    goods = rng.choice([T("rice"), T("sugar"), T("tea"), T("pulses"), T("wheat")])
     return mcq(
         rng,
-        f"In what ratio must {goods} at ₹{c}/kg be mixed with {goods} at ₹{d}/kg to get a mixture worth ₹{m}/kg?",
+        T("In what ratio must {goods} at ₹{c}/kg be mixed with {goods} at ₹{d}/kg to get a mixture worth ₹{m}/kg?", goods=goods, c=c, d=d, m=m),
         ratio(d - m, m - c),
         [ratio(m - c, d - m), ratio(d - m, d - c), ratio(c, d)],
-        f"1. Alligation: cheaper : dearer = (dearer - mean) : (mean - cheaper).\n"
-        f"2. = ({d} - {m}) : ({m} - {c}) = {d - m} : {m - c} = {ratio(d - m, m - c)}.",
+        T("1. Alligation: cheaper : dearer = (dearer - mean) : (mean - cheaper).\n"
+            "2. = ({d} - {m}) : ({m} - {c}) = {x1} : {x2} = {x3}.", d=d, m=m, c=c, x1=d - m, x2=m - c, x3=ratio(d - m, m - c)),
         lambda s: f"{s + 1}:{s + 2}",
     )
 
@@ -1085,15 +1104,16 @@ def mixture_price(rng):
         if (p * c + q * d) % (p + q) == 0 and p != q:
             break
     mean = (p * c + q * d) // (p + q)
-    goods = rng.choice(["Tea", "Coffee", "Rice", "Dal"])
+    goods = rng.choice([T("Tea"), T("Coffee"), T("Rice"), T("Dal")])
     wrong = Fraction(q * c + p * d, p + q)
     return mcq(
         rng,
-        f"{goods} at ₹{c}/kg and {goods.lower()} at ₹{d}/kg are mixed in the ratio {p}:{q}. What is the price of the mixture per kg?",
+        T("{goods} at ₹{c}/kg and {x1} at ₹{d}/kg are mixed in the ratio {p}:{q}. What is the price of the mixture per kg?", goods=goods, c=c, x1=goods.lower(), d=d, p=p, q=q),
         rupees(mean),
         [rupees((c + d) / 2), rupees(float(wrong)), rupees(mean + 5)],
-        f"1. Cost of {p + q} kg = {p} × {c} + {q} × {d} = ₹{p * c + q * d}.\n2. Price per kg = {p * c + q * d} ÷ {p + q} = {rupees(mean)}.\n"
-        f"It sits closer to the price there is more of.",
+        T("1. Cost of {x1} kg = {p} × {c} + {q} × {d} = ₹{x2}.\n"
+            "2. Price per kg = {x3} ÷ {x4} = {mean}.\n"
+            "It sits closer to the price there is more of.", x1=p + q, p=p, c=c, q=q, d=d, x2=p * c + q * d, x3=p * c + q * d, x4=p + q, mean=rupees(mean)),
         near(mean, rupees, 5),
     )
 
@@ -1112,12 +1132,13 @@ def add_water(rng):
     add = int(target) - water
     return mcq(
         rng,
-        f"A {volume}-litre mixture has milk and water in the ratio {a}:{b}. How much water must be added to make the ratio {c}:{d}?",
-        f"{add} litres",
-        [f"{int(target)} litres", f"{abs(volume * d // (c + d) - water) or add + 2} litres", f"{add * 2} litres"],
-        f"1. Milk = {milk} L, water = {water} L.\n2. Milk stays {milk} L. For milk : water = {c} : {d}, water must be {milk} × {d}/{c} = {int(target)} L.\n"
-        f"3. Water to add = {int(target)} - {water} = {add} litres.",
-        near(add, lambda v: f"{num(v)} litres", 2),
+        T("A {volume}-litre mixture has milk and water in the ratio {a}:{b}. How much water must be added to make the ratio {c}:{d}?", volume=volume, a=a, b=b, c=c, d=d),
+        T("{add} litres", add=add),
+        [T("{target} litres", target=int(target)), T("{x1} litres", x1=abs(volume * d // (c + d) - water) or add + 2), T("{x1} litres", x1=add * 2)],
+        T("1. Milk = {milk} L, water = {water} L.\n"
+            "2. Milk stays {milk} L. For milk : water = {c} : {d}, water must be {milk} × {d}/{c} = {target} L.\n"
+            "3. Water to add = {target} - {water} = {add} litres.", milk=milk, water=water, c=c, d=d, target=int(target), add=add),
+        near(add, lambda v: T("{v} litres", v=num(v)), 2),
     )
 
 
@@ -1130,13 +1151,12 @@ def repeated_replacement(rng):
     keep = Fraction(volume - out, volume)
     return mcq(
         rng,
-        f"A container holds {volume} litres of pure milk. {out} litres are removed and replaced with water, "
-        f"and this is done {times} times in all. How much milk is left?",
-        f"{num(left)} litres",
-        [f"{volume - times * out} litres", f"{num(volume * (1 - out / volume) ** (times - 1))} litres", f"{num(left + out / 2)} litres"],
-        f"1. Each replacement keeps ({volume} - {out}) ÷ {volume} = {frac(keep)} of the milk.\n"
-        f"2. After {times} replacements: {volume} × ({frac(keep)}){str(times).translate(SUP)} = {num(left)} litres.\n"
-        f"{volume - times * out} litres is the trap: later removals take out a mixture, not pure milk.",
+        T("A container holds {volume} litres of pure milk. {out} litres are removed and replaced with water, and this is done {times} times in all. How much milk is left?", volume=volume, out=out, times=times),
+        T("{left} litres", left=num(left)),
+        [T("{x1} litres", x1=volume - times * out), T("{x1} litres", x1=num(volume * (1 - out / volume) ** (times - 1))), T("{x1} litres", x1=num(left + out / 2))],
+        T("1. Each replacement keeps ({volume} - {out}) ÷ {volume} = {keep} of the milk.\n"
+            "2. After {times} replacements: {volume} × ({keep}){x1} = {left} litres.\n"
+            "{x2} litres is the trap: later removals take out a mixture, not pure milk.", volume=volume, out=out, keep=frac(keep), times=times, x1=str(times).translate(SUP), left=num(left), x2=volume - times * out),
     )
 
 
@@ -1162,11 +1182,11 @@ def one_die(rng):
     p = Fraction(len(good), 6)
     return mcq(
         rng,
-        f"A fair die is thrown once. What is the probability of getting {name}?",
+        T("A fair die is thrown once. What is the probability of getting {name}?", name=name),
         frac(p),
         fraction_options(rng, p, [1 - p, Fraction(len(good), 5), Fraction(1, len(good)), Fraction(len(good) + 1, 6), Fraction(1, 6)]),
-        f"1. Favourable outcomes: {', '.join(map(str, good))}, so {len(good)} outcome{'s' if len(good) > 1 else ''}.\n"
-        f"2. Probability = {len(good)} ÷ 6 = {frac(p)}.",
+        T("1. Favourable outcomes: {x1}, so {x2} outcome{x3}.\n"
+            "2. Probability = {x4} ÷ 6 = {p}.", x1=', '.join(map(str, good)), x2=len(good), x3='s' if len(good) > 1 else '', x4=len(good), p=frac(p)),
         lambda s: frac(Fraction(s, 7 + s)),
     )
 
@@ -1178,31 +1198,33 @@ def coins(rng):
     kind = rng.choice(["at least one", "exactly one", "no", "exactly two", "at most one"] if n == 3 else ["at least one", "exactly one", "no"])
     count = {"at least one": total - 1, "exactly one": comb(n, 1), "no": 1, "exactly two": comb(n, 2), "at most one": 1 + n}[kind]
     p = Fraction(count, total)
-    word = {2: "Two", 3: "Three"}[n]
+    word = {2: T("Two"), 3: T("Three")}[n]
     return mcq(
         rng,
-        f"{word} fair coins are tossed. What is the probability of getting {kind} head{'s' if kind in ('no', 'exactly two') else ''}?",
+        T("{word} fair coins are tossed. What is the probability of getting {kind} head{x1}?", word=word, kind=kind, x1='s' if kind in ('no', 'exactly two') else ''),
         frac(p),
         fraction_options(rng, p, [1 - p, Fraction(1, n + 1), Fraction(count, total + 1), Fraction(1, 2), Fraction(1, total)]),
-        f"1. There are 2{str(n).translate(SUP)} = {total} equally likely outcomes.\n2. Outcomes with {kind} head{'s' if kind in ('no', 'exactly two') else ''}: {count}.\n"
-        f"3. Probability = {count} ÷ {total} = {frac(p)}."
-        + ("\nShortcut: P(at least one) = 1 - P(none)." if kind == "at least one" else ""),
+        T("1. There are 2{x1} = {total} equally likely outcomes.\n"
+            "2. Outcomes with {kind} head{x2}: {count}.\n"
+            "3. Probability = {count} ÷ {total} = {p}.", x1=str(n).translate(SUP), total=total, kind=kind, x2='s' if kind in ('no', 'exactly two') else '', count=count, p=frac(p))
+        + (T("\nShortcut: P(at least one) = 1 - P(none).") if kind == "at least one" else ""),
         lambda s: frac(Fraction(s, total + s)),
     )
 
 
 @template("Probability", "Basic probability", 2)
 def cards(rng):
-    events = [("a king", 4), ("a heart", 13), ("a face card (jack, queen or king)", 12), ("a red card", 26),
-              ("a red king", 2), ("an ace or a king", 8), ("a black face card", 6), ("a spade or an ace", 16), ("the queen of hearts", 1)]
+    events = [(T("a king"), 4), (T("a heart"), 13), (T("a face card (jack, queen or king)"), 12), (T("a red card"), 26),
+              (T("a red king"), 2), (T("an ace or a king"), 8), (T("a black face card"), 6), (T("a spade or an ace"), 16), (T("the queen of hearts"), 1)]
     name, count = rng.choice(events)
     p = Fraction(count, 52)
     return mcq(
         rng,
-        f"A card is drawn at random from a standard 52-card deck. What is the probability that it is {name}?",
+        T("A card is drawn at random from a standard 52-card deck. What is the probability that it is {name}?", name=name),
         frac(p),
         fraction_options(rng, p, [Fraction(1, 52) if count > 1 else Fraction(1, 13), Fraction(count, 13), 1 - p, Fraction(count + 4, 52), Fraction(1, 4)]),
-        f"1. There are {count} card{'s' if count > 1 else ''} that count as {name} in 52 cards.\n2. Probability = {count} ÷ 52 = {frac(p)}.",
+        T("1. There are {count} card{x1} that count as {name} in 52 cards.\n"
+            "2. Probability = {count} ÷ 52 = {p}.", count=count, x1='s' if count > 1 else '', name=name, p=frac(p)),
         lambda s: frac(Fraction(s, 52)),
     )
 
@@ -1210,19 +1232,21 @@ def cards(rng):
 @template("Probability", "Basic probability", 3)
 def two_dice(rng):
     rolls = [(a, b) for a in range(1, 7) for b in range(1, 7)]
-    events = {f"the sum is {s}": (lambda s: lambda r: sum(r) == s)(s) for s in range(3, 12)}
+    events = {T("the sum is {s}", s=s): (lambda s: lambda r: sum(r) == s)(s) for s in range(3, 12)}
     events.update({"the sum is more than 9": lambda r: sum(r) > 9, "both dice show the same number": lambda r: r[0] == r[1],
                    "the sum is even": lambda r: sum(r) % 2 == 0, "the product is 12": lambda r: r[0] * r[1] == 12})
     name, test = rng.choice(list(events.items()))
     good = [r for r in rolls if test(r)]
     p = Fraction(len(good), 36)
-    listing = ", ".join(f"({a},{b})" for a, b in good) if len(good) <= 8 else f"{len(good)} pairs"
+    listing = ", ".join(f"({a},{b})" for a, b in good) if len(good) <= 8 else T("{x1} pairs", x1=len(good))
     return mcq(
         rng,
-        f"Two fair dice are thrown. What is the probability that {name}?",
+        T("Two fair dice are thrown. What is the probability that {name}?", name=name),
         frac(p),
         fraction_options(rng, p, [Fraction(len(good), 12), Fraction(len(good), 11) if len(good) < 11 else Fraction(1, 11), Fraction(len(good) + 1, 36), 1 - p, Fraction(len(good), 6)]),
-        f"1. There are 6 × 6 = 36 equally likely outcomes.\n2. Favourable: {listing}, so {len(good)} outcomes.\n3. Probability = {len(good)} ÷ 36 = {frac(p)}.",
+        T("1. There are 6 × 6 = 36 equally likely outcomes.\n"
+            "2. Favourable: {listing}, so {x1} outcomes.\n"
+            "3. Probability = {x2} ÷ 36 = {p}.", listing=listing, x1=len(good), x2=len(good), p=frac(p)),
         lambda s: frac(Fraction(s, 36)),
     )
 
@@ -1234,16 +1258,19 @@ def two_balls(rng):
     both = rng.random() < 0.6
     if both:
         p = Fraction(r * (r - 1), n * (n - 1))
-        body = f"A bag has {r} red and {b} blue balls. Two balls are drawn at random without replacement. What is the probability that both are red?"
-        steps = f"1. P(first red) = {r}/{n}.\n2. One red is gone, so P(second red) = {r - 1}/{n - 1}.\n3. P(both red) = {r}/{n} × {r - 1}/{n - 1} = {frac(p)}."
+        body = T("A bag has {r} red and {b} blue balls. Two balls are drawn at random without replacement. What is the probability that both are red?", r=r, b=b)
+        steps = T("1. P(first red) = {r}/{n}.\n"
+            "2. One red is gone, so P(second red) = {x1}/{x2}.\n"
+            "3. P(both red) = {r}/{n} × {x3}/{x4} = {p}.", r=r, n=n, x1=r - 1, x2=n - 1, x3=r - 1, x4=n - 1, p=frac(p))
         traps = [Fraction(r * r, n * n), Fraction(r, n), Fraction(r - 1, n - 1)]
-        tail = f"\n{frac(Fraction(r * r, n * n))} is the trap: that assumes the first ball is put back."
+        tail = T("\n{x1} is the trap: that assumes the first ball is put back.", x1=frac(Fraction(r * r, n * n)))
     else:
         p = Fraction(2 * r * b, n * (n - 1))
-        body = f"A bag has {r} red and {b} blue balls. Two balls are drawn at random without replacement. What is the probability of getting one ball of each colour?"
-        steps = f"1. Red then blue: {r}/{n} × {b}/{n - 1}. Blue then red: {b}/{n} × {r}/{n - 1}.\n2. Add both orders: 2 × {r * b}/{n * (n - 1)} = {frac(p)}."
+        body = T("A bag has {r} red and {b} blue balls. Two balls are drawn at random without replacement. What is the probability of getting one ball of each colour?", r=r, b=b)
+        steps = T("1. Red then blue: {r}/{n} × {b}/{x1}. Blue then red: {b}/{n} × {r}/{x2}.\n"
+            "2. Add both orders: 2 × {x3}/{x4} = {p}.", r=r, n=n, b=b, x1=n - 1, x2=n - 1, x3=r * b, x4=n * (n - 1), p=frac(p))
         traps = [Fraction(r * b, n * (n - 1)), Fraction(2 * r * b, n * n), Fraction(1, 2)]
-        tail = "\nForgetting that the order can be either way halves the answer."
+        tail = T("\nForgetting that the order can be either way halves the answer.")
     return mcq(rng, body, frac(p), fraction_options(rng, p, traps + [Fraction(1, n)]), steps + tail, lambda s: frac(Fraction(s, n + s)))
 
 
@@ -1252,14 +1279,15 @@ def two_balls(rng):
 @template("Permutations and Combinations", "Counting arrangements and selections", 1)
 def arrange_in_a_row(rng):
     n = rng.randint(3, 7)
-    things = rng.choice(["different books be arranged on a shelf", "people stand in a row", "different flags be hung on a pole",
-                         "students line up in a queue", "runners finish a race with no ties"])
+    things = rng.choice([T("different books be arranged on a shelf"), T("people stand in a row"), T("different flags be hung on a pole"),
+                         T("students line up in a queue"), T("runners finish a race with no ties")])
     return mcq(
         rng,
-        f"In how many ways can {n} {things}?",
+        T("In how many ways can {n} {things}?", n=n, things=things),
         num(factorial(n)),
         [num(n * (n - 1)), num(factorial(n - 1)), num(n ** 2)],
-        f"1. The first place has {n} choices, the next {n - 1}, and so on down to 1.\n2. {' × '.join(map(str, range(n, 0, -1)))} = {n}! = {num(factorial(n))}.",
+        T("1. The first place has {n} choices, the next {x1}, and so on down to 1.\n"
+            "2. {x2} = {n}! = {x3}.", n=n, x1=n - 1, x2=' × '.join(map(str, range(n, 0, -1))), x3=num(factorial(n))),
         near(factorial(n), gap=n),
     )
 
@@ -1270,11 +1298,10 @@ def digits_without_repeats(rng):
     digits = sorted(rng.sample(range(1, 10), n))
     return mcq(
         rng,
-        f"How many {r}-digit numbers can be formed from the digits {', '.join(map(str, digits[:-1]))} and {digits[-1]} if no digit is repeated?",
+        T("How many {r}-digit numbers can be formed from the digits {x1} and {x2} if no digit is repeated?", r=r, x1=', '.join(map(str, digits[:-1])), x2=digits[-1]),
         num(perm(n, r)),
         [num(n ** r), num(comb(n, r)), num(perm(n, r - 1))],
-        f"1. First place: {n} choices. Next: {n - 1} left." + (f" Next: {n - 2} left." if r == 3 else "") + "\n"
-        f"2. {' × '.join(str(n - i) for i in range(r))} = {perm(n, r)}.\n{n ** r} would allow repeated digits.",
+        T("1. First place: {n} choices. Next: {x1} left.", n=n, x1=n - 1) + (T(" Next: {x1} left.", x1=n - 2) if r == 3 else "") + T("\n2. {x1} = {x2}.\n{x3} would allow repeated digits.", x1=' × '.join(str(n - i) for i in range(r)), x2=perm(n, r), x3=n ** r),
         near(perm(n, r), gap=n),
     )
 
@@ -1282,15 +1309,15 @@ def digits_without_repeats(rng):
 @template("Permutations and Combinations", "Counting arrangements and selections", 2)
 def committee(rng):
     n, r = rng.randint(5, 12), rng.randint(2, 4)
-    group = rng.choice(["committee", "team", "panel", "group"])
+    group = rng.choice([T("committee"), T("team"), T("panel"), T("group")])
     return mcq(
         rng,
-        f"How many different {group}s of {r} people can be chosen from {n} people?",
+        T("How many different {group}s of {r} people can be chosen from {n} people?", group=group, r=r, n=n),
         num(comb(n, r)),
         [num(perm(n, r)), num(n * r), num(comb(n, r - 1)) if comb(n, r - 1) != comb(n, r) else num(comb(n, r) + n)],
-        f"1. Order doesn't matter in a {group}, so use combinations.\n"
-        f"2. C({n}, {r}) = {' × '.join(str(n - i) for i in range(r))} ÷ {r}! = {perm(n, r)} ÷ {factorial(r)} = {comb(n, r)}.\n"
-        f"{perm(n, r)} counts ordered arrangements.",
+        T("1. Order doesn't matter in a {group}, so use combinations.\n"
+            "2. C({n}, {r}) = {x1} ÷ {r}! = {x2} ÷ {x3} = {x4}.\n"
+            "{x5} counts ordered arrangements.", group=group, n=n, r=r, x1=' × '.join(str(n - i) for i in range(r)), x2=perm(n, r), x3=factorial(r), x4=comb(n, r), x5=perm(n, r)),
         near(comb(n, r), gap=2),
     )
 
@@ -1298,13 +1325,14 @@ def committee(rng):
 @template("Permutations and Combinations", "Counting arrangements and selections", 3)
 def round_table(rng):
     n = rng.randint(4, 8)
-    who = rng.choice(["people", "friends", "guests", "delegates", "family members", "players"])
+    who = rng.choice([T("people"), T("friends"), T("guests"), T("delegates"), T("family members"), T("players")])
     return mcq(
         rng,
-        f"In how many ways can {n} {who} sit around a round table?",
+        T("In how many ways can {n} {who} sit around a round table?", n=n, who=who),
         num(factorial(n - 1)),
         [num(factorial(n)), num(factorial(n - 1) // 2), num(factorial(n) // 2)],
-        f"1. Around a circle, rotations of the same seating are identical.\n2. Fix one person's seat and arrange the other {n - 1}: {n - 1}! = {num(factorial(n - 1))}.",
+        T("1. Around a circle, rotations of the same seating are identical.\n"
+            "2. Fix one person's seat and arrange the other {x1}: {x2}! = {x3}.", x1=n - 1, x2=n - 1, x3=num(factorial(n - 1))),
     )
 
 
@@ -1322,15 +1350,15 @@ def word_arrangements(rng):
         denom *= factorial(k)
     ans = factorial(len(word)) // denom
     first_only = factorial(len(word)) // factorial(next(iter(repeats.values())))
-    described = ", ".join(f"{c} {'twice' if k == 2 else f'{k} times'}" for c, k in repeats.items())
+    described = ", ".join(f"{c} {T("twice") if k == 2 else T("{k} times", k=k)}" for c, k in repeats.items())
     return mcq(
         rng,
-        f"How many different arrangements of the letters of the word {word} are possible?",
+        T("How many different arrangements of the letters of the word {word} are possible?", word=word),
         num(ans),
         [num(factorial(len(word))), num(first_only) if first_only != ans else num(ans * 2), num(ans // 2) if ans % 2 == 0 else num(ans * 3)],
-        f"1. {word} has {len(word)} letters, with {described}.\n"
-        f"2. Arrangements = {len(word)}! ÷ ({' × '.join(f'{k}!' for k in repeats.values())}) = {num(factorial(len(word)))} ÷ {denom} = {num(ans)}.\n"
-        "Divide by the repeats because swapping identical letters gives the same word.",
+        T("1. {word} has {x1} letters, with {described}.\n"
+            "2. Arrangements = {x2}! ÷ ({x3}) = {x4} ÷ {denom} = {ans}.\n"
+            "Divide by the repeats because swapping identical letters gives the same word.", word=word, x1=len(word), described=described, x2=len(word), x3=' × '.join(f'{k}!' for k in repeats.values()), x4=num(factorial(len(word))), denom=denom, ans=num(ans)),
         near(ans, gap=max(1, ans // 10)),
     )
 
@@ -1345,11 +1373,11 @@ def mixed_committee(rng):
     ans = comb(women, k) * comb(men, size - k)
     return mcq(
         rng,
-        f"A committee of {size} is to be chosen from {men} men and {women} women. In how many ways can it be done "
-        f"if it must have exactly {k} wom{'a' if k == 1 else 'e'}n?",
+        T("A committee of {size} is to be chosen from {men} men and {women} women. In how many ways can it be done if it must have exactly {k} wom{x1}n?", size=size, men=men, women=women, k=k, x1='a' if k == 1 else 'e'),
         num(ans),
         [num(comb(men + women, size)), num(comb(women, k) + comb(men, size - k)), num(perm(women, k) * comb(men, size - k))],
-        f"1. Choose the women: C({women}, {k}) = {comb(women, k)}.\n2. Choose the men: C({men}, {size - k}) = {comb(men, size - k)}.\n"
-        f"3. Both choices happen together, so multiply: {comb(women, k)} × {comb(men, size - k)} = {num(ans)}.",
+        T("1. Choose the women: C({women}, {k}) = {x1}.\n"
+            "2. Choose the men: C({men}, {x2}) = {x3}.\n"
+            "3. Both choices happen together, so multiply: {x4} × {x5} = {ans}.", women=women, k=k, x1=comb(women, k), men=men, x2=size - k, x3=comb(men, size - k), x4=comb(women, k), x5=comb(men, size - k), ans=num(ans)),
         near(ans, gap=5),
     )

@@ -168,3 +168,65 @@ def daily_goal(db: Session, user_id: str) -> DailyGoal:
     db.add(goal)
     db.commit()
     return goal
+
+
+PLAN_DAYS = 7
+REVIEW_AFTER_DAYS = 5
+WEAK_BELOW = 60
+
+
+def revision_plan(db: Session, user_id: str, topic_names: dict[str, str]) -> list[dict]:
+    """A week of focus skills: weakest attempted skills first, then skills not started yet, with a
+    spaced review of strong skills that haven't been practised for a while, and a mock test on day 7."""
+    skills = db.scalars(select(Skill)).all()
+    mastery = {m.skill_id: m for m in db.scalars(select(SkillMastery).where(SkillMastery.user_id == user_id)).all()}
+    now = utcnow()
+
+    weak = sorted((s for s in skills if s.id in mastery and mastery[s.id].mastery_score < WEAK_BELOW), key=lambda s: mastery[s.id].mastery_score)
+    fresh = [s for s in skills if s.id not in mastery]
+    review = sorted(
+        (
+            s
+            for s in skills
+            if s.id in mastery
+            and mastery[s.id].mastery_score >= WEAK_BELOW
+            and (mastery[s.id].last_attempt_at is None or now - as_utc(mastery[s.id].last_attempt_at) >= timedelta(days=REVIEW_AFTER_DAYS))
+        ),
+        key=lambda s: as_utc(mastery[s.id].last_attempt_at) if mastery[s.id].last_attempt_at else datetime.min.replace(tzinfo=timezone.utc),
+    )
+    # Mix new skills in among the weak ones so a week never has only repairs or only new ground.
+    focus: list[Skill] = []
+    while weak or fresh:
+        for queue in (weak, weak, fresh):
+            if queue:
+                focus.append(queue.pop(0))
+    if not focus:
+        focus = sorted(skills, key=lambda s: mastery[s.id].mastery_score if s.id in mastery else 0)
+
+    def item(skill: Skill, kind: str) -> dict:
+        row = mastery.get(skill.id)
+        return {
+            "kind": kind,
+            "skill_id": skill.id,
+            "skill": skill.name,
+            "subtopic": skill.subtopic.name,
+            "topic": topic_names.get(skill.subtopic.topic_id, ""),
+            "topic_id": skill.subtopic.topic_id,
+            "mastery": round(row.mastery_score) if row else 0,
+        }
+
+    today = date.today()
+    plan = []
+    for day in range(PLAN_DAYS):
+        items = [item(focus[(2 * day + i) % len(focus)], "focus") for i in range(2)] if focus else []
+        if day % 2 == 1 and review:
+            items.append(item(review[(day // 2) % len(review)], "review"))
+        plan.append(
+            {
+                "date": (today + timedelta(days=day)).isoformat(),
+                "items": items if day < PLAN_DAYS - 1 else items[:1],
+                "mock": day == PLAN_DAYS - 1,
+                "questions": DAILY_TARGET,
+            }
+        )
+    return plan

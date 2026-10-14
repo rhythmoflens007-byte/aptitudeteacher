@@ -546,6 +546,13 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   chevron: <path d="m9 6 6 6-6 6" />,
+  phone: (
+    <>
+      <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+      <path d="M11 18.5h2" />
+    </>
+  ),
+  share: <path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />,
   lock: (
     <>
       <rect x="5" y="11" width="14" height="10" rx="2" />

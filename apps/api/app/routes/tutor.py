@@ -7,8 +7,9 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import ai
+from app import ai, offline_tutor
 from app.auth import current_user
+from app.content_i18n import localize
 from app.db.models import Question, TutorMessage, TutorSession, User, utcnow
 from app.db.session import SessionLocal, get_db
 from app.schemas import TutorMessageIn, TutorMessageOut, TutorSessionIn
@@ -40,13 +41,14 @@ def _message_out(m: TutorMessage) -> TutorMessageOut:
     return TutorMessageOut(id=m.id, role=m.role, content=m.content, emotions=m.emotions or [], created_at=m.created_at)
 
 
-def _session_out(db: Session, session: TutorSession) -> dict:
+def _session_out(db: Session, session: TutorSession, locale: str = "en") -> dict:
     messages = db.scalars(
         select(TutorMessage).where(TutorMessage.session_id == session.id).order_by(TutorMessage.created_at)
     ).all()
     title = session.question_text
     if session.question_id and (q := db.get(Question, session.question_id)):
-        title = q.body
+        shown = localize(q, locale)
+        title = shown["body"] if shown else q.body
     if not title:
         title = next((m.content for m in messages if m.role == "student"), "New conversation")
     return {
@@ -71,7 +73,7 @@ def create_session(body: TutorSessionIn, db: Session = Depends(get_db), user: Us
     session = TutorSession(user_id=user.id, question_id=body.question_id, question_text=body.question_text)
     db.add(session)
     db.commit()
-    return _session_out(db, session)
+    return _session_out(db, session, user.locale)
 
 
 @router.get("/sessions")
@@ -79,12 +81,12 @@ def list_sessions(db: Session = Depends(get_db), user: User = Depends(current_us
     sessions = db.scalars(
         select(TutorSession).where(TutorSession.user_id == user.id).order_by(TutorSession.started_at.desc()).limit(30)
     ).all()
-    return [{k: v for k, v in _session_out(db, s).items() if k != "messages"} for s in sessions]
+    return [{k: v for k, v in _session_out(db, s, user.locale).items() if k != "messages"} for s in sessions]
 
 
 @router.get("/sessions/{session_id}")
 def get_session(session_id: str, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    return _session_out(db, _load(db, session_id, user))
+    return _session_out(db, _load(db, session_id, user), user.locale)
 
 
 @router.post("/sessions/{session_id}/messages", response_model=TutorMessageOut)
@@ -104,7 +106,8 @@ def send_message(
     question = db.get(Question, session.question_id) if session.question_id else None
     # Nothing is written until the AI has answered: an open SQLite write would lock the whole
     # database for every other request during the 5-20 seconds the AI takes.
-    content, emotions = ai.tutor_reply(turns, _context(db, session), user, question.explanation if question else None)
+    offline = offline_tutor.help_for(question, session.question_text, user.locale)
+    content, emotions = ai.tutor_reply(turns, _context(db, session), user, offline)
     db.add(TutorMessage(session_id=session.id, role="student", content=text, created_at=asked_at))
     reply = TutorMessage(session_id=session.id, role="tutor", content=content, emotions=emotions or None)
     db.add(reply)
@@ -130,7 +133,7 @@ def stream_message(
     turns = [(m.role, m.content) for m in reversed(history)] + [("student", text)]
     question = db.get(Question, session.question_id) if session.question_id else None
     context = _context(db, session)
-    worked = question.explanation if question else None
+    offline = offline_tutor.help_for(question, session.question_text, user.locale)
     # Plain snapshots: the stream outlives this request's database session.
     learner = SimpleNamespace(locale=user.locale, tutor_name=user.tutor_name, tutor_gender=user.tutor_gender)
     sid = session.id
@@ -138,7 +141,7 @@ def stream_message(
     def events():
         parts: list[str] = []
         emotions: list[str] = []
-        for sentence, emotion in ai.tutor_reply_stream(turns, context, learner, worked):
+        for sentence, emotion in ai.tutor_reply_stream(turns, context, learner, offline):
             parts.append(sentence)
             emotions.append(emotion or "neutral")
             yield json.dumps({"type": "sentence", "text": sentence, "emotion": emotion}, ensure_ascii=False) + "\n"
@@ -175,4 +178,4 @@ async def ocr(image: UploadFile = File(...), db: Session = Depends(get_db), user
     session = TutorSession(user_id=user.id, question_text=text)
     db.add(session)
     db.commit()
-    return _session_out(db, session)
+    return _session_out(db, session, user.locale)

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app import ai
 from app.auth import current_user
+from app.content_i18n import localize
 from app.db.models import Attempt, Question, Skill, SkillMastery, Topic, User
 from app.db.session import get_db
 from app.engine import gamification, mastery
@@ -40,17 +41,28 @@ def topics(db: Session = Depends(get_db), _: User = Depends(current_user)):
 
 
 @router.get("/questions/next", response_model=NextQuestionOut)
-def next_question(topic_id: str | None = None, db: Session = Depends(get_db), user: User = Depends(current_user)):
+def next_question(
+    topic_id: str | None = None,
+    skill_id: str | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    if skill_id:
+        # Practising one skill from the revision plan.
+        skill = db.get(Skill, skill_id)
+        if skill is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Skill not found.")
+        return NextQuestionOut(question=QuestionOut.of(mastery.question_for_skill(db, user.id, skill), user.locale), reason="plan")
     question, reason = mastery.next_question(db, user.id, topic_id)
-    return NextQuestionOut(question=QuestionOut.of(question), reason=reason)
+    return NextQuestionOut(question=QuestionOut.of(question, user.locale), reason=reason)
 
 
 @router.get("/questions/{question_id}", response_model=QuestionOut)
-def get_question(question_id: str, db: Session = Depends(get_db), _: User = Depends(current_user)):
+def get_question(question_id: str, db: Session = Depends(get_db), user: User = Depends(current_user)):
     question = db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found.")
-    return QuestionOut.of(question)
+    return QuestionOut.of(question, user.locale)
 
 
 @router.post("/questions/generate", response_model=QuestionOut, status_code=status.HTTP_201_CREATED)
@@ -70,7 +82,7 @@ def generate(body: GenerateIn, db: Session = Depends(get_db), user: User = Depen
     question.skills = [skill]
     db.add(question)
     db.commit()
-    return QuestionOut.of(question)
+    return QuestionOut.of(question, user.locale)
 
 
 @router.post("/attempts", response_model=AttemptOut)
@@ -86,9 +98,11 @@ def submit_attempt(body: AttemptIn, db: Session = Depends(get_db), user: User = 
     snapshot = SimpleNamespace(
         body=question.body, options=list(question.options), correct_option=question.correct_option, explanation=question.explanation
     )
-    # The translated explanation doesn't depend on the diagnosis, so it runs alongside it.
+    # A ready-made translation is used as is; otherwise the AI translates the explanation alongside the
+    # diagnosis (which doesn't depend on it).
+    shown = localize(question, user.locale)
     pool = ThreadPoolExecutor(max_workers=1)
-    explanation = pool.submit(ai.explain, snapshot, learner)
+    explanation = pool.submit(lambda: shown["explanation"]) if shown else pool.submit(ai.explain, snapshot, learner)
     pool.shutdown(wait=False)
     misconception, lesson = (None, None)
     if not is_correct:

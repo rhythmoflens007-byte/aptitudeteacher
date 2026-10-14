@@ -86,7 +86,7 @@ function SiteNav() {
         {/* Translated labels are longer, so their section links need a wider screen. */}
         <nav className={`hidden items-center gap-0.5 ${locale === "en" ? "xl:flex" : "2xl:flex"}`} aria-label={t("home.nav.label")}>
           {NAV_LINKS.map(([label, href]) => (
-            <a key={href} href={href} className="whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink">
+            <a key={href} href={href} className="whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-ink/75 transition-colors hover:bg-surface-2 hover:text-ink">
               {t(label)}
             </a>
           ))}
