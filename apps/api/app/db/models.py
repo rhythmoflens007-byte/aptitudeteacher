@@ -244,3 +244,11 @@ class LeagueState(Base):
     __tablename__ = "league_state"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     week_start: Mapped[date] = mapped_column(Date)
+
+
+class AppMeta(Base):
+    """Small key/value facts about the database itself, e.g. which version of the content it was seeded with."""
+
+    __tablename__ = "app_meta"
+    key: Mapped[str] = mapped_column(String(50), primary_key=True)
+    value: Mapped[str] = mapped_column(String(128))

@@ -295,3 +295,32 @@ def test_templated_skills_write_a_new_question_instead_of_repeating(client, user
         assert fresh.source == "generated"
         assert fresh.correct_option in fresh.options
         assert db.get(Question, fresh.id) is not None, "the new question is saved so it can be answered"
+
+
+def test_startup_seeding_runs_only_when_content_changes(client, monkeypatch):
+    from app import seed as seeding
+    from app.db.models import AppMeta
+    from app.db.session import SessionLocal
+
+    with SessionLocal() as db:
+        assert db.get(AppMeta, "seed_fingerprint").value == seeding.content_fingerprint()
+
+    calls = []
+    monkeypatch.setattr(seeding, "seed", lambda db: calls.append(1) or 0)
+    seeding.init_db()
+    assert calls == []  # unchanged content: nothing to do
+
+    monkeypatch.setattr(seeding, "content_fingerprint", lambda: "new deploy")
+    seeding.init_db()
+    assert calls == [1]
+
+
+def test_hosted_login_secret_is_derived_not_the_public_default():
+    from app.config import DEFAULT_JWT_SECRET, Settings
+
+    hosted = Settings(
+        _env_file=None, environment="production", database_url="postgresql://u:p@host/db", jwt_secret=DEFAULT_JWT_SECRET
+    )
+    assert hosted.signing_secret() not in ("", DEFAULT_JWT_SECRET)
+    local = Settings(_env_file=None, environment="development", jwt_secret=DEFAULT_JWT_SECRET)
+    assert local.signing_secret() == DEFAULT_JWT_SECRET

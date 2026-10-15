@@ -1,4 +1,7 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Online, the site reaches the backend through its own address (/backend, forwarded in next.config.ts),
+// so the browser never needs the backend's address or cross-site permission.
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? (process.env.NODE_ENV === "production" ? "/backend" : "http://localhost:8000");
 const TOKEN_KEY = "aptitude.token";
 
 export type Locale = "en" | "hi" | "ta" | "te";

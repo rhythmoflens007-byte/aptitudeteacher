@@ -2,8 +2,9 @@ from collections.abc import Iterator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.pool import NullPool
 
-from app.config import get_settings
+from app.config import ON_VERCEL, get_settings
 
 settings = get_settings()
 
@@ -20,6 +21,10 @@ database_url = _url(settings.database_url)
 if database_url.startswith("sqlite"):
     # SQLite allows one writer at a time; wait for it (up to 15 s) instead of failing with "database is locked".
     engine = create_engine(database_url, connect_args={"check_same_thread": False, "timeout": 15})
+elif ON_VERCEL:
+    # Each serverless function instance is short-lived: connect through the provider's pooler for every
+    # request instead of holding a pool, and skip server-side prepared statements, which poolers drop.
+    engine = create_engine(database_url, poolclass=NullPool, connect_args={"prepare_threshold": None})
 else:
     # Free hosted databases close idle connections; check each one before use instead of failing a request.
     engine = create_engine(database_url, pool_pre_ping=True, pool_recycle=300)

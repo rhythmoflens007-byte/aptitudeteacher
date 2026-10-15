@@ -1,0 +1,8 @@
+.venv
+tests
+scripts
+*.db
+.env
+.voice-cache
+__pycache__
+requirements-dev.txt

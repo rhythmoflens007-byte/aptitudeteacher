@@ -1,10 +1,12 @@
+import hashlib
 import random
+from pathlib import Path
 from typing import get_args
 
 from sqlalchemy import func, inspect, select, text
 from sqlalchemy.orm import Session
 
-from app.db.models import Badge, Question, Skill, Subtopic, Topic
+from app.db.models import AppMeta, Badge, Question, Skill, Subtopic, Topic
 from app.db.session import Base, SessionLocal, engine
 from app.engine.game import ensure_friend_codes
 from app.engine.gamification import BADGES
@@ -135,7 +137,26 @@ def retire_unsupported_locales() -> None:
         )
 
 
+def content_fingerprint() -> str:
+    """Changes whenever the code or question files change, i.e. once per deploy."""
+    digest = hashlib.sha256()
+    app_dir = Path(__file__).resolve().parent
+    for path in sorted(app_dir.rglob("*")):
+        if path.suffix in {".py", ".json"} and "__pycache__" not in path.parts:
+            digest.update(path.relative_to(app_dir).as_posix().encode())
+            digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
 def init_db() -> None:
+    # Serverless hosts start the app often; the full schema check and seeding only need to run when the
+    # code or questions changed since the last start.
+    fingerprint = content_fingerprint()
+    if "app_meta" in inspect(engine).get_table_names():
+        with SessionLocal() as db:
+            seeded = db.get(AppMeta, "seed_fingerprint")
+            if seeded is not None and seeded.value == fingerprint:
+                return
     Base.metadata.create_all(engine)
     add_missing_columns()
     retire_unsupported_locales()
@@ -143,6 +164,8 @@ def init_db() -> None:
         seed(db)
         link_templates(db)
         ensure_friend_codes(db)
+        db.merge(AppMeta(key="seed_fingerprint", value=fingerprint))
+        db.commit()
 
 
 if __name__ == "__main__":

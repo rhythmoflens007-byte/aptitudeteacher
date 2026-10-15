@@ -31,7 +31,7 @@ def verify_password(password: str, stored: str) -> bool:
 def create_token(user_id: str) -> str:
     settings = get_settings()
     payload = {"sub": user_id, "exp": utcnow() + timedelta(hours=settings.jwt_expiry_hours)}
-    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+    return jwt.encode(payload, settings.signing_secret(), algorithm="HS256")
 
 
 def current_user(
@@ -42,7 +42,7 @@ def current_user(
     if credentials is None:
         raise unauthorized
     try:
-        payload = jwt.decode(credentials.credentials, get_settings().jwt_secret, algorithms=["HS256"])
+        payload = jwt.decode(credentials.credentials, get_settings().signing_secret(), algorithms=["HS256"])
     except jwt.PyJWTError:
         raise unauthorized
     user = db.get(User, payload.get("sub"))

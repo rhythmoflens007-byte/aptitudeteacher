@@ -22,7 +22,7 @@ from xml.sax.saxutils import escape
 import aiohttp
 import edge_tts
 
-from app.config import API_DIR, get_settings
+from app.config import API_DIR, ON_VERCEL, get_settings
 
 log = logging.getLogger(__name__)
 
@@ -164,7 +164,10 @@ def _disk_dir() -> Path | None:
     configured = get_settings().voice_cache_dir
     if configured == "off":
         return None
-    return Path(configured) if configured else API_DIR / ".voice-cache"
+    if configured:
+        return Path(configured)
+    # Hosted functions can only write to the temporary folder.
+    return Path("/tmp/aptitude-voice-cache") if ON_VERCEL else API_DIR / ".voice-cache"
 
 
 def _disk_key(provider: str, voice: str, text: str) -> str:

@@ -1,21 +1,26 @@
+import hashlib
+import os
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_DIR = Path(__file__).resolve().parent.parent
+DEFAULT_JWT_SECRET = "dev-only-change-me"
+# Vercel sets VERCEL=1 in every build and function.
+ON_VERCEL = bool(os.environ.get("VERCEL"))
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=API_DIR / ".env", extra="ignore")
 
-    environment: str = "development"
+    environment: str = "production" if ON_VERCEL else "development"
     # Comma-separated web addresses allowed to call the API (add the live site's address when hosting).
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     database_url: str = f"sqlite:///{(API_DIR / 'aptitude.db').as_posix()}"
 
-    jwt_secret: str = "dev-only-change-me"
+    jwt_secret: str = DEFAULT_JWT_SECRET
     jwt_expiry_hours: int = 24 * 7
 
     gemini_api_key: str = ""
@@ -35,6 +40,13 @@ class Settings(BaseSettings):
     google_tts_api_key: str = ""
     # Where spoken sentences are kept so they still play when the voice service is down; "off" disables.
     voice_cache_dir: str = ""
+
+    def signing_secret(self) -> str:
+        """The key that signs login tokens. A hosted deploy without its own JWT_SECRET derives one from the
+        private database address, so the person deploying has one less secret to invent."""
+        if self.jwt_secret != DEFAULT_JWT_SECRET or self.environment != "production":
+            return self.jwt_secret
+        return hashlib.sha256(f"aptitude-teacher-login:{self.database_url}".encode()).hexdigest()
 
     def allowed_origins(self) -> list[str]:
         return [origin.strip().rstrip("/") for origin in self.cors_origins.split(",") if origin.strip()]
