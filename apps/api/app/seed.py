@@ -148,7 +148,25 @@ def content_fingerprint() -> str:
     return digest.hexdigest()
 
 
+# Any fixed number: Postgres advisory locks are identified by an integer.
+SEED_LOCK_ID = 7_241_013
+
+
 def init_db() -> None:
+    # Serverless hosts start several copies at once; on Postgres only one prepares the database while
+    # the others wait, then find it ready.
+    with engine.connect() as lock:
+        locking = engine.dialect.name == "postgresql"
+        if locking:
+            lock.execute(text("SELECT pg_advisory_lock(:id)"), {"id": SEED_LOCK_ID})
+        try:
+            _init_db()
+        finally:
+            if locking:
+                lock.execute(text("SELECT pg_advisory_unlock(:id)"), {"id": SEED_LOCK_ID})
+
+
+def _init_db() -> None:
     # Serverless hosts start the app often; the full schema check and seeding only need to run when the
     # code or questions changed since the last start.
     fingerprint = content_fingerprint()

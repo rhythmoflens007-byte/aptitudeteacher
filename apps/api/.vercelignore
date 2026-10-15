@@ -6,3 +6,5 @@ scripts
 .voice-cache
 __pycache__
 requirements-dev.txt
+.env.local
+.vercel

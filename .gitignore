@@ -22,3 +22,6 @@ apps/api/*.db
 
 # Spoken sentences cached by the API
 apps/api/.voice-cache/
+
+# Vercel CLI link folders
+.vercel/
